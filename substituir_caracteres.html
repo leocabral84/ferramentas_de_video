@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="imagem.ico" type="image/x-icon">
+    <title>Substituir Caracteres</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin-top: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input {
+            width: 100px;
+            padding: 5px;
+            margin-left: 10px;
+        }
+        .button-group {
+            margin-top: 10px;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Contador de Caracteres</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Ir para Capitulador</a></li>
+                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor de Textos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir Números Romanos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Aplicador de Emoções</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Título da Página -->
+    <h2 class="text-center mt-4">Substituir Caracteres no Texto</h2>
+
+    <!-- Container Principal -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <!-- Texto Inicial -->
+                <label for="textoInicial">Texto Inicial</label>
+                <textarea id="textoInicial" class="form-control" placeholder="Cole o texto aqui..."></textarea>
+
+                <!-- Configurações de Substituição -->
+                <div class="input-group mb-3">
+                    <label for="substituicao1">Caracteres a serem substituídos</label>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Substituir</th>
+                                <th>Por</th>
+                                <th>Desl./Lig.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" id="substituir1" class="form-control"></td>
+                                <td><input type="text" id="por1" class="form-control"></td>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" id="ativo1">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" id="substituir2" class="form-control"></td>
+                                <td><input type="text" id="por2" class="form-control"></td>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" id="ativo2">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" id="substituir3" class="form-control"></td>
+                                <td><input type="text" id="por3" class="form-control"></td>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" id="ativo3">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" id="substituir4" class="form-control"></td>
+                                <td><input type="text" id="por4" class="form-control"></td>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" id="ativo4">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" id="substituir5" class="form-control"></td>
+                                <td><input type="text" id="por5" class="form-control"></td>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" id="ativo5">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Botão de Substituição -->
+                <button class="btn btn-primary w-100" onclick="substituirTexto()">Substituir</button>
+
+                <!-- Texto Final -->
+                <label for="textoFinal">Texto Final</label>
+                <textarea id="textoFinal" class="form-control" readonly></textarea>
+
+                <!-- Botões de Ação -->
+                <div class="button-group text-center">
+                    <button class="btn btn-success" onclick="copiarTexto()">Copiar</button>
+                    <button class="btn btn-danger" onclick="limparTudo()">Limpar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script>
+        // Função para substituir os caracteres no texto
+        function substituirTexto() {
+            const textoInicial = document.getElementById("textoInicial").value;
+
+            let textoFinal = textoInicial;
+
+            // Array de configurações de substituição
+            const substituicoes = [
+                { substituir: "substituir1", por: "por1", ativo: "ativo1" },
+                { substituir: "substituir2", por: "por2", ativo: "ativo2" },
+                { substituir: "substituir3", por: "por3", ativo: "ativo3" },
+                { substituir: "substituir4", por: "por4", ativo: "ativo4" },
+                { substituir: "substituir5", por: "por5", ativo: "ativo5" }
+            ];
+
+            substituicoes.forEach(config => {
+                const checkbox = document.getElementById(config.ativo);
+                if (checkbox.checked) {
+                    const substituir = document.getElementById(config.substituir).value;
+                    const por = document.getElementById(config.por).value;
+
+                    // Verifica se há algo para substituir
+                    if (substituir) {
+                        // Criar uma expressão regular segura para substituir caracteres especiais
+                        const regex = new RegExp(substituir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+
+                        // Substitui pelo valor de "por" ou remove se "por" estiver vazio
+                        textoFinal = textoFinal.replace(regex, por);
+                    }
+                }
+            });
+
+            document.getElementById("textoFinal").value = textoFinal;
+        }
+
+        // Função para copiar o texto final
+        function copiarTexto() {
+            const textoFinal = document.getElementById("textoFinal");
+            textoFinal.select();
+            textoFinal.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+        }
+
+        // Função para limpar tudo
+        function limparTudo() {
+            document.getElementById("textoInicial").value = "";
+            document.querySelectorAll('input[type="text"]').forEach(input => {
+                input.value = "";
+            });
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.getElementById("textoFinal").value = "";
+        }
+    </script>
+</body>
+</html>

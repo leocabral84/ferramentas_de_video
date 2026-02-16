@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="imagem.ico" type="image/x-icon">
+    <title>Divisor de Textos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin-top: 20px;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+        textarea, input, button {
+            margin: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .arrow {
+            font-size: 24px;
+            cursor: pointer;
+            margin: 0 15px;
+        }
+
+        header {
+            width: 100%;
+            background: #f4f4f4;
+            padding: 10px 0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header a {
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Divisor de Textos</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Ir para Capitulador</a></li>
+                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor de Textos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir Números Romanos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Aplicador de Emoções</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+<!-- Título da Página -->
+<h2 class="text-center mt-4">Divisor de Textos</h2>
+
+<!-- Container Principal -->
+<div class="container mt-4">
+
+    <!-- Input para buscar arquivo txt -->
+    <input type="file" id="fileInput" accept=".txt" class="form-control mb-3">
+
+    <!-- Caixa de texto principal -->
+    <textarea id="mainText" class="form-control" rows="5" placeholder="Digite ou cole seu texto aqui..."></textarea><br>
+
+    <!-- Configurações de divisão -->
+   <input type="number" id="charLimit" class="form-control" value="5000" min="1"> Número de caracteres máximo
+   <select id="splitMode" class="form-select">
+    <option value="charLimit">Número máximo de caracteres</option>
+    <option value="dotToDot">Ponto a ponto</option>
+    <option value="sentenceBySentence">Frase a frase</option>
+    <option value="semicolonMode">Pontos e vírgula</option>
+   </select>
+
+    <button class="btn btn-primary" onclick="splitText()">Dividir Texto</button>
+    <br>
+
+    <!-- Navegação entre partes -->
+    <input type="number" id="currentTextIndex" class="form-control" value="1" min="1" onkeydown="handleInputEnter(event)">
+    <span id="totalTextCount">de 0</span>
+
+    <!-- Área de visualização com setas -->
+    <div class="nav-buttons">
+        <span class="arrow" onclick="prevText()">⬅</span>
+        <textarea id="displayText" class="form-control" rows="3" readonly></textarea>
+        <span class="arrow" onclick="nextText()">➡</span>
+    </div>
+
+    <!-- Botões de ação -->
+    <button class="btn btn-success" onclick="copyText()">Copiar</button>
+    <button class="btn btn-danger" onclick="resetAll()">Apagar Tudo</button>
+    <button class="btn btn-primary" onclick="playText()">Play</button>
+    <button class="btn btn-secondary" onclick="stopText()">Stop</button>
+
+    <!-- Tabela de resultados -->
+    <table id="resultTable" class="table table-bordered mt-4">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Texto Dividido</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+</div>
+
+<!-- Script principal -->
+<script>
+let textParts = [];
+let currentIndex = 0;
+
+// Carrega o último texto salvo e prepara eventos
+window.onload = function () {
+    loadLastText();
+    document.getElementById("fileInput").addEventListener("change", loadTextFromFile);
+    document.getElementById("mainText").addEventListener("input", function () {
+        saveTextToLocalStorage(this.value);
+    });
+};
+
+// Lê o arquivo txt selecionado
+function loadTextFromFile(event) {
+    const file = event.target.files[0];
+    if (file && file.name.endsWith(".txt")) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const content = e.target.result;
+            document.getElementById("mainText").value = content;
+            saveTextToLocalStorage(content);
+        };
+        reader.readAsText(file);
+    }
+}
+
+// Salva no localStorage
+function saveTextToLocalStorage(text) {
+    localStorage.setItem("lastDivisorText", text);
+}
+
+// Carrega último texto
+function loadLastText() {
+    const lastText = localStorage.getItem("lastDivisorText");
+    if (lastText) {
+        document.getElementById("mainText").value = lastText;
+    }
+}
+
+// Função de divisão de texto
+function splitText() {
+    let text = document.getElementById("mainText").value.trim();
+    let charLimit = parseInt(document.getElementById("charLimit").value, 10);
+    let splitMode = document.getElementById("splitMode").value;
+    textParts = [];
+
+    if (splitMode === "charLimit") {
+        // Número máximo de caracteres (respeitando palavras inteiras)
+        let words = text.split(/\s+/);
+        let currentText = "";
+        words.forEach(word => {
+            if ((currentText + " " + word).trim().length <= charLimit) {
+                currentText = (currentText + " " + word).trim();
+            } else {
+                textParts.push(currentText.trim());
+                currentText = word;
+            }
+        });
+        if (currentText) textParts.push(currentText.trim());
+
+    } else if (splitMode === "dotToDot") {
+        // Ponto a ponto (., ?, !)
+        while (text.length > 0) {
+            let chunk = text.substring(0, charLimit);
+            let lastDotIndex = Math.max(
+                chunk.lastIndexOf("."),
+                chunk.lastIndexOf("?"),
+                chunk.lastIndexOf("!")
+            );
+            if (lastDotIndex === -1) {
+                lastDotIndex = charLimit;
+            } else {
+                lastDotIndex += 1;
+            }
+            textParts.push(text.substring(0, lastDotIndex).trim());
+            text = text.substring(lastDotIndex).trim();
+        }
+
+    } else if (splitMode === "sentenceBySentence") {
+        // Frase a frase
+        let sentenceRegex = /([.!?…])\s*/g;
+        let sentences = text.split(sentenceRegex);
+        for (let i = 0; i < sentences.length; i += 2) {
+            let sentence = sentences[i].trim();
+            let delimiter = sentences[i + 1] || "";
+            if (sentence || delimiter) {
+                textParts.push((sentence + delimiter).trim());
+            }
+        }
+
+    } else if (splitMode === "semicolonMode") {
+        // Pontos e vírgula (, ;)
+        let regex = /([,;])\s*/g;
+        let parts = text.split(regex);
+        let buffer = "";
+        for (let i = 0; i < parts.length; i += 2) {
+            let fragment = parts[i].trim();
+            let delimiter = parts[i + 1] || "";
+            let fullSegment = (fragment + delimiter).trim();
+
+            if ((buffer + " " + fullSegment).trim().length <= charLimit) {
+                buffer = (buffer + " " + fullSegment).trim();
+            } else {
+                if (buffer) textParts.push(buffer);
+                buffer = fullSegment;
+            }
+        }
+        if (buffer) textParts.push(buffer);
+    }
+
+    populateTable();
+    showText(0);
+    document.getElementById("totalTextCount").innerText = 'de ' + textParts.length;
+}
+
+// Preenche tabela
+function populateTable() {
+    let tableBody = document.getElementById("resultTable").getElementsByTagName("tbody")[0];
+    tableBody.innerHTML = "";
+    textParts.forEach((part, index) => {
+        let row = tableBody.insertRow();
+        row.insertCell(0).innerText = index + 1;
+        row.insertCell(1).innerText = part;
+    });
+}
+
+// Exibe parte do texto
+function showText(index) {
+    if (textParts.length > 0 && index >= 0 && index < textParts.length) {
+        document.getElementById("displayText").value = textParts[index];
+        document.getElementById("currentTextIndex").value = index + 1;
+        document.getElementById("totalTextCount").innerText = 'de ' + textParts.length;
+        currentIndex = index;
+    }
+}
+
+// Tecla Enter pula para índice
+function handleInputEnter(event) {
+    if (event.key === "Enter") {
+        let newIndex = parseInt(document.getElementById("currentTextIndex").value, 10) - 1;
+        if (!isNaN(newIndex) && newIndex >= 0 && newIndex < textParts.length) {
+            showText(newIndex);
+        } else {
+            alert("Índice inválido!");
+            document.getElementById("currentTextIndex").value = currentIndex + 1;
+        }
+    }
+}
+
+function prevText() { showText(currentIndex - 1); }
+function nextText() { showText(currentIndex + 1); }
+
+// Copia texto exibido
+function copyText() {
+    let displayText = document.getElementById("displayText");
+    displayText.select();
+    document.execCommand("copy");
+}
+
+// Reseta tudo
+function resetAll() {
+    document.getElementById("mainText").value = "";
+    document.getElementById("charLimit").value = 5000;
+    document.getElementById("displayText").value = "";
+    document.getElementById("currentTextIndex").value = 1;
+    document.getElementById("totalTextCount").innerText = "de 0";
+    document.getElementById("resultTable").getElementsByTagName("tbody")[0].innerHTML = "";
+    textParts = [];
+    currentIndex = 0;
+    localStorage.removeItem("lastDivisorText");
+}
+
+// Botão voltar ao topo
+let btnTopo = document.createElement("button");
+btnTopo.id = "btnTopo";
+btnTopo.innerHTML = "&#8679;";
+document.body.appendChild(btnTopo);
+
+btnTopo.style.position = "fixed";
+btnTopo.style.bottom = "20px";
+btnTopo.style.right = "20px";
+btnTopo.style.width = "50px";
+btnTopo.style.height = "50px";
+btnTopo.style.background = "linear-gradient(135deg, #6a11cb, #2575fc)";
+btnTopo.style.color = "white";
+btnTopo.style.border = "none";
+btnTopo.style.borderRadius = "50%";
+btnTopo.style.display = "flex";
+btnTopo.style.alignItems = "center";
+btnTopo.style.justifyContent = "center";
+btnTopo.style.fontSize = "24px";
+btnTopo.style.cursor = "pointer";
+btnTopo.style.boxShadow = "0px 4px 6px rgba(0,0,0,0.2)";
+btnTopo.style.transition = "opacity 0.3s, transform 0.3s";
+btnTopo.style.opacity = "0";
+btnTopo.style.transform = "scale(0)";
+
+btnTopo.onclick = function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+window.onscroll = function () {
+    if (document.documentElement.scrollTop > 300) {
+        btnTopo.style.opacity = "1";
+        btnTopo.style.transform = "scale(1)";
+    } else {
+        btnTopo.style.opacity = "0";
+        btnTopo.style.transform = "scale(0)";
+    }
+};
+
+// Síntese de voz
+let synth = window.speechSynthesis;
+let voices = [];
+let selectedVoice = null;
+let isSpeaking = false;
+
+function loadVoices() {
+    voices = synth.getVoices();
+    if (voices.length > 0) {
+        selectedVoice = voices[0];
+    }
+}
+
+function playText() {
+    let textToRead = document.getElementById("displayText").value.trim();
+    if (textToRead && synth) {
+        let utterance = new SpeechSynthesisUtterance(textToRead);
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+        isSpeaking = true;
+        utterance.onend = () => { isSpeaking = false; };
+        synth.speak(utterance);
+    }
+}
+
+function stopText() {
+    if (isSpeaking && synth) {
+        synth.cancel();
+        isSpeaking = false;
+    }
+}
+
+if (synth.onvoiceschanged !== undefined) {
+    synth.onvoiceschanged = loadVoices;
+}
+</script>
+
+
+
+
+</body>
+</html>

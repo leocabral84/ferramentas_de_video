@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="imagem.ico" type="image/x-icon">
+  <title>Substituir Números Romanos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: none;
+    }
+    button {
+      display: inline-block;
+      margin-right: 10px;
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .output {
+      margin-top: 20px;
+      background: #f9f9f9;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      min-height: 100px;
+    }
+  </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Substituir Números Romanos</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                  <li class="nav-item"><a class="nav-link" href="Capitulador.html">Ir para Capitulador</a></li>
+                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor de Textos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir Números Romanos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Aplicador de Emoções</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <h1>Substituir Números Romanos</h1>
+    <div class="container">
+        <textarea id="inputText" placeholder="Digite o texto contendo números romanos..."></textarea>
+        <br>
+        <label for="tipoNumero">Escolha o tipo de número:</label>
+        <select id="tipoNumero" style="margin-bottom: 10px; padding: 5px;">
+            <option value="ordinal">Números Ordinais</option>
+            <option value="cardinal">Números Cardinais</option>
+        </select>
+        <br>
+        <button onclick="substituirNumeros()">Substituir números</button>
+        <button onclick="copiarTexto()">Copiar texto</button>
+        <button onclick="resetarPagina()">Limpar / Resetar</button>
+        <div class="output">
+            <strong>Texto alterado:</strong>
+            <textarea id="outputText" readonly placeholder="O texto alterado aparecerá aqui..."></textarea>
+        </div>
+    </div>
+    <script>
+        // Mapeamento de números romanos para ordinais por extenso
+        const numerosRomanosOrdinais = {
+            "I": "primeiro", "II": "segundo", "III": "terceiro", "IV": "quarto", "V": "quinto",
+            "VI": "sexto", "VII": "sétimo", "VIII": "oitavo", "IX": "nono", "X": "décimo",
+            "XI": "décimo primeiro", "XII": "décimo segundo", "XIII": "décimo terceiro", "XIV": "décimo quarto",
+            "XV": "décimo quinto", "XVI": "décimo sexto", "XVII": "décimo sétimo", "XVIII": "décimo oitavo",
+            "XIX": "décimo nono", "XX": "vigésimo", "XXI": "vigésimo primeiro", "XXII": "vigésimo segundo",
+            "XXIII": "vigésimo terceiro", "XXIV": "vigésimo quarto", "XXV": "vigésimo quinto",
+            "XXVI": "vigésimo sexto", "XXVII": "vigésimo sétimo", "XXVIII": "vigésimo oitavo",
+            "XXIX": "vigésimo nono", "XXX": "trigésimo", "XXXI": "trigésimo primeiro", "XXXII": "trigésimo segundo",
+            "XXXIII": "trigésimo terceiro", "XXXIV": "trigésimo quarto", "XXXV": "trigésimo quinto",
+            "XXXVI": "trigésimo sexto", "XXXVII": "trigésimo sétimo", "XXXVIII": "trigésimo oitavo",
+            "XXXIX": "trigésimo nono", "XL": "quadragésimo", "XLI": "quadragésimo primeiro",
+            "XLII": "quadragésimo segundo", "XLIII": "quadragésimo terceiro", "XLIV": "quadragésimo quarto",
+            "XLV": "quadragésimo quinto", "XLVI": "quadragésimo sexto", "XLVII": "quadragésimo sétimo",
+            "XLVIII": "quadragésimo oitavo", "XLIX": "quadragésimo nono", "L": "quinquagésimo",
+            "LI": "quinquagésimo primeiro", "LII": "quinquagésimo segundo", "LIII": "quinquagésimo terceiro",
+            "LIV": "quinquagésimo quarto", "LV": "quinquagésimo quinto", "LVI": "quinquagésimo sexto",
+            "LVII": "quinquagésimo sétimo", "LVIII": "quinquagésimo oitavo", "LIX": "quinquagésimo nono",
+            "LX": "sexagésimo", "LXI": "sexagésimo primeiro", "LXII": "sexagésimo segundo",
+            "LXIII": "sexagésimo terceiro", "LXIV": "sexagésimo quarto", "LXV": "sexagésimo quinto",
+            "LXVI": "sexagésimo sexto", "LXVII": "sexagésimo sétimo", "LXVIII": "sexagésimo oitavo",
+            "LXIX": "sexagésimo nono", "LXX": "septuagésimo", "LXXI": "septuagésimo primeiro",
+            "LXXII": "septuagésimo segundo", "LXXIII": "septuagésimo terceiro", "LXXIV": "septuagésimo quarto",
+            "LXXV": "septuagésimo quinto", "LXXVI": "septuagésimo sexto", "LXXVII": "septuagésimo sétimo",
+            "LXXVIII": "septuagésimo oitavo", "LXXIX": "septuagésimo nono", "LXXX": "octogésimo",
+            "LXXXI": "octogésimo primeiro", "LXXXII": "octogésimo segundo", "LXXXIII": "octogésimo terceiro",
+            "LXXXIV": "octogésimo quarto", "LXXXV": "octogésimo quinto", "LXXXVI": "octogésimo sexto",
+            "LXXXVII": "octogésimo sétimo", "LXXXVIII": "octogésimo oitavo", "LXXXIX": "octogésimo nono",
+            "XC": "nonagésimo", "XCI": "nonagésimo primeiro", "XCII": "nonagésimo segundo",
+            "XCIII": "nonagésimo terceiro", "XCIV": "nonagésimo quarto", "XCV": "nonagésimo quinto",
+            "XCVI": "nonagésimo sexto", "XCVII": "nonagésimo sétimo", "XCVIII": "nonagésimo oitavo",
+            "XCIX": "nonagésimo nono", "C": "centésimo", "CI": "centésimo primeiro", "CII": "centésimo segundo",
+            "CIII": "centésimo terceiro", "CIV": "centésimo quarto", "CV": "centésimo quinto",
+            "CVI": "centésimo sexto", "CVII": "centésimo sétimo", "CVIII": "centésimo oitavo",
+            "CIX": "centésimo nono", "CX": "centésimo décimo", "CXI": "centésimo décimo primeiro",
+            "CXII": "centésimo décimo segundo", "CXIII": "centésimo décimo terceiro", "CXIV": "centésimo décimo quarto",
+            "CXV": "centésimo décimo quinto", "CXVI": "centésimo décimo sexto", "CXVII": "centésimo décimo sétimo",
+            "CXVIII": "centésimo décimo oitavo", "CXIX": "centésimo décimo nono", "CXX": "centésimo vigésimo",
+            "CXXI": "centésimo vigésimo primeiro", "CXXII": "centésimo vigésimo segundo",
+            "CXXIII": "centésimo vigésimo terceiro", "CXXIV": "centésimo vigésimo quarto",
+            "CXXV": "centésimo vigésimo quinto", "CXXVI": "centésimo vigésimo sexto",
+            "CXXVII": "centésimo vigésimo sétimo", "CXXVIII": "centésimo vigésimo oitavo",
+            "CXXIX": "centésimo vigésimo nono", "CXXX": "centésimo trigésimo",
+            "CXXXI": "centésimo trigésimo primeiro", "CXXXII": "centésimo trigésimo segundo",
+            "CXXXIII": "centésimo trigésimo terceiro", "CXXXIV": "centésimo trigésimo quarto",
+            "CXXXV": "centésimo trigésimo quinto", "CXXXVI": "centésimo trigésimo sexto",
+            "CXXXVII": "centésimo trigésimo sétimo", "CXXXVIII": "centésimo trigésimo oitavo",
+            "CXXXIX": "centésimo trigésimo nono", "CXL": "centésimo quadragésimo",
+            "CXLI": "centésimo quadragésimo primeiro", "CXLII": "centésimo quadragésimo segundo",
+            "CXLIII": "centésimo quadragésimo terceiro", "CXLIV": "centésimo quadragésimo quarto",
+            "CXLV": "centésimo quadragésimo quinto", "CXLVI": "centésimo quadragésimo sexto",
+            "CXLVII": "centésimo quadragésimo sétimo", "CXLVIII": "centésimo quadragésimo oitavo",
+            "CXLIX": "centésimo quadragésimo nono", "CL": "centésimo quinquagésimo"
+        };
+
+        // Mapeamento de números romanos para cardinais por extenso
+        const numerosRomanosCardinais = {
+            "I": "um", "II": "dois", "III": "três", "IV": "quatro", "V": "cinco",
+            "VI": "seis", "VII": "sete", "VIII": "oito", "IX": "nove", "X": "dez",
+            "XI": "onze", "XII": "doze", "XIII": "treze", "XIV": "catorze", "XV": "quinze",
+            "XVI": "dezesseis", "XVII": "dezessete", "XVIII": "dezoito", "XIX": "dezenove",
+            "XX": "vinte", "XXI": "vinte e um", "XXII": "vinte e dois", "XXIII": "vinte e três",
+            "XXIV": "vinte e quatro", "XXV": "vinte e cinco", "XXVI": "vinte e seis",
+            "XXVII": "vinte e sete", "XXVIII": "vinte e oito", "XXIX": "vinte e nove",
+            "XXX": "trinta", "XXXI": "trinta e um", "XXXII": "trinta e dois", "XXXIII": "trinta e três",
+            "XXXIV": "trinta e quatro", "XXXV": "trinta e cinco", "XXXVI": "trinta e seis",
+            "XXXVII": "trinta e sete", "XXXVIII": "trinta e oito", "XXXIX": "trinta e nove",
+            "XL": "quarenta", "XLI": "quarenta e um", "XLII": "quarenta e dois", "XLIII": "quarenta e três",
+            "XLIV": "quarenta e quatro", "XLV": "quarenta e cinco", "XLVI": "quarenta e seis",
+            "XLVII": "quarenta e sete", "XLVIII": "quarenta e oito", "XLIX": "quarenta e nove",
+            "L": "cinquenta", "LI": "cinquenta e um", "LII": "cinquenta e dois", "LIII": "cinquenta e três",
+            "LIV": "cinquenta e quatro", "LV": "cinquenta e cinco", "LVI": "cinquenta e seis",
+            "LVII": "cinquenta e sete", "LVIII": "cinquenta e oito", "LIX": "cinquenta e nove",
+            "LX": "sessenta", "LXI": "sessenta e um", "LXII": "sessenta e dois", "LXIII": "sessenta e três",
+            "LXIV": "sessenta e quatro", "LXV": "sessenta e cinco", "LXVI": "sessenta e seis",
+            "LXVII": "sessenta e sete", "LXVIII": "sessenta e oito", "LXIX": "sessenta e nove",
+            "LXX": "setenta", "LXXI": "setenta e um", "LXXII": "setenta e dois", "LXXIII": "setenta e três",
+            "LXXIV": "setenta e quatro", "LXXV": "setenta e cinco", "LXXVI": "setenta e seis",
+            "LXXVII": "setenta e sete", "LXXVIII": "setenta e oito", "LXXIX": "setenta e nove",
+            "LXXX": "oitenta", "LXXXI": "oitenta e um", "LXXXII": "oitenta e dois", "LXXXIII": "oitenta e três",
+            "LXXXIV": "oitenta e quatro", "LXXXV": "oitenta e cinco", "LXXXVI": "oitenta e seis",
+            "LXXXVII": "oitenta e sete", "LXXXVIII": "oitenta e oito", "LXXXIX": "oitenta e nove",
+            "XC": "noventa", "XCI": "noventa e um", "XCII": "noventa e dois", "XCIII": "noventa e três",
+            "XCIV": "noventa e quatro", "XCV": "noventa e cinco", "XCVI": "noventa e seis",
+            "XCVII": "noventa e sete", "XCVIII": "noventa e oito", "XCIX": "noventa e nove",
+            "C": "cem", "CI": "cento e um", "CII": "cento e dois", "CIII": "cento e três",
+            "CIV": "cento e quatro", "CV": "cento e cinco", "CVI": "cento e seis", "CVII": "cento e sete",
+            "CVIII": "cento e oito", "CIX": "cento e nove", "CX": "cento e dez", "CXI": "cento e onze",
+            "CXII": "cento e doze", "CXIII": "cento e treze", "CXIV": "cento e catorze", "CXV": "cento e quinze",
+            "CXVI": "cento e dezesseis", "CXVII": "cento e dezessete", "CXVIII": "cento e dezoito",
+            "CXIX": "cento e dezenove", "CXX": "cento e vinte", "CXXI": "cento e vinte e um",
+            "CXXII": "cento e vinte e dois", "CXXIII": "cento e vinte e três", "CXXIV": "cento e vinte e quatro",
+            "CXXV": "cento e vinte e cinco", "CXXVI": "cento e vinte e seis", "CXXVII": "cento e vinte e sete",
+            "CXXVIII": "cento e vinte e oito", "CXXIX": "cento e vinte e nove", "CXXX": "cento e trinta",
+            "CXXXI": "cento e trinta e um", "CXXXII": "cento e trinta e dois", "CXXXIII": "cento e trinta e três",
+            "CXXXIV": "cento e trinta e quatro", "CXXXV": "cento e trinta e cinco", "CXXXVI": "cento e trinta e seis",
+            "CXXXVII": "cento e trinta e sete", "CXXXVIII": "cento e trinta e oito", "CXXXIX": "cento e trinta e nove",
+            "CXL": "cento e quarenta", "CXLI": "cento e quarenta e um", "CXLII": "cento e quarenta e dois",
+            "CXLIII": "cento e quarenta e três", "CXLIV": "cento e quarenta e quatro", "CXLV": "cento e quarenta e cinco",
+            "CXLVI": "cento e quarenta e seis", "CXLVII": "cento e quarenta e sete", "CXLVIII": "cento e quarenta e oito",
+            "CXLIX": "cento e quarenta e nove", "CL": "cento e cinquenta"
+        };
+
+        function substituirNumeros() {
+            const inputText = document.getElementById("inputText").value;
+            const tipoNumero = document.getElementById("tipoNumero").value;
+            const outputTextElement = document.getElementById("outputText");
+
+            // Escolhe o mapeamento correto com base na seleção do usuário
+            const numerosRomanos = tipoNumero === "ordinal" ? numerosRomanosOrdinais : numerosRomanosCardinais;
+
+            // Substituir números romanos pelo extenso correspondente
+            let resultado = inputText.replace(/\b(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII|XIII|XIV|XV|XVI|XVII|XVIII|XIX|XX|XXI|XXII|XXIII|XXIV|XXV|XXVI|XXVII|XXVIII|XXIX|XXX|XXXI|XXXII|XXXIII|XXXIV|XXXV|XXXVI|XXXVII|XXXVIII|XXXIX|XL|XLI|XLII|XLIII|XLIV|XLV|XLVI|XLVII|XLVIII|XLIX|L|LI|LII|LIII|LIV|LV|LVI|LVII|LVIII|LIX|LX|LXI|LXII|LXIII|LXIV|LXV|LXVI|LXVII|LXVIII|LXIX|LXX|LXXI|LXXII|LXXIII|LXXIV|LXXV|LXXVI|LXXVII|LXXVIII|LXXIX|LXXX|LXXXI|LXXXII|LXXXIII|LXXXIV|LXXXV|LXXXVI|LXXXVII|LXXXVIII|LXXXIX|XC|XCI|XCII|XCIII|XCIV|XCV|XCVI|XCVII|XCVIII|XCIX|C|CI|CII|CIII|CIV|CV|CVI|CVII|CVIII|CIX|CX|CXI|CXII|CXIII|CXIV|CXV|CXVI|CXVII|CXVIII|CXIX|CXX|CXXI|CXXII|CXXIII|CXXIV|CXXV|CXXVI|CXXVII|CXXVIII|CXXIX|CXXX|CXXXI|CXXXII|CXXXIII|CXXXIV|CXXXV|CXXXVI|CXXXVII|CXXXVIII|CXXXIX|CXL|CXLI|CXLII|CXLIII|CXLIV|CXLV|CXLVI|CXLVII|CXLVIII|CXLIX|CL)\b/g, (match) => {
+                return numerosRomanos[match] + ".";
+            });
+
+            outputTextElement.value = resultado;
+        }
+
+        function copiarTexto() {
+            const outputTextElement = document.getElementById("outputText");
+            outputTextElement.select();
+            document.execCommand("copy");
+            alert("Texto copiado para a área de transferência!");
+        }
+
+        function resetarPagina() {
+            document.getElementById("inputText").value = "";
+            document.getElementById("outputText").value = "";
+        }
+    </script>
+</body>
+</html>

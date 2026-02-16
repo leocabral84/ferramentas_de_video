@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="imagem.ico" type="image/x-icon">
+    <title>Inserir Pausas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin-top: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            margin-left: 10px;
+        }
+        .button-group {
+            margin-top: 10px;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        /* Estilo para a mensagem automática */
+        #message-box {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #message-box.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        /* Estilo para o contador de caracteres */
+        #contador-caracteres {
+            font-size: 0.9em;
+            color: #6c757d; /* Cor cinza suave */
+        }
+        /* Estilo para a área de texto dividido */
+        #textoDividido {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+
+        /* Estilo para o mostrador de posição */
+        #posicao-partes {
+            font-size: 0.9em;
+            color: #6c757d; /* Cor cinza suave */
+            margin-top: 5px;
+        }
+
+        /* Estilo para os botões de navegação */
+        button[onclick^="navegarParte"] {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Pausas</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Ir para Capitulador</a></li>
+                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor de Textos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir Números Romanos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Aplicador de Emoções</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Título da Página -->
+    <h2 class="text-center mt-4">Inserir Pausas no Texto</h2>
+
+    <!-- Container Principal -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <textarea id="textoOriginal" class="form-control" placeholder="Cole o texto original aqui..."></textarea>
+                
+                <!-- Configurações de Tempo -->
+                <div class="input-group">
+                    <label for="tempoFinal">Tempo após pontuação final (., ?, !) 0,8:&nbsp</label>
+                    <input type="number" id="tempoFinal" value="0.8" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="tempoDoisPontos">Tempo após dois pontos (:) 0,8:&nbsp</label>
+                    <input type="number" id="tempoDoisPontos" value="0.8" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="tempoVirgula">Tempo após vírgula (,) 0,5:&nbsp</label>
+                    <input type="number" id="tempoVirgula" value="0.5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="tempoReticencias">Tempo após reticências (...) 0,5:&nbsp</label>
+                    <input type="number" id="tempoReticencias" value="0.5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="tempoQuebraLinha">Tempo após quebra de linha 0,0:&nbsp</label>
+                    <input type="number" id="tempoQuebraLinha" value="0.0" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="tempoTravessao">Tempo após travessão (—) 0,5:&nbsp</label>
+                    <input type="number" id="tempoTravessao" value="0.5" step="0.1">
+                </div>
+                
+                <div class="button-group text-center">
+                    <button class="btn btn-primary" onclick="adicionarPausas()">Adicionar Pausas</button>
+                    <button class="btn btn-danger" onclick="limparTexto()">Limpar</button>
+                </div>
+                <textarea id="textoAlterado" class="form-control" placeholder="Texto com pausas será exibido aqui..." readonly></textarea>
+                <small id="contador-caracteres">0 caracteres</small>
+                <div class="button-group text-center">
+                    <button class="btn btn-success" onclick="copiarTexto()">Copiar Texto com Pausas</button>
+                </div>
+
+                <!-- Divisão de Texto -->
+                <div class="mt-4">
+                    <label for="maxCaracteres">Dividir em quantos caracteres?</label>
+                    <input type="number" id="maxCaracteres" value="2000" min="1" step="1" class="form-control w-25 d-inline-block">
+                    <button class="btn btn-primary ml-2" onclick="dividirTexto()">Dividir</button>
+                </div>
+
+                <!-- Área de Visualização do Texto Dividido -->
+                <div class="mt-4">
+                    <textarea id="textoDividido" class="form-control" placeholder="Texto dividido será exibido aqui..." readonly></textarea>
+                    <small id="contador-divisao">0 de 0</small>
+                </div>
+
+                <!-- Navegação entre Partes -->
+                <div class="mt-2 text-center">
+                    <button class="btn btn-secondary mr-2" onclick="navegarParte(-1)" disabled><</button>
+                    <span id="posicao-partes"></span>
+                    <button class="btn btn-secondary ml-2" onclick="navegarParte(1)" disabled>></button>
+                </div>
+
+                <!-- Botão Copiar Texto Dividido -->
+                <div class="mt-2 text-center">
+                    <button onclick="copiarParteAtual()" id="btnCopiarParteAtual" class="btn btn-primary">Copiar Parte Atual</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Caixa de Mensagem Automática -->
+    <div id="message-box" class="hidden">
+        <i class="fas fa-info-circle"></i> Texto com pausas copiado!
+    </div>
+
+    <!-- Script -->
+<script>
+    // Função para atualizar o contador de caracteres
+function atualizarContador() {
+    const textoAlterado = document.getElementById("textoAlterado").value;
+    const contadorElemento = document.getElementById("contador-caracteres");
+    contadorElemento.textContent = `${textoAlterado.length} caracteres`;
+}
+
+// Função principal para adicionar pausas ao texto
+function adicionarPausas() {
+    const textoOriginal = document.getElementById("textoOriginal").value;
+
+    // Obter os tempos configurados pelo usuário
+    const tempoFinal = document.getElementById("tempoFinal").value.trim() === "" ? 0.8 : parseFloat(document.getElementById("tempoFinal").value);
+    const tempoDoisPontos = document.getElementById("tempoDoisPontos").value.trim() === "" ? 0.8 : parseFloat(document.getElementById("tempoDoisPontos").value);
+    const tempoVirgula = document.getElementById("tempoVirgula").value.trim() === "" ? 0.5 : parseFloat(document.getElementById("tempoVirgula").value);
+    const tempoReticencias = document.getElementById("tempoReticencias").value.trim() === "" ? 0.5 : parseFloat(document.getElementById("tempoReticencias").value);
+    const tempoQuebraLinha = document.getElementById("tempoQuebraLinha").value.trim() === "" ? 0.0 : parseFloat(document.getElementById("tempoQuebraLinha").value);
+    const tempoTravessao = document.getElementById("tempoTravessao").value.trim() === "" ? 0.5 : parseFloat(document.getElementById("tempoTravessao").value);
+
+    // Aplicar as regras de inserção de pausas com os tempos configurados
+    let textoAlterado = textoOriginal;
+
+    if (tempoFinal !== 0) {
+        textoAlterado = textoAlterado.replace(/([.!?])\s+/g, `$1<break time="${tempoFinal}s" /> `);
+    }
+    if (tempoDoisPontos !== 0) {
+        textoAlterado = textoAlterado.replace(/(:)\s+/g, `$1<break time="${tempoDoisPontos}s" /> `);
+    }
+    if (tempoVirgula !== 0) {
+        textoAlterado = textoAlterado.replace(/(,)\s+/g, `,<break time="${tempoVirgula}s" /> `);
+    }
+    if (tempoReticencias !== 0) {
+        textoAlterado = textoAlterado.replace(/(\.\.\.)\s+/g, `$1<break time="${tempoReticencias}s" /> `);
+    }
+    if (tempoQuebraLinha !== 0) {
+        textoAlterado = textoAlterado.replace(/\n/g, `<break time="${tempoQuebraLinha}s" />\n`);
+    }
+    if (tempoTravessao !== 0) {
+        textoAlterado = textoAlterado.replace(/(—)\s+/g, `—<break time="${tempoTravessao}s" /> `);
+    }
+
+    // Atualizar o texto alterado na caixa de saída
+    document.getElementById("textoAlterado").value = textoAlterado;
+
+    // Atualizar o contador de caracteres
+    atualizarContador();
+}
+
+// Função para limpar todos os campos
+function limparTexto() {
+    document.getElementById("textoOriginal").value = "";
+    document.getElementById("textoAlterado").value = "";
+    document.getElementById("textoDividido").value = "";
+
+    // Resetar os contadores
+    document.getElementById("contador-caracteres").textContent = "0 caracteres";
+    document.getElementById("contador-divisao").textContent = "0 partes";
+    document.getElementById("posicao-partes").textContent = "";
+
+    // Desabilitar controles de navegação e cópia
+    habilitarControlesDivisao(false);
+}
+
+// Função para copiar o texto com pausas
+function copiarTexto() {
+    const textoAlterado = document.getElementById("textoAlterado");
+    textoAlterado.select();
+    textoAlterado.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+
+    // Exibir mensagem de sucesso
+    showSuccessMessage("Texto com pausas copiado!");
+}
+
+// Função para exibir uma mensagem automática
+function showSuccessMessage(message) {
+    const messageBox = document.getElementById("message-box");
+    messageBox.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+    messageBox.classList.remove("hidden");
+
+    // Esconder a mensagem após 3 segundos
+    setTimeout(() => {
+        messageBox.classList.add("hidden");
+    }, 3000);
+}
+
+// Função para dividir o texto em partes
+function dividirTexto() {
+    const textoAlterado = document.getElementById("textoAlterado").value;
+    const maxCaracteres = parseInt(document.getElementById("maxCaracteres").value);
+
+    if (!textoAlterado || maxCaracteres <= 0) {
+        alert("Insira um texto válido e um número de caracteres positivo.");
+        return;
+    }
+
+    // Dividir o texto respeitando pontos e <break>
+    const partes = [];
+    let inicio = 0;
+
+    while (inicio < textoAlterado.length) {
+        let fim = Math.min(inicio + maxCaracteres, textoAlterado.length);
+        let substring = textoAlterado.substring(inicio, fim);
+
+        // Encontrar a última posição válida para divisão (pontuação seguida de <break>)
+        let ultimaPosicaoValida = -1;
+
+        // Verificar todas as pontuações possíveis
+        const pontuacoes = [".<break", "?<break", "!<break", ":<break", ",<break", "...<break", "—<break"];
+        for (const pontuacao of pontuacoes) {
+            const posicao = substring.lastIndexOf(pontuacao);
+            if (posicao !== -1) {
+                // Garantir que o <break> seja completo (incluindo o "/>")
+                const posicaoFimBreak = substring.indexOf("/>", posicao) + "/>".length;
+                if (posicaoFimBreak > 0 && posicaoFimBreak <= substring.length) {
+                    ultimaPosicaoValida = Math.max(ultimaPosicaoValida, posicaoFimBreak);
+                }
+            }
+        }
+
+        // Se houver uma posição válida, ajustar o fim para essa posição
+        if (ultimaPosicaoValida !== -1) {
+            fim = inicio + ultimaPosicaoValida;
+        } else {
+            // Se não houver pontuação seguida de <break>, usar o limite máximo
+            fim = inicio + maxCaracteres;
+        }
+
+        // Adicionar a parte atual ao array de partes
+        partes.push(textoAlterado.substring(inicio, fim));
+        inicio = fim;
+    }
+
+    // Salvar as partes no dataset do campo de texto dividido
+    const textoDividido = document.getElementById("textoDividido");
+    textoDividido.dataset.partes = JSON.stringify(partes);
+    textoDividido.dataset.indiceAtual = 0; // Resetar o índice para a primeira parte
+
+    // Exibir a primeira parte
+    exibirParteDividida(partes, 0);
+    document.getElementById("posicao-partes").textContent = `1 de ${partes.length}`;
+    document.getElementById("contador-divisao").textContent = `${partes.length} partes`;
+
+    // Habilitar controles de navegação e cópia
+    habilitarControlesDivisao(partes.length > 0);
+}
+
+// Função para exibir uma parte específica do texto dividido
+function exibirParteDividida(partes, indice) {
+    const textoDividido = document.getElementById("textoDividido");
+    textoDividido.value = partes[indice];
+    document.getElementById("posicao-partes").textContent = `${indice + 1} de ${partes.length}`;
+}
+
+// Função para navegar entre as partes
+function navegarParte(delta) {
+    const textoDividido = document.getElementById("textoDividido");
+    const partes = JSON.parse(textoDividido.dataset.partes);
+    let indiceAtual = parseInt(textoDividido.dataset.indiceAtual);
+
+    // Atualizar o índice atual com base no delta
+    indiceAtual += delta;
+
+    // Garantir que o índice fique dentro dos limites
+    indiceAtual = Math.max(0, Math.min(indiceAtual, partes.length - 1));
+
+    // Atualizar o dataset com o novo índice
+    textoDividido.dataset.indiceAtual = indiceAtual;
+
+    // Exibir a parte atualizada
+    exibirParteDividida(partes, indiceAtual);
+}
+
+
+
+// Função para copiar a parte atual do texto dividido
+function copiarParteAtual() {
+            const textoDividido = document.getElementById("textoDividido");
+            const partes = JSON.parse(textoDividido.dataset.partes);
+            const indiceAtual = parseInt(textoDividido.dataset.indiceAtual);
+
+            if (!partes || partes.length === 0) {
+                alert("Não há partes divididas para copiar.");
+                return;
+            }
+
+            const parteAtual = partes[indiceAtual];
+
+            navigator.clipboard.writeText(parteAtual).then(() => {
+                // Exibir mensagem de sucesso
+                showSuccessMessage("Parte atual copiada!");
+            }).catch(err => {
+                console.error("Erro ao copiar:", err);
+                alert("Ocorreu um erro ao copiar a parte atual.");
+            });
+        }
+
+        // Função para habilitar/desabilitar controles de navegação
+        function habilitarControlesDivisao(habilitar) {
+            const botoesNavegacao = document.querySelectorAll("[onclick^='navegarParte']");
+            const botaoCopiar = document.querySelector("#btnCopiarParteAtual");
+
+            botoesNavegacao.forEach(botao => botao.disabled = !habilitar);
+            botaoCopiar.disabled = !habilitar;
+        }
+
+</script>
+</body>
+</html>

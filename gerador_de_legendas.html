@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerador de Legendas SRT</title>
+  <!-- Tailwind via CDN para layout rápido -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* barra de rolagem mais discreta */
+    #captionBox::-webkit-scrollbar { width: 6px; }
+    #captionBox::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+  </style>
+  <!-- Vosk-browser (voz‑>texto offline) – ~15 MB. Modelos devem ser servidos pelo mesmo host. -->
+  <script src="https://unpkg.com/vosk-browser@0.0.13/dist/bundle.js"></script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 p-4">
+  <div class="max-w-5xl mx-auto space-y-4">
+    <!-- Player e controles principais -->
+    <div class="flex items-center gap-2">
+      <input id="audioInput" type="file" accept="audio/mpeg" class="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-indigo-600 file:text-white hover:file:bg-indigo-700" />
+      <audio id="player" controls class="flex-1 h-10"></audio>
+      <button id="btnCopy" class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">COPIAR</button>
+      <button id="btnSave" class="px-4 py-2 rounded bg-amber-600 text-white hover:bg-amber-700">SALVAR SRT</button>
+    </div>
+
+    <!-- Caixa de legendas -->
+    <textarea id="captionBox" rows="18" class="w-full p-4 rounded border border-slate-300 bg-white resize-none leading-relaxed font-mono" placeholder="As legendas aparecerão aqui..." readonly></textarea>
+    <p class="text-xs text-slate-500">Dica: Os modelos Vosk (~50 MB) precisam estar no diretório <code>./model</code>. Consulte README no código.</p>
+  </div>
+
+<script>
+/**************************************************
+ * PARAMETROS BÁSICOS DO GERADOR SRT
+ *************************************************/
+const MAX_CHARS = 42;        // limite de caracteres por linha
+const MAX_DURATION = 6;      // duração máxima de um bloco (s)
+
+/**************************************************
+ * UTILITÁRIOS
+ *************************************************/
+function formatTime(seconds) {
+  const ms = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
+  const s = Math.floor(seconds) % 60;
+  const m = Math.floor(seconds / 60) % 60;
+  const h = Math.floor(seconds / 3600);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${ms}`;
+}
+
+function download(filename, text) {
+  const blob = new Blob([text], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+/**************************************************
+ * INICIALIZAÇÃO VOSK
+ * – Carrega modelo pequeno (vosk-model-small-pt-0.22) em ./model.
+ *************************************************/
+let recognizer;
+(async () => {
+  const { VoskModel, KaldiRecognizer } = await VoskBrowser;
+  const model = new VoskModel('./model'); // coloque os arquivos do modelo aqui
+  recognizer = new KaldiRecognizer({ model, sampleRate: 48000 });
+})();
+
+/**************************************************
+ * LÓGICA PRINCIPAL
+ *************************************************/
+const audioInput = document.getElementById('audioInput');
+const player = document.getElementById('player');
+const captionBox = document.getElementById('captionBox');
+let segments = [];
+let captionIndex = 1;
+
+// 1) Selecionar arquivo mp3 e carregar no player
+audioInput.addEventListener('change', () => {
+  const file = audioInput.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  player.src = url;
+  player.load();
+  resetState();
+});
+
+function resetState(){
+  segments = [];
+  captionIndex = 1;
+  captionBox.value = '';
+}
+
+// 2) Extrair samples do audio conforme toca e alimentar o recognizer
+let audioCtx, sourceNode, processor;
+player.addEventListener('play', () => {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaElementSource(player);
+    processor = audioCtx.createScriptProcessor(4096, 2, 2);
+    sourceNode.connect(processor);
+    processor.connect(audioCtx.destination);
+
+    let startTime = 0;
+    let bufferText = '';
+
+    processor.onaudioprocess = e => {
+      if (player.paused) return;
+      const data = e.inputBuffer.getChannelData(0);
+      recognizer.acceptWaveform(data);
+      const res = recognizer.result();
+      if (res && res.text) {
+        const now = player.currentTime;
+        bufferText += ' ' + res.text;
+        const duration = now - startTime;
+        const charLimit = bufferText.trim().length >= MAX_CHARS;
+        if (duration >= MAX_DURATION || charLimit) {
+          finalizeCaption(bufferText.trim(), startTime, now);
+          bufferText = '';
+          startTime = now;
+        }
+      }
+    };
+  }
+});
+
+player.addEventListener('ended', () => {
+  // flush último segmento
+  if(recognizer){
+    const leftover = recognizer.finalResult().text.trim();
+    if(leftover){
+      finalizeCaption(leftover, segments.at(-1)?.endTime ?? 0, player.duration);
+    }
+  }
+  captionBox.scrollTop = captionBox.scrollHeight;
+});
+
+function finalizeCaption(text, start, end){
+  if(!text) return;
+  const caption = `${captionIndex++}\n${formatTime(start)} --> ${formatTime(end)}\n ${text}\n\n`;
+  segments.push({text,startTime:start,endTime:end});
+  captionBox.value += caption;
+  captionBox.scrollTop = captionBox.scrollHeight;
+}
+
+/**************************************************
+ * BOTÕES DE UTILIDADE
+ *************************************************/
+document.getElementById('btnCopy').addEventListener('click', () => {
+  navigator.clipboard.writeText(captionBox.value);
+});
+
+document.getElementById('btnSave').addEventListener('click', () => {
+  if (!captionBox.value.trim()) return;
+  const name = audioInput.files[0]?.name.replace(/\.[^/.]+$/, '') || 'legendas';
+  download(`${name}.srt`, captionBox.value.trim());
+});
+</script>
+</body>
+</html>
+

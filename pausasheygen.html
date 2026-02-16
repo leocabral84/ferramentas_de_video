@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="imagem.ico" type="image/x-icon">
+    <title>Inserir Relógios e Dividir Texto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            width: 80%;
+            gap: 30px;
+            margin: auto;
+        }
+        .section {
+            width: 100%;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: left;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        button {
+            width: 200px;
+        }
+        .highlight {
+            background-color: yellow;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .arrow {
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Inserir Pausas</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Ir para Capitulador</a></li>
+                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor de Textos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir Números Romanos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Aplicador de Emoções</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Título da Página -->
+    <h2 class="text-center mt-4">Inserir Relógios e Dividir Texto</h2>
+    <!-- Container Principal -->
+    <div class="container mt-4">
+        <!-- Seção de Texto Original -->
+        <div class="section">
+            <label for="originalText" class="form-label">Texto Original:</label>
+            <textarea id="originalText" class="form-control" placeholder="Insira o texto original aqui..."></textarea>
+        </div>
+        <!-- Botões de Ação -->
+        <div class="controls">
+            <button class="btn btn-primary" onclick="insertClocks()">Inserir Relógios</button>
+            <button class="btn btn-info" onclick="copyModifiedText()">Copiar Texto Modificado</button>
+            <button class="btn btn-danger" onclick="clearData()">Limpar Dados</button>
+        </div>
+        <!-- Seção de Texto Modificado -->
+        <div class="section">
+            <label for="modifiedText" class="form-label">Texto Modificado:</label>
+            <textarea id="modifiedText" class="form-control" readonly placeholder="Texto modificado aparecerá aqui..."></textarea>
+        </div>
+        <!-- Divisão por Caracteres -->
+        <div class="section">
+            <label for="charLimit" class="form-label">Número Máximo de Caracteres por Parte:</label>
+            <input type="number" id="charLimit" class="form-control" value="2000" min="1">
+            <button class="btn btn-success mt-2" onclick="splitByChars()">Dividir Texto por Caracteres</button>
+        </div>
+        <!-- Navegação entre Partes Divididas -->
+        <div class="section nav-buttons">
+            <span class="arrow" onclick="prevPart()">⬅</span>
+            <input type="text" id="currentPartIndex" class="form-control" style="width: 60px; text-align: center;" readonly>
+            <span id="totalPartsCount">de 0</span>
+            <span class="arrow" onclick="nextPart()">➡</span>
+            <button class="btn btn-secondary" onclick="copyCurrentPart()">Copiar Parte Atual</button>
+        </div>
+        <!-- Resultado da Divisão -->
+        <table id="resultTable" class="table table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Texto Dividido</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <!-- Script -->
+    <script>
+        let parts = [];
+        let currentIndex = 0;
+
+        // Função para inserir relógios após pontuação
+        function insertClocks() {
+            const originalText = document.getElementById("originalText").value;
+            if (!originalText) {
+                alert("Insira um texto original antes de prosseguir.");
+                return;
+            }
+            const modifiedText = originalText.replace(/([.!?])/g, "$1 🕓");
+            document.getElementById("modifiedText").value = modifiedText;
+        }
+
+        // Função para copiar o texto modificado
+        function copyModifiedText() {
+            const modifiedText = document.getElementById("modifiedText");
+            if (!modifiedText.value) {
+                alert("Não há texto modificado para copiar.");
+                return;
+            }
+            modifiedText.select();
+            document.execCommand("copy");
+            alert("Texto modificado copiado!");
+        }
+
+        // Função para limpar os dados
+        function clearData() {
+            document.getElementById("originalText").value = "";
+            document.getElementById("modifiedText").value = "";
+            document.getElementById("charLimit").value = "2000";
+            document.getElementById("resultTable").getElementsByTagName("tbody")[0].innerHTML = "";
+            parts = [];
+            currentIndex = 0;
+            updateNavigation();
+        }
+
+        // Função para dividir o texto por caracteres, respeitando o último relógio e evitando cortar palavras
+        function splitByChars() {
+            const modifiedText = document.getElementById("modifiedText").value;
+            if (!modifiedText) {
+                alert("Insira ou processe o texto modificado antes de dividir.");
+                return;
+            }
+            const charLimit = parseInt(document.getElementById("charLimit").value, 10);
+            if (isNaN(charLimit) || charLimit <= 0) {
+                alert("Insira um número válido de caracteres.");
+                return;
+            }
+
+            parts = [];
+            let remainingText = modifiedText.trim();
+            while (remainingText.length > 0) {
+                let chunk = remainingText.substring(0, charLimit);
+                let lastSpaceIndex = chunk.lastIndexOf(" ");
+
+                if (lastSpaceIndex === -1 || chunk.length < charLimit) {
+                    // Se não houver espaço ou o chunk for menor que o limite, forçamos a divisão no limite
+                    lastSpaceIndex = charLimit;
+                }
+
+                // Garantimos que o relógio seja incluído
+                let lastClockIndex = chunk.lastIndexOf("⏰");
+                if (lastClockIndex !== -1 && lastClockIndex < lastSpaceIndex) {
+                    lastSpaceIndex = lastClockIndex + 1;
+                }
+
+                parts.push(remainingText.substring(0, lastSpaceIndex).trim());
+                remainingText = remainingText.substring(lastSpaceIndex).trim();
+            }
+
+            populateTable();
+            showPart(0);
+        }
+
+        // Função para preencher a tabela com os resultados
+        function populateTable() {
+            let tableBody = document.getElementById("resultTable").getElementsByTagName("tbody")[0];
+            tableBody.innerHTML = "";
+            parts.forEach((part, index) => {
+                let row = tableBody.insertRow();
+                row.insertCell(0).innerText = index + 1;
+                row.insertCell(1).innerText = part;
+            });
+        }
+
+        // Função para mostrar uma parte específica
+        function showPart(index) {
+            if (parts.length > 0 && index >= 0 && index < parts.length) {
+                document.getElementById("currentPartIndex").value = String(index + 1).padStart(2, "0");
+                document.getElementById("totalPartsCount").innerText = `de ${String(parts.length).padStart(2, "0")}`;
+                currentIndex = index;
+            }
+        }
+
+        // Função para navegar para a parte anterior
+        function prevPart() {
+            if (currentIndex > 0) {
+                showPart(currentIndex - 1);
+            }
+        }
+
+        // Função para navegar para a próxima parte
+        function nextPart() {
+            if (currentIndex < parts.length - 1) {
+                showPart(currentIndex + 1);
+            }
+        }
+
+        // Função para copiar a parte atual
+        function copyCurrentPart() {
+            if (parts.length === 0) {
+                alert("Não há partes divididas para copiar.");
+                return;
+            }
+            const currentPart = parts[currentIndex];
+            navigator.clipboard.writeText(currentPart).then(() => {
+                
+            }).catch(err => {
+                console.error("Erro ao copiar:", err);
+                alert("Ocorreu um erro ao copiar a parte atual.");
+            });
+        }
+
+        // Função para atualizar a navegação
+        function updateNavigation() {
+            document.getElementById("currentPartIndex").value = "00";
+            document.getElementById("totalPartsCount").innerText = "de 00";
+        }
+
+        // ------------------------ BOTÃO VOLTAR AO TOPO ------------------------
+        let btnTopo = document.createElement("button");
+        btnTopo.id = "btnTopo";
+        btnTopo.innerHTML = "&#8679;"; // Seta para cima
+        document.body.appendChild(btnTopo);
+    
+        btnTopo.style.position = "fixed";
+        btnTopo.style.bottom = "20px";
+        btnTopo.style.right = "20px";
+        btnTopo.style.width = "50px";
+        btnTopo.style.height = "50px";
+        btnTopo.style.background = "linear-gradient(135deg, #6a11cb, #2575fc)";
+        btnTopo.style.color = "white";
+        btnTopo.style.border = "none";
+        btnTopo.style.borderRadius = "50%";
+        btnTopo.style.display = "flex";
+        btnTopo.style.alignItems = "center";
+        btnTopo.style.justifyContent = "center";
+        btnTopo.style.fontSize = "24px";
+        btnTopo.style.cursor = "pointer";
+        btnTopo.style.boxShadow = "0px 4px 6px rgba(0, 0, 0, 0.2)";
+        btnTopo.style.transition = "opacity 0.3s, transform 0.3s";
+        btnTopo.style.opacity = "0";
+        btnTopo.style.transform = "scale(0)";
+    
+        btnTopo.onclick = function() {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+    
+        window.onscroll = function() {
+            if (document.documentElement.scrollTop > 300) {
+                btnTopo.style.opacity = "1";
+                btnTopo.style.transform = "scale(1)";
+            } else {
+                btnTopo.style.opacity = "0";
+                btnTopo.style.transform = "scale(0)";
+            }
+        };
+
+
+    </script>
+</body>
+</html>

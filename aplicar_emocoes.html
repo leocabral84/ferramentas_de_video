@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="imagem.ico" type="image/x-icon">
+  <title>Aplicador de Emoções</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      resize: none;
+    }
+    button {
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .buttons-container {
+      display: flex;
+      gap: 10px;
+    }
+    .emotion-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .emotion-buttons label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Formatador de Texto</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="Capitulador.html">Ir para Capitulador</a></li>
+          <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+          <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+          <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+          <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html">Divisor de Textos</a></li>
+          <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir Números Romanos</a></li>
+          <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+          <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+          <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Aplicador de Emoções</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Título da Página -->
+  <h1>Aplicador de Emoções em Textos</h1>
+
+  <!-- Container Principal -->
+  <div class="container">
+    <!-- Seção de Entrada -->
+    <div class="text-center w-100">
+      <textarea id="inputText" class="form-control" placeholder="Cole o texto original aqui..."></textarea>
+      <div class="buttons-container mt-3">
+        <button class="btn btn-primary" onclick="applyEmotions()">Aplicar</button>
+        <button class="btn btn-danger" onclick="clearAll()">Limpar</button>
+      </div>
+    </div>
+
+    <!-- Seção de Seleção de Emoções -->
+    <div class="emotion-buttons">
+      <label>
+        <input type="checkbox" id="alegria" value="alegria">
+        <span>Alegria</span>
+      </label>
+      <label>
+        <input type="checkbox" id="tristeza" value="tristeza">
+        <span>Tristeza</span>
+      </label>
+      <label>
+        <input type="checkbox" id="raiva" value="raiva">
+        <span>Raiva</span>
+      </label>
+      <label>
+        <input type="checkbox" id="surpresa" value="surpresa">
+        <span>Surpresa</span>
+      </label>
+      <label>
+        <input type="checkbox" id="medo" value="medo">
+        <span>Medo</span>
+      </label>
+      <label>
+        <input type="checkbox" id="enfase" value="enfase">
+        <span>Ênfase</span>
+      </label>
+    </div>
+
+    <!-- Seção de Saída -->
+    <div class="text-center w-100">
+      <textarea id="outputText" class="form-control" placeholder="Texto com emoções aplicadas aparecerá aqui..." readonly></textarea>
+      <div class="buttons-container mt-3">
+        <button class="btn btn-success" onclick="copyText()">Copiar Texto</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Função para aplicar as emoções no texto
+    function applyEmotions() {
+      const inputText = document.getElementById('inputText').value.trim();
+      let outputText = inputText;
+
+      // Verifica quais emoções foram selecionadas
+      const emotions = [];
+      if (document.getElementById('alegria').checked) emotions.push('alegria');
+      if (document.getElementById('tristeza').checked) emotions.push('tristeza');
+      if (document.getElementById('raiva').checked) emotions.push('raiva');
+      if (document.getElementById('surpresa').checked) emotions.push('surpresa');
+      if (document.getElementById('medo').checked) emotions.push('medo');
+      if (document.getElementById('enfase').checked) emotions.push('enfase');
+
+      // Aplica os códigos SSML com base nas emoções selecionadas
+      for (const emotion of emotions) {
+        switch (emotion) {
+          case 'alegria':
+            outputText = `<prosody pitch="+15%" rate="fast">${outputText}</prosody>`;
+            break;
+          case 'tristeza':
+            outputText = `<prosody pitch="-10%" rate="slow" volume="soft">${outputText}</prosody>`;
+            break;
+          case 'raiva':
+            outputText = `<prosody pitch="+10%" rate="fast" volume="loud">${outputText}</prosody>`;
+            break;
+          case 'surpresa':
+            outputText = `<prosody pitch="+20%" rate="medium">${outputText}</prosody>`;
+            break;
+          case 'medo':
+            outputText = `<prosody pitch="-5%" rate="fast" volume="medium">${outputText}</prosody>`;
+            break;
+          case 'enfase':
+            outputText = `<emphasis level="strong">${outputText}</emphasis>`;
+            break;
+        }
+      }
+
+      // Exibe o texto formatado na caixa de saída
+      document.getElementById('outputText').value = outputText;
+    }
+
+    // Função para copiar o texto formatado
+    function copyText() {
+      const outputText = document.getElementById('outputText');
+      outputText.select(); // Seleciona o texto
+      document.execCommand('copy'); // Copia o texto para a área de transferência
+    
+    }
+
+    // Função para limpar todos os campos
+    function clearAll() {
+      document.getElementById('inputText').value = ''; // Limpa a caixa de entrada
+      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false); // Desmarca todas as emoções
+      document.getElementById('outputText').value = ''; // Limpa a caixa de saída
+    }
+  </script>
+</body>
+</html>
