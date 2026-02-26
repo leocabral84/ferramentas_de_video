@@ -583,6 +583,11 @@
                     <button class="btn-success" onclick="addMarker()" style="width: 100%;">
                         + Adicionar Marcação
                     </button>
+                    <!-- 🗑️ Botão Limpar Todas (NOVO) -->
+                    <button class="btn-danger" onclick="clearAllMarkers()" 
+                            style="width: 100%; margin-top: 10px;" title="Remove todas as marcações">
+                        🗑️ Limpar Todas as Marcações
+                    </button>
                 </div>
 
                 <div class="marker-list" id="markerList">
@@ -838,6 +843,29 @@
             renderMarkers();
             updateProgressMarkers();
             saveToLocalStorage(); // 💾 Salvar após remover marcador
+        }
+
+                function removeMarker(id) {
+            markers = markers.filter(m => m.id !== id);
+            renderMarkers();
+            updateProgressMarkers();
+            saveToLocalStorage(); // 💾 Salvar após remover marcador
+        }
+
+        // 🗑️ Limpar Todas as Marcações (NOVA FUNÇÃO)
+        function clearAllMarkers() {
+            if (markers.length === 0) {
+                alert('Não há marcações para limpar');
+                return;
+            }
+            
+            if (confirm(`Tem certeza que deseja remover todas as ${markers.length} marcações?`)) {
+                markers = [];
+                renderMarkers();
+                updateProgressMarkers();
+                saveToLocalStorage();
+                
+            }
         }
 
         function goToMarker(time) {
