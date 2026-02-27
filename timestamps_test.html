@@ -457,7 +457,8 @@
 
         /* 🔊 Estilos para controle de volume */
         input[type="range"] {
-            -webkit-appearance: none;
+            -webkit-appearance: none;  /* Para Chrome/Safari */
+            appearance: none;          /* Padrão moderno */
             height: 6px;
             background: #4a5568;
             border-radius: 3px;
@@ -495,23 +496,24 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Divisor de Textos</a>
+            <a class="navbar-brand" href="#">TiME STAMPS</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
                     <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
                     <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
                     <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
                     <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caract.</a></li>
                     <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caract.</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
                     <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir N. Romanos</a></li>
                     <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Ins. Relógios</a></li>
                     <li class="nav-item"><a class="nav-link" href="pausas.html">Ins. Pausas</a></li>
                     <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Emoções</a></li>
                     <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
+                    <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">TimeStamps</a></li>
                 </ul>
             </div>
         </div>
