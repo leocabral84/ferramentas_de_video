@@ -480,6 +480,38 @@
             background: #5568d3;
         }
 
+        /* ============================
+           NOVO: ÁREA DE BUSCA (CSS)
+           ============================ */
+        .search-section{
+            margin-top:16px; background:#2d3748; border-radius:8px; padding:14px; color:#e2e8f0;
+            box-shadow:0 2px 6px rgba(0,0,0,.25);
+        }
+        .search-header{
+            display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;
+        }
+        .search-controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px}
+        .search-input{
+            background:#1a202c; color:#fff; border:1px solid #4a5568; border-radius:6px; padding:8px 10px; min-width:220px;
+        }
+        .btn-nav{padding:8px 12px}
+        .btn-icon{display:inline-flex; align-items:center; gap:6px}
+        .btn-icon .icon{font-size:16px; line-height:1}
+        .search-status{font-size:12px; color:#cbd5e1; min-width:52px; text-align:right}
+
+        .search-text-wrapper{
+            background:#0f172a; border:1px solid #334155; border-radius:8px; overflow:auto; max-height:320px; min-height:180px;
+        }
+        .search-text{
+            padding:12px; color:#e2e8f0; white-space:pre-wrap; word-wrap:break-word; outline:none;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+        }
+        .search-text:empty:before{
+            content:attr(data-placeholder); color:#64748b;
+        }
+        mark{ background:#fde68a; color:#1f2937; padding:0 2px; border-radius:3px; }
+        mark.current{ background:#fbbf24; color:#111827; box-shadow:0 0 0 2px #f59e0b inset; }
+
         @media (max-width: 968px) {
             .main-content {
                 flex-direction: column;
@@ -497,7 +529,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">TiME STAMPS</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -568,6 +601,28 @@
                         <div class="progress-bar" id="progressBar"></div>
                     </div>
                 </div>
+
+                <!-- ==========================================================
+                     NOVO BLOCO (COMPLEMENTO): BUSCADOR + CAIXA DE TEXTO
+                     Local: Abaixo dos controles do vídeo (coluna esquerda)
+                     ========================================================== -->
+                <div class="search-section" aria-label="Buscador de Palavras e Frases">
+                    <div class="search-header">
+                        <div class="search-controls">
+                            <input type="text" id="searchQuery" class="search-input" placeholder="Buscar palavra ou frase..." />
+                            <button class="btn-secondary btn-nav" id="prevBtn" title="Anterior">← Anterior</button>
+                            <button class="btn-secondary btn-nav" id="nextBtn" title="Próximo">Próximo →</button>
+                            <button class="btn-primary btn-icon" id="searchBtn" title="Buscar"><span class="icon">🔍</span> Buscar</button>
+                        </div>
+                        <div class="search-status"><span id="matchCounter">0/0</span></div>
+                    </div>
+
+                    <div class="search-text-wrapper">
+                        <div id="searchText" class="search-text" contenteditable="true" spellcheck="false"
+                             data-placeholder="📋 Cole aqui a transcrição ou texto para buscar. As ocorrências serão realçadas."></div>
+                    </div>
+                </div>
+                <!-- =============== FIM DO COMPLEMENTO (BUSCADOR) =============== -->
             </div>
 
             <div class="markers-section">
@@ -627,7 +682,7 @@
         </div>
     </div>
 
-        <script>
+    <script>
         let video = document.getElementById('videoPlayer');
         let markers = [];
         let startTime = 0;
@@ -1180,6 +1235,152 @@
                 document.querySelector('.navbar-toggler')?.setAttribute('aria-expanded', 'false');
             }
         });
+
+        /* ======================================================
+           NOVO (COMPLEMENTO): LÓGICA DO BUSCADOR / HIGHLIGHT
+           ====================================================== */
+        const searchTextDiv = document.getElementById('searchText');
+        const searchQueryInput = document.getElementById('searchQuery');
+        const searchBtn = document.getElementById('searchBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const matchCounterEl = document.getElementById('matchCounter');
+
+        let rawSearchText = '';   // texto puro (sem tags)
+        let lastQuery = '';
+        let matches = [];         // [{start,end}]
+        let currentMatchIndex = -1;
+
+        // Carregar possíveis dados salvos do buscador (sem alterar seu fluxo original)
+        window.addEventListener('load', function(){
+            // Se já existir algo salvo, usamos; senão, começamos vazio
+            const savedRaw = localStorage.getItem('vte_searchText') || '';
+            const savedQuery = localStorage.getItem('vte_searchQuery') || '';
+            if (savedRaw) {
+                rawSearchText = savedRaw;
+                renderHighlighted(); // mostra texto salvo (sem realce até buscar)
+            }
+            if (savedQuery) searchQueryInput.value = savedQuery;
+        });
+
+        // Capturar texto puro sempre que o usuário editar a caixa (contenteditable)
+        searchTextDiv.addEventListener('input', () => {
+            // innerText nos dá apenas texto (sem <mark>)
+            rawSearchText = searchTextDiv.innerText;
+            if (lastQuery) performSearch(false); // re-realça se já houver consulta ativa
+            saveSearchState();
+        });
+
+        // Botões e Enter
+        searchBtn.addEventListener('click', () => performSearch(true));
+        searchQueryInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') performSearch(true);
+        });
+        nextBtn.addEventListener('click', gotoNext);
+        prevBtn.addEventListener('click', gotoPrev);
+
+        // Atalhos úteis (sem mexer nos seus atalhos/fluxo existentes)
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd+F foca a busca
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                searchQueryInput.focus();
+                searchQueryInput.select();
+            }
+            // F3 -> próximo, Shift+F3 -> anterior (padrão de editores)
+            if (e.key === 'F3' && !e.shiftKey) { e.preventDefault(); gotoNext(); }
+            if (e.key === 'F3' && e.shiftKey)  { e.preventDefault(); gotoPrev(); }
+        });
+
+        function performSearch(resetToFirst=true){
+            lastQuery = (searchQueryInput.value || '').trim();
+            matches = []; currentMatchIndex = -1;
+
+            if (!lastQuery) {
+                renderHighlighted();
+                updateCounter();
+                saveSearchState();
+                return;
+            }
+
+            const hay = (rawSearchText || '').toLowerCase();
+            const needle = lastQuery.toLowerCase();
+
+            let idx = 0;
+            while (true) {
+                idx = hay.indexOf(needle, idx);
+                if (idx === -1) break;
+                matches.push({ start: idx, end: idx + needle.length });
+                idx += needle.length || 1;
+            }
+
+            if (matches.length > 0) {
+                currentMatchIndex = resetToFirst ? 0 : Math.min(currentMatchIndex, matches.length-1);
+            }
+
+            renderHighlighted();
+            updateCounter();
+            scrollToCurrent();
+            saveSearchState();
+        }
+
+        function gotoNext(){
+            if (matches.length === 0) return;
+            currentMatchIndex = (currentMatchIndex + 1) % matches.length;
+            renderHighlighted(); updateCounter(); scrollToCurrent();
+        }
+
+        function gotoPrev(){
+            if (matches.length === 0) return;
+            currentMatchIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
+            renderHighlighted(); updateCounter(); scrollToCurrent();
+        }
+
+        function updateCounter(){
+            if (matches.length === 0) matchCounterEl.textContent = '0/0';
+            else matchCounterEl.textContent = `${currentMatchIndex+1}/${matches.length}`;
+        }
+
+        function renderHighlighted(){
+            // Se não há termo, apenas mostra o texto “puro” escapado
+            if (!lastQuery) {
+                searchTextDiv.innerHTML = escapeHtml(rawSearchText || '');
+                return;
+            }
+
+            let html = '';
+            let lastEnd = 0;
+            for (let i = 0; i < matches.length; i++) {
+                const m = matches[i];
+                html += escapeHtml((rawSearchText || '').slice(lastEnd, m.start));
+                const seg = escapeHtml((rawSearchText || '').slice(m.start, m.end));
+                html += `<mark ${i===currentMatchIndex ? 'class="current"' : ''} data-idx="${i}">${seg}</mark>`;
+                lastEnd = m.end;
+            }
+            html += escapeHtml((rawSearchText || '').slice(lastEnd));
+            searchTextDiv.innerHTML = html;
+        }
+
+        function scrollToCurrent(){
+            const current = searchTextDiv.querySelector('mark.current');
+            if (current) current.scrollIntoView({ block:'center', inline:'nearest', behavior:'smooth' });
+        }
+
+        function escapeHtml(str){
+            return String(str)
+                .replaceAll('&','&')
+                .replaceAll('<','<')
+                .replaceAll('>','>')
+                .replaceAll('"','"')
+                .replaceAll("'","&#039;");
+        }
+
+        function saveSearchState(){
+            // Persistência separada para não alterar sua função saveToLocalStorage()
+            localStorage.setItem('vte_searchText', rawSearchText || '');
+            localStorage.setItem('vte_searchQuery', searchQueryInput.value || '');
+        }
+        /* =================== FIM DO COMPLEMENTO BUSCADOR =================== */
     </script>
 </body>
 </html>
