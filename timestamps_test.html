@@ -522,6 +522,11 @@
                 border-top: 1px solid #e2e8f0;
             }
         }
+
+        #markerList .btn-danger {
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, .35);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -952,9 +957,9 @@
                         <div class="marker-label">${marker.label}</div>
                     </div>
                     <div class="marker-actions">
-                        <button class="btn-primary" onclick="event.stopPropagation(); goToMarker(${marker.time})" title="Ir para tempo">
-                            ▶
-                        </button>
+                        <button id="marker-play-btn-${marker.id}" class="btn-primary"
+                            onclick="event.stopPropagation(); toggleMarkerPlay(${marker.id}, ${marker.time}, this)"
+                            title="Reproduzir/Parar">▶</button>
                         <button class="btn-secondary" onclick="event.stopPropagation(); editMarker(${marker.id})" title="Editar tempo">
                             ✏️
                         </button>
@@ -1380,6 +1385,79 @@
             localStorage.setItem('vte_searchText', rawSearchText || '');
             localStorage.setItem('vte_searchQuery', searchQueryInput.value || '');
         }
+
+
+        // ======================================================
+        // NOVO: Tocar/Parar por marcação (toggle no mesmo botão)
+        // ======================================================
+        let currentMarkerPlayingId = null;
+
+        /**
+        * Atualiza o ícone e o estilo do botão de uma marcação.
+        * playing=true  -> mostra ⏹ e usa estilo "perigo" (vermelho)
+        * playing=false -> mostra ▶  e usa estilo primário (roxo/azul)
+        */
+        function setMarkerButtonIcon(id, playing) {
+            const btn = document.getElementById(`marker-play-btn-${id}`);
+            if (!btn) return;
+            btn.textContent = playing ? '⏹' : '▶';
+            btn.title = playing ? 'Parar' : 'Reproduzir';
+
+            // alterna classes (mantendo seu visual atual)
+            if (playing) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-danger');
+            } else {
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-primary');
+            }
+        }
+
+        /**
+        * Alterna play/stop ao clicar no botão da marcação.
+        * - Se clicar em uma marcação diferente, a anterior volta para ▶ automaticamente.
+        * - Ao parar, chamamos seu stopVideo() para manter o mesmo comportamento (volta para startTime ou 0).
+        */
+        function toggleMarkerPlay(id, time, btnEl) {
+            // Se já estamos tocando esta marcação, vira STOP => STOP
+            if (currentMarkerPlayingId === id) {
+                stopVideo(); // usa sua função (respeita hasStartTime)
+                setMarkerButtonIcon(id, false);
+                currentMarkerPlayingId = null;
+                return;
+            }
+
+            // Se havia outra marcação tocando, volta o botão anterior para ▶
+            if (currentMarkerPlayingId !== null && currentMarkerPlayingId !== id) {
+                setMarkerButtonIcon(currentMarkerPlayingId, false);
+            }
+
+            // Vai para o tempo da marcação e toca
+            video.currentTime = time;
+            video.play();
+
+            // Marca ativo e muda para ⏹
+            currentMarkerPlayingId = id;
+            setMarkerButtonIcon(id, true);
+        }
+
+        // Quando o vídeo termina, reseta o botão da marcação ativa
+        video.addEventListener('ended', function () {
+            if (currentMarkerPlayingId !== null) {
+                setMarkerButtonIcon(currentMarkerPlayingId, false);
+                currentMarkerPlayingId = null;
+            }
+        });
+
+        // Se o vídeo for pausado por qualquer outro motivo (ex.: teclas, controles principais),
+        // garantimos que o botão da marcação volte para ▶
+        video.addEventListener('pause', function () {
+            // Só reseta se havia uma marcação "ativa"
+            if (currentMarkerPlayingId !== null) {
+                setMarkerButtonIcon(currentMarkerPlayingId, false);
+                currentMarkerPlayingId = null;
+            }
+        });
         /* =================== FIM DO COMPLEMENTO BUSCADOR =================== */
     </script>
 </body>
