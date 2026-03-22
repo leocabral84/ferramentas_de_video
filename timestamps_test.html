@@ -527,43 +527,108 @@
             box-shadow: 0 0 0 2px rgba(239, 68, 68, .35);
             cursor: pointer;
         }
+
+        /* ============ ESTILOS DAS ABAS ============ */
+        .tab-selector {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            padding: 0 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: flex !important;  /* Mantém o layout flex original */
+            width: 100%;
+        }
+
+        /* Responsivo para abas */
+        @media (max-width: 968px) {
+            .tab-content.active {
+                flex-direction: column;
+            }
+            
+            .markers-section {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #e2e8f0;
+            }
+        }
+
+        /* Player do YouTube */
+        #youtubePlayer {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        #youtubePlayerWrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            background: #000;
+            border-radius: 10px;
+        }
+
+        #youtubePlayerWrapper iframe,
+        #youtubePlayerWrapper div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">TiME STAMPS</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
-                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
-                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
-                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caracteres</a></li>
-                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
-                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir N. Romanos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
-                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Emoções</a></li>
-                    <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
-                    <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
-                </ul>
-            </div>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">TiME STAMPS</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
+                <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
+                <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                <li class="nav-item"><a class="nav-link active" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir N. Romanos</a></li>
+                <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Emoções</a></li>
+                <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
+                <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
+            </ul>
         </div>
-    </nav>
-    
-    <div class="container">
-        <div class="header">
-            <h1>🎬 Video Timestamp Editor</h1>
-            <p>Teste seus marcadores antes de enviar para o YouTube</p>
-        </div>
+    </div>
+</nav>
 
-        <div class="main-content">
+<div class="container">
+    <div class="header">
+        <h1>🎬 Video Timestamp Editor</h1>
+        <p>Teste seus marcadores antes de enviar para o YouTube</p>
+    </div>
+
+    <!-- SELETOR DE ABAS -->
+    <div class="tab-selector">
+        <button class="btn-primary" id="tabBtnPC" onclick="switchTab('pc')">📁 Vídeo do PC</button>
+        <button class="btn-secondary" id="tabBtnYT" onclick="switchTab('youtube')">▶️ Vídeo do YouTube</button>
+    </div>
+
+    <div class="main-content">
+        
+        <!-- CONTEÚDO PC -->
+        <div id="content-pc" class="tab-content active">
             <div class="video-section">
                 <div class="video-container">
                     <video id="videoPlayer" preload="metadata">
@@ -571,46 +636,36 @@
                         Seu navegador não suporta o elemento de vídeo.
                     </video>
                 </div>
-
                 <div class="controls">
                     <div class="control-row">
                         <input type="file" id="videoInput" accept="video/mp4,video/*" />
                     </div>
-
                     <div class="control-row">
                         <button class="btn-primary" id="playBtn" onclick="togglePlay()">▶ Play</button>
                         <button class="btn-secondary" id="pauseBtn" onclick="pauseVideo()">⏸ Pause</button>
                         <button class="btn-danger" id="stopBtn" onclick="stopVideo()">⏹ Stop</button>
-                        
-                        <!-- 🔊 Controle de Volume (NOVO) -->
                         <div style="display: flex; align-items: center; gap: 8px; margin-left: 10px;">
-                            <button class="btn-secondary" id="volumeBtn" onclick="toggleMute()" 
-                                    style="padding: 8px 12px; min-width: auto;" title="Mute/Unmute">🔊</button>
-                            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" 
-                                   style="width: 100px; cursor: pointer;" oninput="setVolume(this.value)" title="Volume" />
+                            <button class="btn-secondary" id="volumeBtn" onclick="toggleMute()"
+                                style="padding: 8px 12px; min-width: auto;" title="Mute/Unmute">🔊</button>
+                            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"
+                                style="width: 100px; cursor: pointer;" oninput="setVolume(this.value)" title="Volume" />
                         </div>
-                        
                         <div class="time-display" id="currentTime">00:00:00</div>
                         <span style="color: #e2e8f0;">/</span>
                         <div class="time-display" id="totalTime">00:00:00</div>
                     </div>
-
                     <div class="control-row">
                         <label>Iniciar em:</label>
                         <input type="time" id="startTimeInput" step="1" />
                         <button class="btn-success" onclick="setStartTime()">Definir Início</button>
                         <button class="btn-secondary" onclick="clearStartTime()">Limpar</button>
                     </div>
-
                     <div class="progress-container" id="progressContainer">
                         <div class="progress-bar" id="progressBar"></div>
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     NOVO BLOCO (COMPLEMENTO): BUSCADOR + CAIXA DE TEXTO
-                     Local: Abaixo dos controles do vídeo (coluna esquerda)
-                     ========================================================== -->
+                <!-- BUSCADOR -->
                 <div class="search-section" aria-label="Buscador de Palavras e Frases">
                     <div class="search-header">
                         <div class="search-controls">
@@ -621,18 +676,16 @@
                         </div>
                         <div class="search-status"><span id="matchCounter">0/0</span></div>
                     </div>
-
                     <div class="search-text-wrapper">
                         <div id="searchText" class="search-text" contenteditable="true" spellcheck="false"
-                             data-placeholder="📋 Cole aqui a transcrição ou texto para buscar. As ocorrências serão realçadas."></div>
+                            data-placeholder="📋 Cole aqui a transcrição ou texto para buscar. As ocorrências serão realçadas."></div>
                     </div>
                 </div>
-                <!-- =============== FIM DO COMPLEMENTO (BUSCADOR) =============== -->
             </div>
 
+            <!-- MARCADORES PC -->
             <div class="markers-section">
                 <div class="section-title">📌 MARCAÇÕES</div>
-
                 <div class="marker-input">
                     <div class="form-group">
                         <label for="markerTime">Tempo:</label>
@@ -645,13 +698,11 @@
                     <button class="btn-success" onclick="addMarker()" style="width: 100%;">
                         + Adicionar Marcação
                     </button>
-                    <!-- 🗑️ Botão Limpar Todas (NOVO) -->
-                    <button class="btn-danger" onclick="clearAllMarkers()" 
-                            style="width: 100%; margin-top: 10px;" title="Remove todas as marcações">
+                    <button class="btn-danger" onclick="clearAllMarkers()"
+                        style="width: 100%; margin-top: 10px;" title="Remove todas as marcações">
                         🗑️ Limpar Todas as Marcações
                     </button>
                 </div>
-
                 <div class="marker-list" id="markerList">
                     <div class="empty-state">
                         <p>Nenhuma marcação adicionada</p>
@@ -665,800 +716,1097 @@
                     <button class="btn-secondary" onclick="exportMarkersJSON()" style="width: 100%; margin-bottom: 10px;">
                         💾 Exportar Backup (JSON)
                     </button>
-                    <!-- Resto dos botões de import... -->
-                </div>
-
-                <div class="export-import">
-                    
-                    <input type="file" id="importFile" accept=".json" onchange="importMarkers(event)" 
-                           style="display: none;" />
-                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()" 
-                            style="width: 100%; margin-bottom: 10px;">
+                    <input type="file" id="importFile" accept=".json" onchange="importMarkers(event)"
+                        style="display: none;" />
+                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()"
+                        style="width: 100%; margin-bottom: 10px;">
                         📁 Importar Marcações (JSON)
                     </button>
-                    <input type="file" id="importTxtFile" accept=".txt" onchange="importMarkersTxt(event)" 
-                           style="display: none;" />
-                    <button class="btn-secondary" onclick="document.getElementById('importTxtFile').click()" 
-                            style="width: 100%;">
+                    <input type="file" id="importTxtFile" accept=".txt" onchange="importMarkersTxt(event)"
+                        style="display: none;" />
+                    <button class="btn-secondary" onclick="document.getElementById('importTxtFile').click()"
+                        style="width: 100%;">
                         📄 Importar Marcações (TXT)
                     </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        let video = document.getElementById('videoPlayer');
-        let markers = [];
-        let startTime = 0;
-        let hasStartTime = false;
+        <!-- CONTEÚDO YOUTUBE -->
+        <div id="content-youtube" class="tab-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <div id="youtubePlayerWrapper">
+                        <div id="youtubePlayer"></div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="control-row" style="margin-bottom: 15px;">
+                        <input type="text" id="youtubeUrlInput" class="search-input" placeholder="Cole o link do YouTube aqui..." style="flex: 1; margin-right: 10px;">
+                        <button class="btn-success" onclick="loadYouTubeVideo()">OK Carregar</button>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn-primary" id="ytPlayBtn" onclick="youtubeTogglePlay()">▶ Play</button>
+                        <button class="btn-secondary" id="ytPauseBtn" onclick="youtubePauseVideo()">⏸ Pause</button>
+                        <button class="btn-danger" id="ytStopBtn" onclick="youtubeStopVideo()">⏹ Stop</button>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-left: 10px;">
+                            <button class="btn-secondary" id="ytVolumeBtn" onclick="youtubeToggleMute()"
+                                style="padding: 8px 12px; min-width: auto;" title="Mute/Unmute">🔊</button>
+                            <input type="range" id="ytVolumeSlider" min="0" max="1" step="0.01" value="1"
+                                style="width: 100px; cursor: pointer;" oninput="youtubeSetVolume(this.value)" title="Volume" />
+                        </div>
+                        <div class="time-display" id="ytCurrentTime">00:00:00</div>
+                        <span style="color: #e2e8f0;">/</span>
+                        <div class="time-display" id="ytTotalTime">00:00:00</div>
+                    </div>
+                    <div class="control-row">
+                        <label>Iniciar em:</label>
+                        <input type="time" id="ytStartTimeInput" step="1" />
+                        <button class="btn-success" onclick="youtubeSetStartTime()">Definir Início</button>
+                        <button class="btn-secondary" onclick="youtubeClearStartTime()">Limpar</button>
+                    </div>
+                    <div class="progress-container" id="ytProgressContainer">
+                        <div class="progress-bar" id="ytProgressBar" style="width: 0%;"></div>
+                    </div>
+                </div>
 
-        // Carregar vídeo
-        document.getElementById('videoInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                video.src = url;
-                video.load();
-                
-                video.addEventListener('loadedmetadata', function() {
-                    document.getElementById('totalTime').textContent = formatTime(video.duration);
-                    updateProgressMarkers();
-                    initVolume(); // 🔊 Inicializar volume ao carregar vídeo
-                });
-            }
-        });
+                <!-- BUSCADOR YOUTUBE -->
+                <div class="search-section" aria-label="Buscador de Palavras e Frases">
+                    <div class="search-header">
+                        <div class="search-controls">
+                            <input type="text" id="ytSearchQuery" class="search-input" placeholder="Buscar palavra ou frase..." />
+                            <button class="btn-secondary btn-nav" id="ytPrevBtn" title="Anterior">← Anterior</button>
+                            <button class="btn-secondary btn-nav" id="ytNextBtn" title="Próximo">Próximo →</button>
+                            <button class="btn-primary btn-icon" id="ytSearchBtn" title="Buscar"><span class="icon">🔍</span> Buscar</button>
+                        </div>
+                        <div class="search-status"><span id="ytMatchCounter">0/0</span></div>
+                    </div>
+                    <div class="search-text-wrapper">
+                        <div id="ytSearchText" class="search-text" contenteditable="true" spellcheck="false"
+                            data-placeholder="📋 Cole aqui a transcrição do vídeo do YouTube..."></div>
+                    </div>
+                </div>
+            </div>
 
-        // 🔊 Funções de Controle de Volume (NOVAS)
-        function initVolume() {
-            // Carregar volume salvo no localStorage
-            const savedVolume = localStorage.getItem('videoVolume');
-            if (savedVolume !== null) {
-                video.volume = parseFloat(savedVolume);
-                document.getElementById('volumeSlider').value = video.volume;
-            } else {
-                video.volume = 1;
-                document.getElementById('volumeSlider').value = 1;
-            }
-            updateVolumeIcon();
-        }
-
-        function setVolume(value) {
-            video.volume = parseFloat(value);
-            localStorage.setItem('videoVolume', value);
-            updateVolumeIcon();
-        }
-
-        function toggleMute() {
-            if (video.volume > 0) {
-                // Salvar volume atual antes de mutar
-                video.dataset.previousVolume = video.volume;
-                video.volume = 0;
-            } else {
-                // Restaurar volume anterior ou usar 1 se não houver
-                video.volume = parseFloat(video.dataset.previousVolume) || 1;
-            }
-            document.getElementById('volumeSlider').value = video.volume;
-            localStorage.setItem('videoVolume', video.volume);
-            updateVolumeIcon();
-        }
-
-        function updateVolumeIcon() {
-            const btn = document.getElementById('volumeBtn');
-            if (video.volume === 0) {
-                btn.textContent = '🔇';
-            } else if (video.volume < 0.5) {
-                btn.textContent = '🔉';
-            } else {
-                btn.textContent = '🔊';
-            }
-        }
-
-        // ✏️ Funções de Edição de Marcadores (NOVAS)
-        function secondsToTimeInput(seconds) {
-            // Converter segundos para formato HH:MM:SS compatível com input type="time"
-            const hrs = Math.floor(seconds / 3600);
-            const mins = Math.floor((seconds % 3600) / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }
-
-        function editMarker(id) {
-            const marker = markers.find(m => m.id === id);
-            if (!marker) return;
-            
-            const timeElement = document.getElementById(`marker-time-${id}`);
-            if (!timeElement) return;
-            
-            // Criar input para edição do tempo
-            const input = document.createElement('input');
-            input.type = 'time';
-            input.step = '1';
-            input.value = secondsToTimeInput(marker.time);
-            input.style.width = '100px';
-            input.style.padding = '4px 8px';
-            input.style.border = '1px solid #667eea';
-            input.style.borderRadius = '4px';
-            input.style.fontFamily = "'Courier New', monospace";
-            input.style.fontSize = '14px';
-            input.style.backgroundColor = '#1a202c';
-            input.style.color = 'white';
-            input.id = `edit-input-${id}`;
-            
-            // Salvar conteúdo original para possível cancelamento
-            const originalTimeDisplay = formatTime(marker.time);
-            
-            // Substituir conteúdo pelo input
-            const originalContent = timeElement.innerHTML;
-            timeElement.innerHTML = '';
-            timeElement.appendChild(input);
-            input.focus();
-            input.select();
-            
-            // Função para salvar a edição
-            const saveEdit = function() {
-                const newValue = input.value;
-                if (newValue) {
-                    const newSeconds = timeToSeconds(newValue);
-                    if (newSeconds !== marker.time) {
-                        marker.time = newSeconds;
-                        // Reordenar marcadores por tempo
-                        markers.sort((a, b) => a.time - b.time);
-                        renderMarkers();
-                        updateProgressMarkers();
-                        saveToLocalStorage();
-                    }
-                } else {
-                    // Se vazio, reverter para o valor original
-                    renderMarkers();
-                }
-            };
-            
-            // Eventos para salvar ao pressionar Enter ou perder foco
-            input.addEventListener('blur', saveEdit);
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    saveEdit();
-                    input.blur();
-                } else if (e.key === 'Escape') {
-                    // Cancelar edição: restaurar visualização original
-                    renderMarkers();
-                }
-            });
-            
-            // Prevenir propagação de clique para não acionar goToMarker
-            input.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        }
-
-        // Controles de playback
-        function togglePlay() {
-            if (hasStartTime && video.currentTime < startTime) {
-                video.currentTime = startTime;
-            }
-            video.play();
-        }
-
-        function pauseVideo() {
-            video.pause();
-        }
-
-        function stopVideo() {
-            video.pause();
-            if (hasStartTime) {
-                video.currentTime = startTime;
-            } else {
-                video.currentTime = 0;
-            }
-        }
-
-        // Definir tempo de início
-        function setStartTime() {
-            const input = document.getElementById('startTimeInput');
-            if (input.value) {
-                startTime = timeToSeconds(input.value);
-                hasStartTime = true;
-                video.currentTime = startTime;
-                saveToLocalStorage(); // 💾 Salvar após alterar startTime
-                alert(`Início definido para: ${formatTime(startTime)}`);
-            }
-        }
-
-        function clearStartTime() {
-            hasStartTime = false;
-            startTime = 0;
-            document.getElementById('startTimeInput').value = '';
-            saveToLocalStorage(); // 💾 Salvar após limpar startTime
-        }
-
-        // Marcadores
-        function addMarker() {
-            const timeInput = document.getElementById('markerTime');
-            const labelInput = document.getElementById('markerLabel');
-            
-            if (!timeInput.value) {
-                alert('Por favor, insira um tempo para a marcação');
-                return;
-            }
-
-            const marker = {
-                id: Date.now(),
-                time: timeToSeconds(timeInput.value),
-                label: labelInput.value || `Marcação ${markers.length + 1}`
-            };
-
-            markers.push(marker);
-            markers.sort((a, b) => a.time - b.time);
-            
-            renderMarkers();
-            updateProgressMarkers();
-            saveToLocalStorage(); // 💾 Salvar após adicionar marcador
-            
-            // Limpar inputs
-            timeInput.value = '';
-            labelInput.value = '';
-        }
-
-        function removeMarker(id) {
-            markers = markers.filter(m => m.id !== id);
-            renderMarkers();
-            updateProgressMarkers();
-            saveToLocalStorage(); // 💾 Salvar após remover marcador
-        }
-
-                function removeMarker(id) {
-            markers = markers.filter(m => m.id !== id);
-            renderMarkers();
-            updateProgressMarkers();
-            saveToLocalStorage(); // 💾 Salvar após remover marcador
-        }
-
-        // 🗑️ Limpar Todas as Marcações (NOVA FUNÇÃO)
-        function clearAllMarkers() {
-            if (markers.length === 0) {
-                alert('Não há marcações para limpar');
-                return;
-            }
-            
-            if (confirm(`Tem certeza que deseja remover todas as ${markers.length} marcações?`)) {
-                markers = [];
-                renderMarkers();
-                updateProgressMarkers();
-                saveToLocalStorage();
-                
-            }
-        }
-
-        function goToMarker(time) {
-            video.currentTime = time;
-            if (video.paused) {
-                video.play();
-            }
-        }
-
-        function renderMarkers() {
-            const list = document.getElementById('markerList');
-            
-            if (markers.length === 0) {
-                list.innerHTML = `
+            <!-- MARCADORES YOUTUBE -->
+            <div class="markers-section">
+                <div class="section-title">📌 MARCAÇÕES (YOUTUBE)</div>
+                <div class="marker-input">
+                    <div class="form-group">
+                        <label for="ytMarkerTime">Tempo:</label>
+                        <input type="time" id="ytMarkerTime" step="1" />
+                    </div>
+                    <div class="form-group">
+                        <label for="ytMarkerLabel">Descrição (opcional):</label>
+                        <input type="text" id="ytMarkerLabel" placeholder="Ex: Introdução" />
+                    </div>
+                    <button class="btn-success" onclick="youtubeAddMarker()" style="width: 100%;">
+                        + Adicionar Marcação
+                    </button>
+                    <button class="btn-danger" onclick="youtubeClearAllMarkers()"
+                        style="width: 100%; margin-top: 10px;" title="Remove todas as marcações">
+                        🗑️ Limpar Todas as Marcações
+                    </button>
+                </div>
+                <div class="marker-list" id="ytMarkerList">
                     <div class="empty-state">
                         <p>Nenhuma marcação adicionada</p>
                         <p style="font-size: 12px; margin-top: 10px;">Adicione timestamps para testar</p>
                     </div>
-                `;
-                return;
-            }
-
-            list.innerHTML = markers.map(marker => `
-                <div class="marker-item" onclick="goToMarker(${marker.time})">
-                    <div>
-                        <div class="marker-time" id="marker-time-${marker.id}">${formatTime(marker.time)}</div>
-                        <div class="marker-label">${marker.label}</div>
-                    </div>
-                    <div class="marker-actions">
-                        <button id="marker-play-btn-${marker.id}" class="btn-primary"
-                            onclick="event.stopPropagation(); toggleMarkerPlay(${marker.id}, ${marker.time}, this)"
-                            title="Reproduzir/Parar">▶</button>
-                        <button class="btn-secondary" onclick="event.stopPropagation(); editMarker(${marker.id})" title="Editar tempo">
-                            ✏️
-                        </button>
-                        <button class="btn-danger" onclick="event.stopPropagation(); removeMarker(${marker.id})" title="Remover">
-                            ✕
-                        </button>
-                    </div>
                 </div>
-            `).join('');
-        }
+                <div class="export-import">
+                    <button class="btn-primary" onclick="youtubeExportMarkers()" style="width: 100%; margin-bottom: 10px;">
+                        📄 Exportar Marcações (TXT)
+                    </button>
+                    <button class="btn-secondary" onclick="youtubeExportMarkersJSON()" style="width: 100%; margin-bottom: 10px;">
+                        💾 Exportar Backup (JSON)
+                    </button>
+                    <input type="file" id="ytImportFile" accept=".json" onchange="youtubeImportMarkers(event)"
+                        style="display: none;" />
+                    <button class="btn-secondary" onclick="document.getElementById('ytImportFile').click()"
+                        style="width: 100%; margin-bottom: 10px;">
+                        📁 Importar Marcações (JSON)
+                    </button>
+                    <input type="file" id="ytImportTxtFile" accept=".txt" onchange="youtubeImportMarkersTxt(event)"
+                        style="display: none;" />
+                    <button class="btn-secondary" onclick="document.getElementById('ytImportTxtFile').click()"
+                        style="width: 100%;">
+                        📄 Importar Marcações (TXT)
+                    </button>
+                </div>
+            </div>
+        </div>
 
-        // Atualizar progresso
-        video.addEventListener('timeupdate', function() {
-            if (video.duration) {
-                const progress = (video.currentTime / video.duration) * 100;
-                document.getElementById('progressBar').style.width = progress + '%';
+    </div>
+</div>
+
+<!-- API do YouTube -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+// VARIÁVEIS GLOBAIS
+let currentTab = 'pc';
+let video = document.getElementById('videoPlayer');
+let markers = [];
+let startTime = 0;
+let hasStartTime = false;
+let currentMarkerPlayingId = null;
+
+// Variáveis YouTube
+let youtubePlayer = null;
+let youtubeMarkers = [];
+let youtubeStartTime = 0;
+let youtubeHasStartTime = false;
+let youtubeCurrentMarkerPlayingId = null;
+let youtubeUpdateInterval = null;
+
+// ALTERNAR ABAS
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabBtnPC').className = tab === 'pc' ? 'btn-primary' : 'btn-secondary';
+    document.getElementById('tabBtnYT').className = tab === 'youtube' ? 'btn-primary' : 'btn-secondary';
+    document.getElementById('content-pc').classList.remove('active');
+    document.getElementById('content-youtube').classList.remove('active');
+    document.getElementById('content-' + tab).classList.add('active');
+    
+    if (tab === 'pc' && youtubePlayer) youtubePlayer.pauseVideo();
+    else if (tab === 'youtube' && video) video.pause();
+}
+
+// API YOUTUBE
+function onYouTubeIframeAPIReady() {}
+
+function loadYouTubeVideo() {
+    const url = document.getElementById('youtubeUrlInput').value;
+    const videoId = extractVideoID(url);
+    if (!videoId) { alert('URL do YouTube inválida.'); return; }
+    
+    if (youtubePlayer) {
+        youtubePlayer.loadVideoById(videoId);
+    } else {
+        youtubePlayer = new YT.Player('youtubePlayer', {
+            height: '100%',
+            width: '100%',
+            videoId: videoId,
+            playerVars: { 'playsinline': 1, 'controls': 0 },
+            events: {
+                'onReady': onYouTubePlayerReady,
+                'onStateChange': onYouTubePlayerStateChange
             }
-            document.getElementById('currentTime').textContent = formatTime(video.currentTime);
         });
+    }
+}
 
-        // Auto-pausar no início definido
-        video.addEventListener('timeupdate', function() {
-            if (hasStartTime && video.currentTime < startTime && video.currentTime > 0) {
-                video.currentTime = startTime;
-            }
-        });
+function extractVideoID(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
 
-        // Utilitários
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return '00:00:00';
-            const hrs = Math.floor(seconds / 3600);
-            const mins = Math.floor((seconds % 3600) / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+function onYouTubePlayerReady(event) {
+    const duration = youtubePlayer.getDuration();
+    document.getElementById('ytTotalTime').textContent = formatTime(duration);
+    youtubeInitVolume();
+    startYouTubeTimeUpdate();
+}
+
+function onYouTubePlayerStateChange(event) {
+    if (event.data === YT.PlayerState.PLAYING) {
+        document.getElementById('ytPlayBtn').textContent = '⏸ Pause';
+        document.getElementById('ytPlayBtn').className = 'btn-secondary';
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        document.getElementById('ytPlayBtn').textContent = '▶ Play';
+        document.getElementById('ytPlayBtn').className = 'btn-primary';
+        // NÃO resetar o botão da marcação ao pausar manualmente
+    } else if (event.data === YT.PlayerState.ENDED) {
+        document.getElementById('ytPlayBtn').textContent = '▶ Play';
+        document.getElementById('ytPlayBtn').className = 'btn-primary';
+        // Só resetar quando o vídeo terminar
+        if (youtubeCurrentMarkerPlayingId !== null) {
+            setYoutubeMarkerButtonIcon(youtubeCurrentMarkerPlayingId, false);
+            youtubeCurrentMarkerPlayingId = null;
         }
+    }
+}
 
-        function timeToSeconds(timeStr) {
-            const parts = timeStr.split(':').map(Number);
-            if (parts.length === 3) {
-                return parts[0] * 3600 + parts[1] * 60 + parts[2];
-            } else if (parts.length === 2) {
-                return parts[0] * 60 + parts[1];
+function startYouTubeTimeUpdate() {
+    if (youtubeUpdateInterval) clearInterval(youtubeUpdateInterval);
+    youtubeUpdateInterval = setInterval(() => {
+        if (youtubePlayer && youtubePlayer.getCurrentTime) {
+            const currentTime = youtubePlayer.getCurrentTime();
+            const duration = youtubePlayer.getDuration();
+            document.getElementById('ytCurrentTime').textContent = formatTime(currentTime);
+            if (duration > 0) {
+                const progress = (currentTime / duration) * 100;
+                document.getElementById('ytProgressBar').style.width = progress + '%';
             }
-            return 0;
-        }
-
-        function updateProgressMarkers() {
-            const container = document.getElementById('progressContainer');
-            container.querySelectorAll('.marker-indicator').forEach(el => el.remove());
-            
-            if (video.duration) {
-                markers.forEach(marker => {
-                    const indicator = document.createElement('div');
-                    indicator.className = 'marker-indicator';
-                    indicator.style.left = ((marker.time / video.duration) * 100) + '%';
-                    indicator.title = `${marker.label} - ${formatTime(marker.time)}`;
-                    container.appendChild(indicator);
-                });
+            if (youtubeHasStartTime && currentTime < youtubeStartTime && currentTime > 0) {
+                youtubePlayer.seekTo(youtubeStartTime);
+                youtubePlayer.pauseVideo();
             }
         }
+    }, 250);
+}
 
-        // Exportar Marcações em TXT
-        function exportMarkers() {
-            if (markers.length === 0) {
-                alert('Não há marcações para exportar');
-                return;
+// CONTROLES YOUTUBE
+function youtubeTogglePlay() {
+    if (!youtubePlayer) return;
+    const state = youtubePlayer.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) youtubePlayer.pauseVideo();
+    else {
+        if (youtubeHasStartTime && youtubePlayer.getCurrentTime() < youtubeStartTime) {
+            youtubePlayer.seekTo(youtubeStartTime);
+        }
+        youtubePlayer.playVideo();
+    }
+}
+
+function youtubePauseVideo() { if (youtubePlayer) youtubePlayer.pauseVideo(); }
+
+function youtubeStopVideo() {
+    if (!youtubePlayer) return;
+    youtubePlayer.pauseVideo();
+    if (youtubeHasStartTime) youtubePlayer.seekTo(youtubeStartTime);
+    else youtubePlayer.seekTo(0);
+}
+
+function youtubeSetVolume(value) {
+    if (youtubePlayer) {
+        youtubePlayer.setVolume(parseFloat(value) * 100);
+        localStorage.setItem('youtubeVolume', value);
+        updateYoutubeVolumeIcon();
+    }
+}
+
+function youtubeToggleMute() {
+    if (!youtubePlayer) return;
+    if (youtubePlayer.isMuted()) {
+        youtubePlayer.unMute();
+        const savedVol = localStorage.getItem('youtubeVolume') || 1;
+        youtubePlayer.setVolume(parseFloat(savedVol) * 100);
+        document.getElementById('ytVolumeSlider').value = savedVol;
+    } else {
+        youtubePlayer.mute();
+        document.getElementById('ytVolumeSlider').value = 0;
+    }
+    updateYoutubeVolumeIcon();
+}
+
+function youtubeInitVolume() {
+    const savedVolume = localStorage.getItem('youtubeVolume');
+    if (savedVolume !== null) {
+        youtubePlayer.setVolume(parseFloat(savedVolume) * 100);
+        document.getElementById('ytVolumeSlider').value = savedVolume;
+    }
+    updateYoutubeVolumeIcon();
+}
+
+function updateYoutubeVolumeIcon() {
+    const btn = document.getElementById('ytVolumeBtn');
+    const vol = document.getElementById('ytVolumeSlider').value;
+    if (vol == 0 || (youtubePlayer && youtubePlayer.isMuted())) btn.textContent = '🔇';
+    else if (vol < 0.5) btn.textContent = '🔉';
+    else btn.textContent = '🔊';
+}
+
+function youtubeSetStartTime() {
+    const input = document.getElementById('ytStartTimeInput');
+    if (input.value) {
+        youtubeStartTime = timeToSeconds(input.value);
+        youtubeHasStartTime = true;
+        youtubePlayer.seekTo(youtubeStartTime);
+        alert(`Início definido para: ${formatTime(youtubeStartTime)}`);
+    }
+}
+
+function youtubeClearStartTime() {
+    youtubeHasStartTime = false;
+    youtubeStartTime = 0;
+    document.getElementById('ytStartTimeInput').value = '';
+}
+
+// MARCADORES YOUTUBE
+function youtubeAddMarker() {
+    if (!youtubePlayer) { alert('Carregue um vídeo primeiro.'); return; }
+    const timeInput = document.getElementById('ytMarkerTime');
+    const labelInput = document.getElementById('ytMarkerLabel');
+    let timeVal = timeInput.value;
+    if (!timeVal) timeVal = secondsToTimeInput(youtubePlayer.getCurrentTime());
+    if (!timeVal) { alert('Por favor, insira um tempo para a marcação'); return; }
+    
+    const marker = {
+        id: Date.now(),
+        time: timeToSeconds(timeVal),
+        label: labelInput.value || `Marcação ${youtubeMarkers.length + 1}`
+    };
+    youtubeMarkers.push(marker);
+    youtubeMarkers.sort((a, b) => a.time - b.time);
+    renderYoutubeMarkers();
+    timeInput.value = '';
+    labelInput.value = '';
+}
+
+function renderYoutubeMarkers() {
+    const list = document.getElementById('ytMarkerList');
+    if (youtubeMarkers.length === 0) {
+        list.innerHTML = `<div class="empty-state"><p>Nenhuma marcação adicionada</p><p style="font-size: 12px; margin-top: 10px;">Adicione timestamps para testar</p></div>`;
+        return;
+    }
+    list.innerHTML = youtubeMarkers.map(marker => `
+    <div class="marker-item" onclick="youtubeGoToMarker(${marker.time})">
+        <div>
+            <div class="marker-time" id="yt-marker-time-${marker.id}">${formatTime(marker.time)}</div>
+            <div class="marker-label">${marker.label}</div>
+        </div>
+        <div class="marker-actions">
+            <button id="yt-marker-play-btn-${marker.id}" class="btn-primary"
+                onclick="event.stopPropagation(); youtubeToggleMarkerPlay(${marker.id}, ${marker.time}, this)"
+                title="Reproduzir/Parar">▶</button>
+            <button class="btn-secondary" onclick="event.stopPropagation(); youtubeEditMarker(${marker.id})" title="Editar tempo">✏️</button>
+            <button class="btn-danger" onclick="event.stopPropagation(); youtubeRemoveMarker(${marker.id})" title="Remover">✕</button>
+        </div>
+    </div>`).join('');
+}
+
+function youtubeRemoveMarker(id) {
+    youtubeMarkers = youtubeMarkers.filter(m => m.id !== id);
+    renderYoutubeMarkers();
+}
+
+function youtubeClearAllMarkers() {
+    if (youtubeMarkers.length === 0) { alert('Não há marcações para limpar'); return; }
+    if (confirm(`Tem certeza que deseja remover todas as ${youtubeMarkers.length} marcações?`)) {
+        youtubeMarkers = [];
+        renderYoutubeMarkers();
+    }
+}
+
+function youtubeGoToMarker(time) {
+    if (youtubePlayer) {
+        youtubePlayer.seekTo(time, true);
+        youtubePlayer.playVideo();
+    }
+}
+
+function youtubeEditMarker(id) {
+    const marker = youtubeMarkers.find(m => m.id === id);
+    if (!marker) return;
+    const timeElement = document.getElementById(`yt-marker-time-${id}`);
+    if (!timeElement) return;
+    const input = document.createElement('input');
+    input.type = 'time'; input.step = '1';
+    input.value = secondsToTimeInput(marker.time);
+    input.style.cssText = "width: 100px; padding: 4px 8px; border: 1px solid #667eea; border-radius: 4px; background: #1a202c; color: white;";
+    timeElement.innerHTML = '';
+    timeElement.appendChild(input);
+    input.focus();
+    const saveEdit = function() {
+        const newValue = input.value;
+        if (newValue) {
+            const newSeconds = timeToSeconds(newValue);
+            if (newSeconds !== marker.time) {
+                marker.time = newSeconds;
+                youtubeMarkers.sort((a, b) => a.time - b.time);
+                renderYoutubeMarkers();
             }
+        } else renderYoutubeMarkers();
+    };
+    input.addEventListener('blur', saveEdit);
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { saveEdit(); input.blur(); }
+        else if (e.key === 'Escape') renderYoutubeMarkers();
+    });
+    input.addEventListener('click', e => e.stopPropagation());
+}
 
-            // Criar conteúdo em formato TXT (padrão YouTube)
-            let txtContent = '';
-            markers.forEach(marker => {
-                txtContent += `${formatTime(marker.time)} ${marker.label}\n`;
+// Toggle play/stop nas marcações YouTube
+function setYoutubeMarkerButtonIcon(id, playing) {
+    const btn = document.getElementById(`yt-marker-play-btn-${id}`);
+    if (!btn) return;
+    btn.textContent = playing ? '⏹' : '▶';
+    btn.title = playing ? 'Parar' : 'Reproduzir';
+    if (playing) {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-danger');
+    } else {
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-primary');
+    }
+}
+
+function youtubeToggleMarkerPlay(id, time, btnEl) {
+    if (!youtubePlayer) return;
+    if (youtubeCurrentMarkerPlayingId === id) {
+        youtubeStopVideo();
+        setYoutubeMarkerButtonIcon(id, false);
+        youtubeCurrentMarkerPlayingId = null;
+        return;
+    }
+    if (youtubeCurrentMarkerPlayingId !== null && youtubeCurrentMarkerPlayingId !== id) {
+        setYoutubeMarkerButtonIcon(youtubeCurrentMarkerPlayingId, false);
+    }
+    youtubePlayer.seekTo(time, true);
+    youtubePlayer.playVideo();
+    youtubeCurrentMarkerPlayingId = id;
+    setYoutubeMarkerButtonIcon(id, true);
+}
+
+// EXPORTAÇÃO/IMPORTAÇÃO YOUTUBE
+function youtubeExportMarkers() {
+    if (youtubeMarkers.length === 0) { alert('Não há marcações para exportar'); return; }
+    let txtContent = '';
+    youtubeMarkers.forEach(marker => { txtContent += `${formatTime(marker.time)} ${marker.label}\n`; });
+    const blob = new Blob([txtContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `marcacoes_yt_${Date.now()}.txt`; a.click();
+    URL.revokeObjectURL(url);
+}
+
+function youtubeExportMarkersJSON() {
+    if (youtubeMarkers.length === 0) { alert('Não há marcações para exportar'); return; }
+    const data = { markers: youtubeMarkers, startTime: youtubeHasStartTime ? youtubeStartTime : null, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `marcacoes_yt_backup_${Date.now()}.json`; a.click();
+    URL.revokeObjectURL(url);
+}
+
+function youtubeImportMarkers(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.markers) {
+                youtubeMarkers = data.markers;
+                if (data.startTime !== null) {
+                    youtubeStartTime = data.startTime; youtubeHasStartTime = true;
+                    document.getElementById('ytStartTimeInput').value = formatTime(youtubeStartTime);
+                }
+                renderYoutubeMarkers();
+                alert('Marcações importadas com sucesso!');
+            }
+        } catch (err) { alert('Erro ao importar arquivo: ' + err.message); }
+    };
+    reader.readAsText(file); event.target.value = '';
+}
+
+function youtubeImportMarkersTxt(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            let importedCount = 0;
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || line.startsWith('#')) return;
+                const match = line.match(/^(\d{1,2}(?::\d{2}){1,2}|\d+)\s*[-:–—]?\s*(.+)?$/);
+                if (match) {
+                    let timeStr = match[1];
+                    let label = (match[2] || `Marcação ${youtubeMarkers.length + 1}`).trim();
+                    let seconds = timeStr.includes(':') ? timeToSeconds(timeStr) : (parseFloat(timeStr) || 0);
+                    const exists = youtubeMarkers.some(m => m.time === seconds && m.label === label);
+                    if (!exists) { youtubeMarkers.push({ id: Date.now() + importedCount, time: seconds, label: label }); importedCount++; }
+                }
             });
+            if (importedCount > 0) {
+                youtubeMarkers.sort((a, b) => a.time - b.time);
+                renderYoutubeMarkers();
+                alert(`✅ ${importedCount} marcação(ões) importada(s)!`);
+            } else alert('⚠️ Nenhuma marcação válida encontrada.');
+        } catch (err) { alert('Erro: ' + err.message); }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
 
-            // Criar blob e fazer download
-            const blob = new Blob([txtContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `marcacoes_${Date.now()}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        // Exportar Marcações em JSON (backup completo)
-        function exportMarkersJSON() {
-            if (markers.length === 0) {
-                alert('Não há marcações para exportar');
-                return;
-            }
-
-            const data = {
-                markers: markers,
-                startTime: hasStartTime ? startTime : null,
-                exportedAt: new Date().toISOString()
-            };
-
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `marcacoes_backup_${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importMarkers(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (data.markers) {
-                        markers = data.markers;
-                        if (data.startTime !== null) {
-                            startTime = data.startTime;
-                            hasStartTime = true;
-                            document.getElementById('startTimeInput').value = formatTime(startTime);
-                        }
-                        renderMarkers();
-                        updateProgressMarkers();
-                        saveToLocalStorage(); // 💾 Salvar após importar
-                        alert('Marcações importadas com sucesso!');
-                    }
-                } catch (err) {
-                    alert('Erro ao importar arquivo: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-
-        // 🆕 Importar marcações via arquivo TXT
-        function importMarkersTxt(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const text = e.target.result;
-                    const lines = text.split('\n');
-                    let importedCount = 0;
-                    
-                    lines.forEach(line => {
-                        line = line.trim();
-                        
-                        // Ignorar linhas vazias ou comentários
-                        if (!line || line.startsWith('#')) return;
-                        
-                        // Pattern: tempo no início (HH:MM:SS ou MM:SS ou apenas segundos)
-                        const match = line.match(/^(\d{1,2}(?::\d{2}){1,2}|\d+)\s*[-:–—]?\s*(.+)?$/);
-                        
-                        if (match) {
-                            let timeStr = match[1];
-                            let label = (match[2] || `Marcação ${markers.length + 1}`).trim();
-                            
-                            // Converter tempo para segundos
-                            let seconds;
-                            if (timeStr.includes(':')) {
-                                seconds = timeToSeconds(timeStr);
-                            } else {
-                                seconds = parseFloat(timeStr) || 0;
-                            }
-                            
-                            // Evitar duplicatas exatas
-                            const exists = markers.some(m => m.time === seconds && m.label === label);
-                            if (!exists) {
-                                markers.push({
-                                    id: Date.now() + importedCount,
-                                    time: seconds,
-                                    label: label
-                                });
-                                importedCount++;
-                            }
-                        }
-                    });
-                    
-                    if (importedCount > 0) {
-                        markers.sort((a, b) => a.time - b.time);
-                        renderMarkers();
-                        updateProgressMarkers();
-                        saveToLocalStorage(); // 💾 Salvar após importar TXT
-                        alert(`✅ ${importedCount} marcação(ões) importada(s) do arquivo TXT!`);
-                    } else {
-                        alert('⚠️ Nenhuma marcação válida encontrada no arquivo. Verifique o formato.');
-                    }
-                    
-                } catch (err) {
-                    alert('Erro ao importar arquivo TXT: ' + err.message);
-                }
-                event.target.value = '';
-            };
-            reader.readAsText(file);
-        }
-
-        // 💾 Função centralizada para salvar no localStorage
-        function saveToLocalStorage() {
-            if (markers.length > 0) {
-                localStorage.setItem('videoMarkers', JSON.stringify(markers));
-            }
-            localStorage.setItem('videoStartTime', JSON.stringify({
-                time: startTime,
-                enabled: hasStartTime
-            }));
-            // 🔊 Salvar volume também
-            localStorage.setItem('videoVolume', video.volume.toString());
-        }
-
-        // Salvar no localStorage automaticamente ao fechar
-        window.addEventListener('beforeunload', function() {
-            saveToLocalStorage();
-        });
-
-        // Carregar do localStorage ao iniciar
-        window.addEventListener('load', function() {
-            const savedMarkers = localStorage.getItem('videoMarkers');
-            const savedStartTime = localStorage.getItem('videoStartTime');
-            
-            if (savedMarkers) {
-                markers = JSON.parse(savedMarkers);
-                renderMarkers();
-            }
-            
-            if (savedStartTime) {
-                const data = JSON.parse(savedStartTime);
-                if (data.enabled) {
-                    startTime = data.time;
-                    hasStartTime = true;
-                    document.getElementById('startTimeInput').value = formatTime(startTime);
-                }
-            }
-            
-            // 🔊 Inicializar volume (será chamado também após carregar vídeo)
+// ================= LÓGICA ORIGINAL PC =================
+document.getElementById('videoInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const url = URL.createObjectURL(file);
+        video.src = url;
+        video.load();
+        video.addEventListener('loadedmetadata', function() {
+            document.getElementById('totalTime').textContent = formatTime(video.duration);
+            updateProgressMarkers();
             initVolume();
         });
+    }
+});
 
-        video.addEventListener('loadedmetadata', updateProgressMarkers);
+function initVolume() {
+    const savedVolume = localStorage.getItem('videoVolume');
+    if (savedVolume !== null) {
+        video.volume = parseFloat(savedVolume);
+        document.getElementById('volumeSlider').value = video.volume;
+    } else {
+        video.volume = 1;
+        document.getElementById('volumeSlider').value = 1;
+    }
+    updateVolumeIcon();
+}
 
-        // Toggle do menu mobile
-        document.querySelector('.navbar-toggler')?.addEventListener('click', function() {
-            const collapse = document.getElementById('navbarNav');
-            const isExpanded = this.getAttribute('aria-expanded') === 'true';
-            
-            this.setAttribute('aria-expanded', !isExpanded);
-            
-            if (!isExpanded) {
-                collapse.classList.add('show');
-                collapse.style.maxHeight = collapse.scrollHeight + 'px';
-            } else {
-                collapse.classList.remove('show');
-                collapse.style.maxHeight = null;
+function setVolume(value) {
+    video.volume = parseFloat(value);
+    localStorage.setItem('videoVolume', value);
+    updateVolumeIcon();
+}
+
+function toggleMute() {
+    if (video.volume > 0) {
+        video.dataset.previousVolume = video.volume;
+        video.volume = 0;
+    } else {
+        video.volume = parseFloat(video.dataset.previousVolume) || 1;
+    }
+    document.getElementById('volumeSlider').value = video.volume;
+    localStorage.setItem('videoVolume', video.volume);
+    updateVolumeIcon();
+}
+
+function updateVolumeIcon() {
+    const btn = document.getElementById('volumeBtn');
+    if (video.volume === 0) btn.textContent = '🔇';
+    else if (video.volume < 0.5) btn.textContent = '🔉';
+    else btn.textContent = '🔊';
+}
+
+function secondsToTimeInput(seconds) {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function formatTime(seconds) {
+    if (isNaN(seconds)) return '00:00:00';
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function timeToSeconds(timeStr) {
+    const parts = timeStr.split(':').map(Number);
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    else if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return 0;
+}
+
+function togglePlay() {
+    if (hasStartTime && video.currentTime < startTime) video.currentTime = startTime;
+    video.play();
+}
+
+function pauseVideo() { video.pause(); }
+
+function stopVideo() {
+    video.pause();
+    if (hasStartTime) video.currentTime = startTime;
+    else video.currentTime = 0;
+}
+
+function setStartTime() {
+    const input = document.getElementById('startTimeInput');
+    if (input.value) {
+        startTime = timeToSeconds(input.value);
+        hasStartTime = true;
+        video.currentTime = startTime;
+        saveToLocalStorage();
+        alert(`Início definido para: ${formatTime(startTime)}`);
+    }
+}
+
+function clearStartTime() {
+    hasStartTime = false;
+    startTime = 0;
+    document.getElementById('startTimeInput').value = '';
+    saveToLocalStorage();
+}
+
+function addMarker() {
+    const timeInput = document.getElementById('markerTime');
+    const labelInput = document.getElementById('markerLabel');
+    if (!timeInput.value) { alert('Por favor, insira um tempo para a marcação'); return; }
+    const marker = {
+        id: Date.now(),
+        time: timeToSeconds(timeInput.value),
+        label: labelInput.value || `Marcação ${markers.length + 1}`
+    };
+    markers.push(marker);
+    markers.sort((a, b) => a.time - b.time);
+    renderMarkers();
+    updateProgressMarkers();
+    saveToLocalStorage();
+    timeInput.value = '';
+    labelInput.value = '';
+}
+
+function removeMarker(id) {
+    markers = markers.filter(m => m.id !== id);
+    renderMarkers();
+    updateProgressMarkers();
+    saveToLocalStorage();
+}
+
+function clearAllMarkers() {
+    if (markers.length === 0) { alert('Não há marcações para limpar'); return; }
+    if (confirm(`Tem certeza que deseja remover todas as ${markers.length} marcações?`)) {
+        markers = [];
+        renderMarkers();
+        updateProgressMarkers();
+        saveToLocalStorage();
+    }
+}
+
+function goToMarker(time) {
+    video.currentTime = time;
+    if (video.paused) video.play();
+}
+
+function renderMarkers() {
+    const list = document.getElementById('markerList');
+    if (markers.length === 0) {
+        list.innerHTML = `<div class="empty-state"><p>Nenhuma marcação adicionada</p><p style="font-size: 12px; margin-top: 10px;">Adicione timestamps para testar</p></div>`;
+        return;
+    }
+    list.innerHTML = markers.map(marker => `
+    <div class="marker-item" onclick="goToMarker(${marker.time})">
+        <div>
+            <div class="marker-time" id="marker-time-${marker.id}">${formatTime(marker.time)}</div>
+            <div class="marker-label">${marker.label}</div>
+        </div>
+        <div class="marker-actions">
+            <button id="marker-play-btn-${marker.id}" class="btn-primary"
+                onclick="event.stopPropagation(); toggleMarkerPlay(${marker.id}, ${marker.time}, this)"
+                title="Reproduzir/Parar">▶</button>
+            <button class="btn-secondary" onclick="event.stopPropagation(); editMarker(${marker.id})" title="Editar tempo">✏️</button>
+            <button class="btn-danger" onclick="event.stopPropagation(); removeMarker(${marker.id})" title="Remover">✕</button>
+        </div>
+    </div>`).join('');
+}
+
+function editMarker(id) {
+    const marker = markers.find(m => m.id === id);
+    if (!marker) return;
+    const timeElement = document.getElementById(`marker-time-${id}`);
+    if (!timeElement) return;
+    const input = document.createElement('input');
+    input.type = 'time'; input.step = '1';
+    input.value = secondsToTimeInput(marker.time);
+    input.style.cssText = "width: 100px; padding: 4px 8px; border: 1px solid #667eea; border-radius: 4px; background: #1a202c; color: white;";
+    timeElement.innerHTML = '';
+    timeElement.appendChild(input);
+    input.focus();
+    const saveEdit = function() {
+        const newValue = input.value;
+        if (newValue) {
+            const newSeconds = timeToSeconds(newValue);
+            if (newSeconds !== marker.time) {
+                marker.time = newSeconds;
+                markers.sort((a, b) => a.time - b.time);
+                renderMarkers();
+                updateProgressMarkers();
+                saveToLocalStorage();
             }
-        });
+        } else renderMarkers();
+    };
+    input.addEventListener('blur', saveEdit);
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { saveEdit(); input.blur(); }
+        else if (e.key === 'Escape') renderMarkers();
+    });
+    input.addEventListener('click', e => e.stopPropagation());
+}
 
-        // Fechar menu ao clicar em um link (mobile)
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                const collapse = document.getElementById('navbarNav');
-                const toggler = document.querySelector('.navbar-toggler');
-                
-                if (window.innerWidth <= 991 && collapse.classList.contains('show')) {
-                    collapse.classList.remove('show');
-                    collapse.style.maxHeight = null;
-                    toggler.setAttribute('aria-expanded', 'false');
+video.addEventListener('timeupdate', function() {
+    if (video.duration) {
+        const progress = (video.currentTime / video.duration) * 100;
+        document.getElementById('progressBar').style.width = progress + '%';
+    }
+    document.getElementById('currentTime').textContent = formatTime(video.currentTime);
+});
+
+video.addEventListener('timeupdate', function() {
+    if (hasStartTime && video.currentTime < startTime && video.currentTime > 0) {
+        video.currentTime = startTime;
+    }
+});
+
+function updateProgressMarkers() {
+    const container = document.getElementById('progressContainer');
+    container.querySelectorAll('.marker-indicator').forEach(el => el.remove());
+    if (video.duration) {
+        markers.forEach(marker => {
+            const indicator = document.createElement('div');
+            indicator.className = 'marker-indicator';
+            indicator.style.cssText = "position: absolute; top: 0; bottom: 0; width: 2px; background: #fc8181; z-index: 10;";
+            indicator.style.left = ((marker.time / video.duration) * 100) + '%';
+            indicator.title = `${marker.label} - ${formatTime(marker.time)}`;
+            container.appendChild(indicator);
+        });
+    }
+}
+
+function exportMarkers() {
+    if (markers.length === 0) { alert('Não há marcações para exportar'); return; }
+    let txtContent = '';
+    markers.forEach(marker => { txtContent += `${formatTime(marker.time)} ${marker.label}\n`; });
+    const blob = new Blob([txtContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `marcacoes_${Date.now()}.txt`; a.click();
+    URL.revokeObjectURL(url);
+}
+
+function exportMarkersJSON() {
+    if (markers.length === 0) { alert('Não há marcações para exportar'); return; }
+    const data = { markers: markers, startTime: hasStartTime ? startTime : null, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `marcacoes_backup_${Date.now()}.json`; a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importMarkers(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.markers) {
+                markers = data.markers;
+                if (data.startTime !== null) {
+                    startTime = data.startTime; hasStartTime = true;
+                    document.getElementById('startTimeInput').value = formatTime(startTime);
+                }
+                renderMarkers(); updateProgressMarkers(); saveToLocalStorage();
+                alert('Marcações importadas com sucesso!');
+            }
+        } catch (err) { alert('Erro ao importar arquivo: ' + err.message); }
+    };
+    reader.readAsText(file); event.target.value = '';
+}
+
+function importMarkersTxt(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            let importedCount = 0;
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || line.startsWith('#')) return;
+                const match = line.match(/^(\d{1,2}(?::\d{2}){1,2}|\d+)\s*[-:–—]?\s*(.+)?$/);
+                if (match) {
+                    let timeStr = match[1];
+                    let label = (match[2] || `Marcação ${markers.length + 1}`).trim();
+                    let seconds = timeStr.includes(':') ? timeToSeconds(timeStr) : (parseFloat(timeStr) || 0);
+                    const exists = markers.some(m => m.time === seconds && m.label === label);
+                    if (!exists) { markers.push({ id: Date.now() + importedCount, time: seconds, label: label }); importedCount++; }
                 }
             });
-        });
+            if (importedCount > 0) {
+                markers.sort((a, b) => a.time - b.time);
+                renderMarkers(); updateProgressMarkers(); saveToLocalStorage();
+                alert(`✅ ${importedCount} marcação(ões) importada(s)!`);
+            } else alert('⚠️ Nenhuma marcação válida encontrada.');
+        } catch (err) { alert('Erro: ' + err.message); }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
 
-        // Ajustar menu ao redimensionar janela
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 991) {
-                const collapse = document.getElementById('navbarNav');
-                collapse.classList.remove('show');
-                collapse.style.maxHeight = null;
-                document.querySelector('.navbar-toggler')?.setAttribute('aria-expanded', 'false');
-            }
-        });
+function saveToLocalStorage() {
+    if (markers.length > 0) localStorage.setItem('videoMarkers', JSON.stringify(markers));
+    localStorage.setItem('videoStartTime', JSON.stringify({ time: startTime, enabled: hasStartTime }));
+    localStorage.setItem('videoVolume', video.volume.toString());
+}
 
-        /* ======================================================
-           NOVO (COMPLEMENTO): LÓGICA DO BUSCADOR / HIGHLIGHT
-           ====================================================== */
-        const searchTextDiv = document.getElementById('searchText');
-        const searchQueryInput = document.getElementById('searchQuery');
-        const searchBtn = document.getElementById('searchBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        const matchCounterEl = document.getElementById('matchCounter');
+window.addEventListener('beforeunload', function() { saveToLocalStorage(); });
 
-        let rawSearchText = '';   // texto puro (sem tags)
-        let lastQuery = '';
-        let matches = [];         // [{start,end}]
-        let currentMatchIndex = -1;
-
-        // Carregar possíveis dados salvos do buscador (sem alterar seu fluxo original)
-        window.addEventListener('load', function(){
-            // Se já existir algo salvo, usamos; senão, começamos vazio
-            const savedRaw = localStorage.getItem('vte_searchText') || '';
-            const savedQuery = localStorage.getItem('vte_searchQuery') || '';
-            if (savedRaw) {
-                rawSearchText = savedRaw;
-                renderHighlighted(); // mostra texto salvo (sem realce até buscar)
-            }
-            if (savedQuery) searchQueryInput.value = savedQuery;
-        });
-
-        // Capturar texto puro sempre que o usuário editar a caixa (contenteditable)
-        searchTextDiv.addEventListener('input', () => {
-            // innerText nos dá apenas texto (sem <mark>)
-            rawSearchText = searchTextDiv.innerText;
-            if (lastQuery) performSearch(false); // re-realça se já houver consulta ativa
-            saveSearchState();
-        });
-
-        // Botões e Enter
-        searchBtn.addEventListener('click', () => performSearch(true));
-        searchQueryInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') performSearch(true);
-        });
-        nextBtn.addEventListener('click', gotoNext);
-        prevBtn.addEventListener('click', gotoPrev);
-
-        // Atalhos úteis (sem mexer nos seus atalhos/fluxo existentes)
-        document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd+F foca a busca
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
-                e.preventDefault();
-                searchQueryInput.focus();
-                searchQueryInput.select();
-            }
-            // F3 -> próximo, Shift+F3 -> anterior (padrão de editores)
-            if (e.key === 'F3' && !e.shiftKey) { e.preventDefault(); gotoNext(); }
-            if (e.key === 'F3' && e.shiftKey)  { e.preventDefault(); gotoPrev(); }
-        });
-
-        function performSearch(resetToFirst=true){
-            lastQuery = (searchQueryInput.value || '').trim();
-            matches = []; currentMatchIndex = -1;
-
-            if (!lastQuery) {
-                renderHighlighted();
-                updateCounter();
-                saveSearchState();
-                return;
-            }
-
-            const hay = (rawSearchText || '').toLowerCase();
-            const needle = lastQuery.toLowerCase();
-
-            let idx = 0;
-            while (true) {
-                idx = hay.indexOf(needle, idx);
-                if (idx === -1) break;
-                matches.push({ start: idx, end: idx + needle.length });
-                idx += needle.length || 1;
-            }
-
-            if (matches.length > 0) {
-                currentMatchIndex = resetToFirst ? 0 : Math.min(currentMatchIndex, matches.length-1);
-            }
-
-            renderHighlighted();
-            updateCounter();
-            scrollToCurrent();
-            saveSearchState();
+window.addEventListener('load', function() {
+    const savedMarkers = localStorage.getItem('videoMarkers');
+    const savedStartTime = localStorage.getItem('videoStartTime');
+    if (savedMarkers) { markers = JSON.parse(savedMarkers); renderMarkers(); }
+    if (savedStartTime) {
+        const data = JSON.parse(savedStartTime);
+        if (data.enabled) {
+            startTime = data.time; hasStartTime = true;
+            document.getElementById('startTimeInput').value = formatTime(startTime);
         }
+    }
+    initVolume();
+});
 
-        function gotoNext(){
-            if (matches.length === 0) return;
-            currentMatchIndex = (currentMatchIndex + 1) % matches.length;
-            renderHighlighted(); updateCounter(); scrollToCurrent();
+video.addEventListener('loadedmetadata', updateProgressMarkers);
+
+document.querySelector('.navbar-toggler')?.addEventListener('click', function() {
+    const collapse = document.getElementById('navbarNav');
+    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+    this.setAttribute('aria-expanded', !isExpanded);
+    if (!isExpanded) { collapse.classList.add('show'); collapse.style.maxHeight = collapse.scrollHeight + 'px'; }
+    else { collapse.classList.remove('show'); collapse.style.maxHeight = null; }
+});
+
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+        const collapse = document.getElementById('navbarNav');
+        const toggler = document.querySelector('.navbar-toggler');
+        if (window.innerWidth <= 991 && collapse.classList.contains('show')) {
+            collapse.classList.remove('show'); collapse.style.maxHeight = null;
+            toggler.setAttribute('aria-expanded', 'false');
         }
+    });
+});
 
-        function gotoPrev(){
-            if (matches.length === 0) return;
-            currentMatchIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
-            renderHighlighted(); updateCounter(); scrollToCurrent();
-        }
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 991) {
+        const collapse = document.getElementById('navbarNav');
+        collapse.classList.remove('show'); collapse.style.maxHeight = null;
+        document.querySelector('.navbar-toggler')?.setAttribute('aria-expanded', 'false');
+    }
+});
 
-        function updateCounter(){
-            if (matches.length === 0) matchCounterEl.textContent = '0/0';
-            else matchCounterEl.textContent = `${currentMatchIndex+1}/${matches.length}`;
-        }
+// BUSCADOR PC
+const searchTextDiv = document.getElementById('searchText');
+const searchQueryInput = document.getElementById('searchQuery');
+const searchBtn = document.getElementById('searchBtn');
+const nextBtn = document.getElementById('nextBtn');
+const prevBtn = document.getElementById('prevBtn');
+const matchCounterEl = document.getElementById('matchCounter');
+let rawSearchText = '';
+let lastQuery = '';
+let matches = [];
+let currentMatchIndex = -1;
 
-        function renderHighlighted(){
-            // Se não há termo, apenas mostra o texto “puro” escapado
-            if (!lastQuery) {
-                searchTextDiv.innerHTML = escapeHtml(rawSearchText || '');
-                return;
+window.addEventListener('load', function(){
+    const savedRaw = localStorage.getItem('vte_searchText') || '';
+    const savedQuery = localStorage.getItem('vte_searchQuery') || '';
+    if (savedRaw) { rawSearchText = savedRaw; renderHighlighted(); }
+    if (savedQuery) searchQueryInput.value = savedQuery;
+});
+
+searchTextDiv.addEventListener('input', () => {
+    rawSearchText = searchTextDiv.innerText;
+    if (lastQuery) performSearch(false);
+    saveSearchState();
+});
+
+searchBtn.addEventListener('click', () => performSearch(true));
+searchQueryInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(true); });
+nextBtn.addEventListener('click', gotoNext);
+prevBtn.addEventListener('click', gotoPrev);
+
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); searchQueryInput.focus(); searchQueryInput.select(); }
+    if (e.key === 'F3' && !e.shiftKey) { e.preventDefault(); gotoNext(); }
+    if (e.key === 'F3' && e.shiftKey)  { e.preventDefault(); gotoPrev(); }
+});
+
+function performSearch(resetToFirst=true){
+    lastQuery = (searchQueryInput.value || '').trim();
+    matches = []; currentMatchIndex = -1;
+    if (!lastQuery) { renderHighlighted(); updateCounter(); saveSearchState(); return; }
+    const hay = (rawSearchText || '').toLowerCase();
+    const needle = lastQuery.toLowerCase();
+    let idx = 0;
+    while (true) {
+        idx = hay.indexOf(needle, idx);
+        if (idx === -1) break;
+        matches.push({ start: idx, end: idx + needle.length });
+        idx += needle.length || 1;
+    }
+    if (matches.length > 0) { currentMatchIndex = resetToFirst ? 0 : Math.min(currentMatchIndex, matches.length-1); }
+    renderHighlighted(); updateCounter(); scrollToCurrent(); saveSearchState();
+}
+
+function gotoNext(){
+    if (matches.length === 0) return;
+    currentMatchIndex = (currentMatchIndex + 1) % matches.length;
+    renderHighlighted(); updateCounter(); scrollToCurrent();
+}
+
+function gotoPrev(){
+    if (matches.length === 0) return;
+    currentMatchIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
+    renderHighlighted(); updateCounter(); scrollToCurrent();
+}
+
+function updateCounter(){
+    if (matches.length === 0) matchCounterEl.textContent = '0/0';
+    else matchCounterEl.textContent = `${currentMatchIndex+1}/${matches.length}`;
+}
+
+function renderHighlighted(){
+    if (!lastQuery) { searchTextDiv.innerHTML = escapeHtml(rawSearchText || ''); return; }
+    let html = ''; let lastEnd = 0;
+    for (let i = 0; i < matches.length; i++) {
+        const m = matches[i];
+        html += escapeHtml((rawSearchText || '').slice(lastEnd, m.start));
+        const seg = escapeHtml((rawSearchText || '').slice(m.start, m.end));
+        html += `<mark ${i===currentMatchIndex ? 'class="current"' : ''} data-idx="${i}">${seg}</mark>`;
+        lastEnd = m.end;
+    }
+    html += escapeHtml((rawSearchText || '').slice(lastEnd));
+    searchTextDiv.innerHTML = html;
+}
+
+function scrollToCurrent(){
+    const current = searchTextDiv.querySelector('mark.current');
+    if (current) current.scrollIntoView({ block:'center', inline:'nearest', behavior:'smooth' });
+}
+
+function escapeHtml(str){
+    return String(str).replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('"','"').replaceAll("'","&#039;");
+}
+
+function saveSearchState(){
+    localStorage.setItem('vte_searchText', rawSearchText || '');
+    localStorage.setItem('vte_searchQuery', searchQueryInput.value || '');
+}
+
+function setMarkerButtonIcon(id, playing) {
+    const btn = document.getElementById(`marker-play-btn-${id}`);
+    if (!btn) return;
+    btn.textContent = playing ? '⏹' : '▶';
+    btn.title = playing ? 'Parar' : 'Reproduzir';
+    if (playing) { btn.classList.remove('btn-primary'); btn.classList.add('btn-danger'); }
+    else { btn.classList.remove('btn-danger'); btn.classList.add('btn-primary'); }
+}
+
+function toggleMarkerPlay(id, time, btnEl) {
+    if (currentMarkerPlayingId === id) {
+        stopVideo();
+        setMarkerButtonIcon(id, false);
+        currentMarkerPlayingId = null;
+        return;
+    }
+    if (currentMarkerPlayingId !== null && currentMarkerPlayingId !== id) {
+        setMarkerButtonIcon(currentMarkerPlayingId, false);
+    }
+    video.currentTime = time;
+    video.play();
+    currentMarkerPlayingId = id;
+    setMarkerButtonIcon(id, true);
+}
+
+video.addEventListener('ended', function () {
+    if (currentMarkerPlayingId !== null) { setMarkerButtonIcon(currentMarkerPlayingId, false); currentMarkerPlayingId = null; }
+});
+
+video.addEventListener('pause', function () {
+    if (currentMarkerPlayingId !== null) { setMarkerButtonIcon(currentMarkerPlayingId, false); currentMarkerPlayingId = null; }
+});
+
+// BUSCADOR YOUTUBE
+const ytSearchTextDiv = document.getElementById('ytSearchText');
+const ytSearchQueryInput = document.getElementById('ytSearchQuery');
+const ytSearchBtn = document.getElementById('ytSearchBtn');
+const ytNextBtn = document.getElementById('ytNextBtn');
+const ytPrevBtn = document.getElementById('ytPrevBtn');
+const ytMatchCounterEl = document.getElementById('ytMatchCounter');
+let ytRawSearchText = '';
+let ytLastQuery = '';
+let ytMatches = [];
+let ytCurrentMatchIndex = -1;
+
+window.addEventListener('load', function(){
+    const savedRaw = localStorage.getItem('vte_yt_searchText') || '';
+    const savedQuery = localStorage.getItem('vte_yt_searchQuery') || '';
+    if (savedRaw) { ytRawSearchText = savedRaw; ytRenderHighlighted(); }
+    if (savedQuery) ytSearchQueryInput.value = savedQuery;
+});
+
+ytSearchTextDiv.addEventListener('input', () => {
+    ytRawSearchText = ytSearchTextDiv.innerText;
+    if (ytLastQuery) ytPerformSearch(false);
+    ytSaveSearchState();
+});
+
+ytSearchBtn.addEventListener('click', () => ytPerformSearch(true));
+ytSearchQueryInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') ytPerformSearch(true); });
+ytNextBtn.addEventListener('click', ytGotoNext);
+ytPrevBtn.addEventListener('click', ytGotoPrev);
+
+function ytPerformSearch(resetToFirst=true){
+    ytLastQuery = (ytSearchQueryInput.value || '').trim();
+    ytMatches = []; ytCurrentMatchIndex = -1;
+    if (!ytLastQuery) { ytRenderHighlighted(); ytUpdateCounter(); ytSaveSearchState(); return; }
+    const hay = (ytRawSearchText || '').toLowerCase();
+    const needle = ytLastQuery.toLowerCase();
+    let idx = 0;
+    while (true) {
+        idx = hay.indexOf(needle, idx);
+        if (idx === -1) break;
+        ytMatches.push({ start: idx, end: idx + needle.length });
+        idx += needle.length || 1;
+    }
+    if (ytMatches.length > 0) { ytCurrentMatchIndex = resetToFirst ? 0 : Math.min(ytCurrentMatchIndex, ytMatches.length-1); }
+    ytRenderHighlighted(); ytUpdateCounter(); ytScrollToCurrent(); ytSaveSearchState();
+}
+
+function ytGotoNext(){
+    if (ytMatches.length === 0) return;
+    ytCurrentMatchIndex = (ytCurrentMatchIndex + 1) % ytMatches.length;
+    ytRenderHighlighted(); ytUpdateCounter(); ytScrollToCurrent();
+}
+
+function ytGotoPrev(){
+    if (ytMatches.length === 0) return;
+    ytCurrentMatchIndex = (ytCurrentMatchIndex - 1 + ytMatches.length) % ytMatches.length;
+    ytRenderHighlighted(); ytUpdateCounter(); ytScrollToCurrent();
+}
+
+function ytUpdateCounter(){
+    if (ytMatches.length === 0) ytMatchCounterEl.textContent = '0/0';
+    else ytMatchCounterEl.textContent = `${ytCurrentMatchIndex+1}/${ytMatches.length}`;
+}
+
+function ytRenderHighlighted(){
+    if (!ytLastQuery) { ytSearchTextDiv.innerHTML = escapeHtml(ytRawSearchText || ''); return; }
+    let html = ''; let lastEnd = 0;
+    for (let i = 0; i < ytMatches.length; i++) {
+        const m = ytMatches[i];
+        html += escapeHtml((ytRawSearchText || '').slice(lastEnd, m.start));
+        const seg = escapeHtml((ytRawSearchText || '').slice(m.start, m.end));
+        html += `<mark ${i===ytCurrentMatchIndex ? 'class="current"' : ''} data-idx="${i}">${seg}</mark>`;
+        lastEnd = m.end;
+    }
+    html += escapeHtml((ytRawSearchText || '').slice(lastEnd));
+    ytSearchTextDiv.innerHTML = html;
+}
+
+function ytScrollToCurrent(){
+    const current = ytSearchTextDiv.querySelector('mark.current');
+    if (current) current.scrollIntoView({ block:'center', inline:'nearest', behavior:'smooth' });
+}
+
+function ytSaveSearchState(){
+    localStorage.setItem('vte_yt_searchText', ytRawSearchText || '');
+    localStorage.setItem('vte_yt_searchQuery', ytSearchQueryInput.value || '');
+}
+
+// Resetar botão da marcação apenas quando vídeo terminar ou pausar por outros motivos
+if (typeof YT !== 'undefined') {
+    setInterval(function() {
+        if (youtubePlayer && youtubePlayer.getPlayerState) {
+            const state = youtubePlayer.getPlayerState();
+            // ENDED = 0
+            if (state === YT.PlayerState.ENDED) {
+                if (youtubeCurrentMarkerPlayingId !== null) {
+                    setYoutubeMarkerButtonIcon(youtubeCurrentMarkerPlayingId, false);
+                    youtubeCurrentMarkerPlayingId = null;
+                }
             }
-
-            let html = '';
-            let lastEnd = 0;
-            for (let i = 0; i < matches.length; i++) {
-                const m = matches[i];
-                html += escapeHtml((rawSearchText || '').slice(lastEnd, m.start));
-                const seg = escapeHtml((rawSearchText || '').slice(m.start, m.end));
-                html += `<mark ${i===currentMatchIndex ? 'class="current"' : ''} data-idx="${i}">${seg}</mark>`;
-                lastEnd = m.end;
-            }
-            html += escapeHtml((rawSearchText || '').slice(lastEnd));
-            searchTextDiv.innerHTML = html;
         }
+    }, 500);
+}
 
-        function scrollToCurrent(){
-            const current = searchTextDiv.querySelector('mark.current');
-            if (current) current.scrollIntoView({ block:'center', inline:'nearest', behavior:'smooth' });
-        }
-
-        function escapeHtml(str){
-            return String(str)
-                .replaceAll('&','&')
-                .replaceAll('<','<')
-                .replaceAll('>','>')
-                .replaceAll('"','"')
-                .replaceAll("'","&#039;");
-        }
-
-        function saveSearchState(){
-            // Persistência separada para não alterar sua função saveToLocalStorage()
-            localStorage.setItem('vte_searchText', rawSearchText || '');
-            localStorage.setItem('vte_searchQuery', searchQueryInput.value || '');
-        }
-
-
-        // ======================================================
-        // NOVO: Tocar/Parar por marcação (toggle no mesmo botão)
-        // ======================================================
-        let currentMarkerPlayingId = null;
-
-        /**
-        * Atualiza o ícone e o estilo do botão de uma marcação.
-        * playing=true  -> mostra ⏹ e usa estilo "perigo" (vermelho)
-        * playing=false -> mostra ▶  e usa estilo primário (roxo/azul)
-        */
-        function setMarkerButtonIcon(id, playing) {
-            const btn = document.getElementById(`marker-play-btn-${id}`);
-            if (!btn) return;
-            btn.textContent = playing ? '⏹' : '▶';
-            btn.title = playing ? 'Parar' : 'Reproduzir';
-
-            // alterna classes (mantendo seu visual atual)
-            if (playing) {
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-danger');
-            } else {
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-primary');
-            }
-        }
-
-        /**
-        * Alterna play/stop ao clicar no botão da marcação.
-        * - Se clicar em uma marcação diferente, a anterior volta para ▶ automaticamente.
-        * - Ao parar, chamamos seu stopVideo() para manter o mesmo comportamento (volta para startTime ou 0).
-        */
-        function toggleMarkerPlay(id, time, btnEl) {
-            // Se já estamos tocando esta marcação, vira STOP => STOP
-            if (currentMarkerPlayingId === id) {
-                stopVideo(); // usa sua função (respeita hasStartTime)
-                setMarkerButtonIcon(id, false);
-                currentMarkerPlayingId = null;
-                return;
-            }
-
-            // Se havia outra marcação tocando, volta o botão anterior para ▶
-            if (currentMarkerPlayingId !== null && currentMarkerPlayingId !== id) {
-                setMarkerButtonIcon(currentMarkerPlayingId, false);
-            }
-
-            // Vai para o tempo da marcação e toca
-            video.currentTime = time;
-            video.play();
-
-            // Marca ativo e muda para ⏹
-            currentMarkerPlayingId = id;
-            setMarkerButtonIcon(id, true);
-        }
-
-        // Quando o vídeo termina, reseta o botão da marcação ativa
-        video.addEventListener('ended', function () {
-            if (currentMarkerPlayingId !== null) {
-                setMarkerButtonIcon(currentMarkerPlayingId, false);
-                currentMarkerPlayingId = null;
-            }
-        });
-
-        // Se o vídeo for pausado por qualquer outro motivo (ex.: teclas, controles principais),
-        // garantimos que o botão da marcação volte para ▶
-        video.addEventListener('pause', function () {
-            // Só reseta se havia uma marcação "ativa"
-            if (currentMarkerPlayingId !== null) {
-                setMarkerButtonIcon(currentMarkerPlayingId, false);
-                currentMarkerPlayingId = null;
-            }
-        });
-        /* =================== FIM DO COMPLEMENTO BUSCADOR =================== */
-    </script>
+</script>
 </body>
 </html>
