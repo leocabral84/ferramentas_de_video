@@ -196,13 +196,15 @@
         }
         /* ============ FIM ESTILOS NAVBAR ============ */
 
+        /* SUBSTITUIR a regra .container */
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
+        max-width: 1200px;
+        margin: 0 auto;
+        background: #2d3748;     /* antes era white; agora fundo escuro */
+        border-radius: 15px;
+        box-shadow: 0 20px 60px #2d3748;
+        overflow: hidden;
+        color: #e2e8f0;          /* texto padrão claro dentro do container */
         }
 
         .header {
@@ -220,7 +222,7 @@
         .video-section {
             flex: 1;
             padding: 20px;
-            background: #1a202c;
+            background: #2d3748;
         }
 
         .video-container {
@@ -583,6 +585,76 @@
             height: 100%;
         }
 
+        /* Estilos das Abas do Buscador */
+        .search-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4a5568;
+            padding-bottom: 10px;
+        }
+
+        .search-tabs button {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .search-tab-content {
+            display: block;
+        }
+
+        /* Responsivo para mobile */
+        @media (max-width: 768px) {
+            .pdf-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .pdf-controls button,
+            .pdf-controls input[type="file"] {
+                width: 100%;
+            }
+        }
+
+        /* INCLUIR: deixar a barra “clicável” visualmente */
+        #progressContainer,
+        #ytProgressContainer {
+        cursor: pointer;
+        user-select: none; /* evita selecionar texto durante arraste */
+        }
+
+        /* === Tooltip de tempo na barra de progresso === */
+        .progress-tooltip {
+        position: absolute;
+        transform: translate(-50%, -150%); /* sobe mais o balão */
+        background: rgba(17, 24, 39, 0.92); /* #111827 */
+        color: #e5e7eb;                     /* slate-200 */
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        line-height: 1;                     /* compacto para ganhar espaço */
+        pointer-events: none;
+        white-space: nowrap;
+        z-index: 1000;                      /* garante sobreposição */
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 4px 12px rgba(0,0,0,.35);
+        }
+
+        /* Deixar a barra “clicável” e com espaço superior para o tooltip */
+        #progressContainer,
+        #ytProgressContainer {
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+        margin-top: 22px;   /* + espaço acima da barra para o tooltip não colidir */
+        overflow: visible;  /* garante que o tooltip possa “sair” da barra */
+        }
+
     </style>
 </head>
 <body>
@@ -665,26 +737,54 @@
                     </div>
                 </div>
 
-                <!-- BUSCADOR -->
-                <div class="search-section" aria-label="Buscador de Palavras e Frases">
-                    <div class="search-header">
-                        <div class="search-controls">
-                            <input type="text" id="searchQuery" class="search-input" placeholder="Buscar palavra ou frase..." />
-                            <button class="btn-secondary btn-nav" id="prevBtn" title="Anterior">← Anterior</button>
-                            <button class="btn-secondary btn-nav" id="nextBtn" title="Próximo">Próximo →</button>
-                            <button class="btn-primary btn-icon" id="searchBtn" title="Buscar"><span class="icon">🔍</span> Buscar</button>
-                        </div>
-                        <div class="search-status"><span id="matchCounter">0/0</span></div>
+                <!-- BUSCADOR COM ABAS (TEXTO E PDF) - PC -->
+                <div class="search-section" aria-label="Buscador e Leitor">
+                    <div class="search-tabs">
+                        <button class="btn-primary" id="tabText" onclick="switchSearchTabPC('text')">📝 Texto</button>
+                        <button class="btn-secondary" id="tabPDF" onclick="switchSearchTabPC('pdf')">📄 PDF</button>
                     </div>
-                    <div class="search-text-wrapper">
-                        <div id="searchText" class="search-text" contenteditable="true" spellcheck="false"
-                            data-placeholder="📋 Cole aqui a transcrição ou texto para buscar. As ocorrências serão realçadas."></div>
+                    
+                    <div id="contentSearchText" class="search-tab-content">
+                        <div class="search-header">
+                            <div class="search-controls">
+                                <input type="text" id="searchQuery" class="search-input" placeholder="Buscar palavra ou frase..." />
+                                <button class="btn-secondary btn-nav" id="prevBtn" title="Anterior">← Anterior</button>
+                                <button class="btn-secondary btn-nav" id="nextBtn" title="Próximo">Próximo →</button>
+                                <button class="btn-primary btn-icon" id="searchBtn" title="Buscar"><span class="icon">🔍</span> Buscar</button>
+                            </div>
+                            <div class="search-status"><span id="matchCounter">0/0</span></div>
+                        </div>
+                        <div class="search-text-wrapper">
+                            <div id="searchText" class="search-text" contenteditable="true" spellcheck="false"
+                                data-placeholder="📋 Cole aqui a transcrição ou texto para buscar. As ocorrências serão realçadas."></div>
+                        </div>
+                    </div>
+                    
+                    <div id="contentSearchPDF" class="search-tab-content" style="display: none;">
+                        <div class="pdf-controls">
+                            <input type="file" id="pdfInput" accept=".pdf" style="flex: 1; min-width: 200px;" />
+                            <button class="btn-success" onclick="loadPDFAndShow('pc')">📂 Carregar PDF</button>
+                            <button class="btn-secondary" onclick="previousPage('pc')" title="Página Anterior">◀ Anterior</button>
+                            <span id="pdfPageInfo" style="color: #e2e8f0; font-size: 14px;">Página 0 de 0</span>
+                            <button class="btn-secondary" onclick="nextPage('pc')" title="Próxima Página">Próxima ▶</button>
+                            <input type="number" id="pdfPageInput" min="1" placeholder="Ir para..." 
+                                style="width: 80px; padding: 6px; border-radius: 4px; border: 1px solid #4a5568; background: #1a202c; color: white;"
+                                onkeypress="if(event.key==='Enter') goToPage('pc')" />
+                            <button class="btn-primary" onclick="goToPage('pc')">Ir</button>
+                        </div>
+                        <div class="pdf-viewer">
+                            <canvas id="pdfCanvas" style="display: none;"></canvas>
+                            <div id="pdfPlaceholder">
+                                <p style="font-size: 48px; margin-bottom: 10px;">📄</p>
+                                <p>Nenhum PDF carregado</p>
+                                <p style="font-size: 12px; margin-top: 10px;">Selecione um arquivo PDF para visualizar</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- MARCADORES PC -->
-            
             <div class="markers-section">
                 <div class="section-title">📌 MARCAÇÕES</div>
                 <div class="marker-input">
@@ -776,25 +876,53 @@
                     </div>
                 </div>
 
-                <!-- BUSCADOR YOUTUBE -->
-                <div class="search-section" aria-label="Buscador de Palavras e Frases">
-                    <div class="search-header">
-                        <div class="search-controls">
-                            <input type="text" id="ytSearchQuery" class="search-input" placeholder="Buscar palavra ou frase..." />
-                            <button class="btn-secondary btn-nav" id="ytPrevBtn" title="Anterior">← Anterior</button>
-                            <button class="btn-secondary btn-nav" id="ytNextBtn" title="Próximo">Próximo →</button>
-                            <button class="btn-primary btn-icon" id="ytSearchBtn" title="Buscar"><span class="icon">🔍</span> Buscar</button>
-                        </div>
-                        <div class="search-status"><span id="ytMatchCounter">0/0</span></div>
+                <!-- BUSCADOR COM ABAS (TEXTO E PDF) - YOUTUBE -->
+                <div class="search-section" aria-label="Buscador e Leitor">
+                    <div class="search-tabs">
+                        <button class="btn-primary" id="ytTabText" onclick="switchSearchTabYT('text')">📝 Texto</button>
+                        <button class="btn-secondary" id="ytTabPDF" onclick="switchSearchTabYT('pdf')">📄 PDF</button>
                     </div>
-                    <div class="search-text-wrapper">
-                        <div id="ytSearchText" class="search-text" contenteditable="true" spellcheck="false"
-                            data-placeholder="📋 Cole aqui a transcrição do vídeo do YouTube..."></div>
+                    
+                    <div id="ytContentSearchText" class="search-tab-content">
+                        <div class="search-header">
+                            <div class="search-controls">
+                                <input type="text" id="ytSearchQuery" class="search-input" placeholder="Buscar palavra ou frase..." />
+                                <button class="btn-secondary btn-nav" id="ytPrevBtn" title="Anterior">← Anterior</button>
+                                <button class="btn-secondary btn-nav" id="ytNextBtn" title="Próximo">Próximo →</button>
+                                <button class="btn-primary btn-icon" id="ytSearchBtn" title="Buscar"><span class="icon">🔍</span> Buscar</button>
+                            </div>
+                            <div class="search-status"><span id="ytMatchCounter">0/0</span></div>
+                        </div>
+                        <div class="search-text-wrapper">
+                            <div id="ytSearchText" class="search-text" contenteditable="true" spellcheck="false"
+                                data-placeholder="📋 Cole aqui a transcrição do vídeo do YouTube..."></div>
+                        </div>
+                    </div>
+                    
+                    <div id="ytContentSearchPDF" class="search-tab-content" style="display: none;">
+                        <div class="pdf-controls">
+                            <input type="file" id="ytPdfInput" accept=".pdf" style="flex: 1; min-width: 200px;" />
+                            <button class="btn-success" onclick="loadPDFAndShow('youtube')">📂 Carregar PDF</button>
+                            <button class="btn-secondary" onclick="previousPage('youtube')" title="Página Anterior">◀ Anterior</button>
+                            <span id="ytPdfPageInfo" style="color: #e2e8f0; font-size: 14px;">Página 0 de 0</span>
+                            <button class="btn-secondary" onclick="nextPage('youtube')" title="Próxima Página">Próxima ▶</button>
+                            <input type="number" id="ytPdfPageInput" min="1" placeholder="Ir para..." 
+                                style="width: 80px; padding: 6px; border-radius: 4px; border: 1px solid #4a5568; background: #1a202c; color: white;"
+                                onkeypress="if(event.key==='Enter') goToPage('youtube')" />
+                            <button class="btn-primary" onclick="goToPage('youtube')">Ir</button>
+                        </div>
+                        <div class="pdf-viewer">
+                            <canvas id="ytPdfCanvas" style="display: none;"></canvas>
+                            <div id="ytPdfPlaceholder">
+                                <p style="font-size: 48px; margin-bottom: 10px;">📄</p>
+                                <p>Nenhum PDF carregado</p>
+                                <p style="font-size: 12px; margin-top: 10px;">Selecione um arquivo PDF para visualizar</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- MARCADORES YOUTUBE -->
             <!-- MARCADORES YOUTUBE -->
             <div class="markers-section">
                 <div class="section-title">📌 MARCAÇÕES (YOUTUBE)</div>
@@ -854,9 +982,13 @@
 
 <!-- API do YouTube -->
 <script src="https://www.youtube.com/iframe_api"></script>
+<!-- PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
+// ============================================
 // VARIÁVEIS GLOBAIS
+// ============================================
 let currentTab = 'pc';
 let video = document.getElementById('videoPlayer');
 let markers = [];
@@ -872,48 +1004,401 @@ let youtubeHasStartTime = false;
 let youtubeCurrentMarkerPlayingId = null;
 let youtubeUpdateInterval = null;
 
-// ALTERNAR ABAS
-function switchTab(tab) {
-    currentTab = tab;
-    document.getElementById('tabBtnPC').className = tab === 'pc' ? 'btn-primary' : 'btn-secondary';
-    document.getElementById('tabBtnYT').className = tab === 'youtube' ? 'btn-primary' : 'btn-secondary';
-    document.getElementById('content-pc').classList.remove('active');
-    document.getElementById('content-youtube').classList.remove('active');
-    document.getElementById('content-' + tab).classList.add('active');
-    
-    if (tab === 'pc' && youtubePlayer) youtubePlayer.pauseVideo();
-    else if (tab === 'youtube' && video) video.pause();
+// Variáveis do PDF
+let pdfDocs = { pc: null, youtube: null };
+let pdfPageNums = { pc: 1, youtube: 1 };
+let pdfPageRendering = { pc: false, youtube: false };
+let pdfPageNumsPending = { pc: null, youtube: null };
+
+// Configurar PDF.js worker
+if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
-// API YOUTUBE
-function onYouTubeIframeAPIReady() {}
+// ============================================
+// FUNÇÕES DE ABAS PRINCIPAIS
+// ============================================
+function switchTab(tab) {
+  currentTab = tab;
+
+  // Botões principais das abas
+  document.getElementById('tabBtnPC').className = (tab === 'pc') ? 'btn-primary' : 'btn-secondary';
+  document.getElementById('tabBtnYT').className = (tab === 'youtube') ? 'btn-primary' : 'btn-secondary';
+
+  // Conteúdos principais
+  document.getElementById('content-pc').classList.remove('active');
+  document.getElementById('content-youtube').classList.remove('active');
+  document.getElementById('content-' + tab).classList.add('active');
+
+  // Pausar o player do outro contexto
+  if (tab === 'pc' && youtubePlayer) youtubePlayer.pauseVideo();
+  else if (tab === 'youtube' && video) video.pause();
+}
+
+// INCLUIR: utilitário para calcular a fração clicada/arrastada na barra
+function getClickFraction(evt, containerEl) {
+  const rect = containerEl.getBoundingClientRect();
+  const x = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+  let frac = x / rect.width;
+  if (frac < 0) frac = 0;
+  if (frac > 1) frac = 1;
+  return frac;
+}
+
+/* ----- Abas do buscador: PC ----- */
+function switchSearchTabPC(tab) {
+  const tabTextBtn  = document.getElementById('tabText');             // PC
+  const tabPDFBtn   = document.getElementById('tabPDF');
+  const contentText = document.getElementById('contentSearchText');
+  const contentPDF  = document.getElementById('contentSearchPDF');
+
+  if (!tabTextBtn || !tabPDFBtn || !contentText || !contentPDF) return;
+
+  if (tab === 'text') {
+    tabTextBtn.className = 'btn-primary';
+    tabPDFBtn.className  = 'btn-secondary';
+    contentText.style.display = 'block';
+    contentPDF.style.display  = 'none';
+  } else {
+    tabPDFBtn.className  = 'btn-primary';
+    tabTextBtn.className = 'btn-secondary';
+    contentPDF.style.display  = 'block';
+    contentText.style.display = 'none';
+  }
+}
+
+/* ----- Abas do buscador: YOUTUBE ----- */
+function switchSearchTabYT(tab) {
+  const tabTextBtn  = document.getElementById('ytTabText');           // YouTube
+  const tabPDFBtn   = document.getElementById('ytTabPDF');
+  const contentText = document.getElementById('ytContentSearchText');
+  const contentPDF  = document.getElementById('ytContentSearchPDF');
+
+  if (!tabTextBtn || !tabPDFBtn || !contentText || !contentPDF) return;
+
+  if (tab === 'text') {
+    tabTextBtn.className = 'btn-primary';
+    tabPDFBtn.className  = 'btn-secondary';
+    contentText.style.display = 'block';
+    contentPDF.style.display  = 'none';
+  } else {
+    tabPDFBtn.className  = 'btn-primary';
+    tabTextBtn.className = 'btn-secondary';
+    contentPDF.style.display  = 'block';
+    contentText.style.display = 'none';
+  }
+}
+
+function getPdfIds(context) {
+  return (context === 'youtube')
+    ? {
+        input: 'ytPdfInput',
+        canvas: 'ytPdfCanvas',
+        info: 'ytPdfPageInfo',
+        placeholder: 'ytPdfPlaceholder',
+        pageInput: 'ytPdfPageInput'
+      }
+    : {
+        input: 'pdfInput',
+        canvas: 'pdfCanvas',
+        info: 'pdfPageInfo',
+        placeholder: 'pdfPlaceholder',
+        pageInput: 'pdfPageInput'
+      };
+}
+
+function loadPDFAndShow(context) {
+  // 1) Garante que a subaba PDF esteja ativa antes de renderizar
+  if (context === 'pc') {
+    switchSearchTabPC('pdf');
+  } else {
+    switchSearchTabYT('pdf');
+  }
+
+  // 2) Dispara o carregamento/renderização
+  loadPDF(context);
+
+  // 3) Aguarda o canvas ficar efetivamente visível/renderizado e rola até ele
+  const ids = getPdfIds(context);
+  const start = performance.now();
+
+  (function waitForCanvas() {
+    const canvas = document.getElementById(ids.canvas);
+    const visible = canvas && canvas.offsetParent !== null;        // não está display:none/oculto pelo pai
+    const hasSize = visible && canvas.width > 0 && canvas.height > 0;
+
+    if (hasSize) {
+      // rola suavemente até o canvas
+      canvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    // timeout de segurança: 2.5s
+    if (performance.now() - start > 2500) return;
+
+    // tenta novamente no próximo frame
+    requestAnimationFrame(waitForCanvas);
+  })();
+}
+
+
+document.addEventListener('keydown', function (e) {
+  // Usa offsetParent (ou computedStyle) para detectar se o bloco PDF está visível de fato
+  const pcPdfEl = document.getElementById('contentSearchPDF');
+  const ytPdfEl = document.getElementById('ytContentSearchPDF');
+
+  const isVisible = (el) => {
+    if (!el) return false;
+    // invisível se display:none ou se algum pai está oculto; offsetParent null cobre a maioria dos casos.
+    if (el.offsetParent === null) return false;
+    const cs = window.getComputedStyle(el);
+    return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0';
+  };
+
+  const pcPdfVisible = isVisible(pcPdfEl);
+  const ytPdfVisible = isVisible(ytPdfEl);
+
+  if ((!pcPdfVisible && !ytPdfVisible) || (!pdfDocs.pc && !pdfDocs.youtube)) return;
+
+  const context = pcPdfVisible ? 'pc' : 'youtube';
+
+  // Evita interferir quando o foco está em inputs
+  if (!e.target.matches('input, textarea, [contenteditable="true"]')) {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      previousPage(context);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      nextPage(context);
+    }
+  }
+});
+
+
+// ============================================
+// FUNÇÕES DO PDF (USANDO getPdfIds(context))
+// ============================================
+function loadPDF(context) {
+  const ids = getPdfIds(context);
+  const fileInput = document.getElementById(ids.input);
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  if (!file) {
+    alert('Por favor, selecione um arquivo PDF primeiro!');
+    return;
+  }
+  if (typeof pdfjsLib === 'undefined') {
+    alert('Biblioteca PDF.js não carregada. Verifique sua conexão com a internet.');
+    return;
+  }
+
+  const fileReader = new FileReader();
+  fileReader.onload = function () {
+    const typedarray = new Uint8Array(this.result);
+
+    pdfjsLib.getDocument(typedarray).promise.then(function (pdf) {
+      pdfDocs[context] = pdf;
+      pdfPageNums[context] = 1;
+
+      // Atualiza UI: mostra canvas, esconde placeholder e escreve "Página 1 de N"
+      document.getElementById(ids.info).textContent =
+        `Página 1 de ${pdfDocs[context].numPages}`;
+      const placeholderEl = document.getElementById(ids.placeholder);
+      const canvasEl = document.getElementById(ids.canvas);
+      if (placeholderEl) placeholderEl.style.display = 'none';
+      if (canvasEl) canvasEl.style.display = 'block';
+
+      // Renderiza a primeira página
+      renderPDFPage(context, pdfPageNums[context], ids);
+    }).catch(function (error) {
+      alert('Erro ao carregar PDF: ' + error.message);
+    });
+  };
+
+  fileReader.readAsArrayBuffer(file);
+}
+
+function renderPDFPage(context, num, ids) {
+  // Permite chamar tanto com ids explícitos quanto deixando que a função recupere
+  if (!ids) ids = getPdfIds(context);
+
+  // Evita colisões de render
+  if (pdfPageRendering[context]) {
+    pdfPageNumsPending[context] = num;
+    return;
+  }
+  if (!pdfDocs[context] || num < 1 || num > pdfDocs[context].numPages) return;
+
+  pdfPageRendering[context] = true;
+
+  pdfDocs[context].getPage(num).then(function (page) {
+    const canvas = document.getElementById(ids.canvas);
+    const ctx = canvas.getContext('2d');
+    canvas.width = 0; canvas.height = 0; // reset rápido
+
+    // Ajuste de escala — pode alterar se quiser zoom maior/menor
+    const viewport = page.getViewport({ scale: 1.5 });
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    const renderContext = { canvasContext: ctx, viewport: viewport };
+    const renderTask = page.render(renderContext);
+
+    renderTask.promise.then(function () {
+    pdfPageRendering[context] = false;
+
+    // Atualiza texto "Página X de N"
+    document.getElementById(ids.info).textContent =
+        `Página ${pdfPageNums[context]} de ${pdfDocs[context].numPages}`;
+
+    // 🔽 Rola suavemente até o canvas do PDF assim que a página terminar de renderizar
+    const canvasEl = document.getElementById(ids.canvas);
+    if (canvasEl) {
+        canvasEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Se o usuário navegou enquanto renderizava, renderiza a página pendente
+    if (pdfPageNumsPending[context] !== null) {
+        const nextNum = pdfPageNumsPending[context];
+        pdfPageNumsPending[context] = null;
+        renderPDFPage(context, nextNum, ids);
+    }
+    });
+  });
+}
+
+function previousPage(context) {
+  if (pdfPageNums[context] <= 1) return;
+  pdfPageNums[context]--;
+  renderPDFPage(context, pdfPageNums[context], getPdfIds(context));
+}
+
+function nextPage(context) {
+  if (!pdfDocs[context] || pdfPageNums[context] >= pdfDocs[context].numPages) return;
+  pdfPageNums[context]++;
+  renderPDFPage(context, pdfPageNums[context], getPdfIds(context));
+}
+
+function goToPage(context) {
+  const ids = getPdfIds(context);
+  const input = document.getElementById(ids.pageInput);
+  const page = parseInt(input.value, 10);
+
+  if (pdfDocs[context] && page >= 1 && page <= pdfDocs[context].numPages) {
+    pdfPageNums[context] = page;
+    renderPDFPage(context, pdfPageNums[context], ids);
+    input.value = '';
+  } else {
+    alert(
+      pdfDocs[context]
+        ? `Digite um número de página entre 1 e ${pdfDocs[context].numPages}`
+        : 'Carregue um PDF primeiro!'
+    );
+  }
+}
+
+// ============================================
+// FUNÇÃO COPIAR TEMPO ATUAL
+// ============================================
+function copyCurrentTimeToMarker(tab) {
+    let currentTime = 0;
+    
+    if (tab === 'pc') {
+        if (video && !isNaN(video.currentTime)) {
+            currentTime = video.currentTime;
+        } else {
+            alert('Carregue um vídeo primeiro!');
+            return;
+        }
+    } else if (tab === 'youtube') {
+        if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+            currentTime = youtubePlayer.getCurrentTime();
+        } else {
+            alert('Carregue um vídeo do YouTube primeiro!');
+            return;
+        }
+    }
+    
+    const timeString = secondsToTimeInput(currentTime);
+    
+    if (tab === 'pc') {
+        document.getElementById('markerTime').value = timeString;
+    } else {
+        document.getElementById('ytMarkerTime').value = timeString;
+    }
+    
+    const input = tab === 'pc' ? document.getElementById('markerTime') : document.getElementById('ytMarkerTime');
+    input.style.backgroundColor = '#48bb78';
+    input.style.color = 'white';
+    setTimeout(() => {
+        input.style.backgroundColor = '';
+        input.style.color = '';
+    }, 500);
+}
+
+
+
+function onYouTubeIframeAPIReady() {
+
+}
+
 
 function loadYouTubeVideo() {
-    const url = document.getElementById('youtubeUrlInput').value;
+  const url = document.getElementById('youtubeUrlInput').value;
+  const tryInit = () => {
+    if (!(window.YT && YT.Player)) {
+      // API ainda carregando – tenta novamente em 150 ms
+      setTimeout(tryInit, 150);
+      return;
+    }
     const videoId = extractVideoID(url);
     if (!videoId) { alert('URL do YouTube inválida.'); return; }
-    
+
     if (youtubePlayer) {
-        youtubePlayer.loadVideoById(videoId);
+      youtubePlayer.loadVideoById(videoId);
     } else {
-        youtubePlayer = new YT.Player('youtubePlayer', {
-            height: '100%',
-            width: '100%',
-            videoId: videoId,
-            playerVars: { 'playsinline': 1, 'controls': 0 },
-            events: {
-                'onReady': onYouTubePlayerReady,
-                'onStateChange': onYouTubePlayerStateChange
-            }
-        });
+      youtubePlayer = new YT.Player('youtubePlayer', {
+        height: '100%',
+        width: '100%',
+        videoId: videoId,
+        playerVars: { playsinline: 1, controls: 0 },
+        events: {
+          'onReady': onYouTubePlayerReady,
+          'onStateChange': onYouTubePlayerStateChange
+        }
+      });
     }
+  };
+  tryInit();
 }
 
+
+
 function extractVideoID(url) {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+  if (!url) return null;
+  try {
+    // 1) URLs curtas: https://youtu.be/VIDEOID?t=30
+    const short = url.match(/youtu\.be\/([^?#]+)/);
+    if (short && short[1]) return short[1].substring(0, 11);
+
+    // 2) watch: https://www.youtube.com/watch?v=VIDEOID&...
+    const watch = url.match(/[?&]v=([^&#]+)/);
+    if (watch && watch[1]) return watch[1].substring(0, 11);
+
+    // 3) embed: https://www.youtube.com/embed/VIDEOID
+    const embed = url.match(/\/embed\/([^?#]+)/);
+    if (embed && embed[1]) return embed[1].substring(0, 11);
+
+    // 4) /v/VIDEOID
+    const legacy = url.match(/\/v\/([^?#]+)/);
+    if (legacy && legacy[1]) return legacy[1].substring(0, 11);
+
+    return null;
+  } catch {
+    return null;
+  }
 }
+
 
 function onYouTubePlayerReady(event) {
     const duration = youtubePlayer.getDuration();
@@ -929,11 +1414,9 @@ function onYouTubePlayerStateChange(event) {
     } else if (event.data === YT.PlayerState.PAUSED) {
         document.getElementById('ytPlayBtn').textContent = '▶ Play';
         document.getElementById('ytPlayBtn').className = 'btn-primary';
-        // NÃO resetar o botão da marcação ao pausar manualmente
     } else if (event.data === YT.PlayerState.ENDED) {
         document.getElementById('ytPlayBtn').textContent = '▶ Play';
         document.getElementById('ytPlayBtn').className = 'btn-primary';
-        // Só resetar quando o vídeo terminar
         if (youtubeCurrentMarkerPlayingId !== null) {
             setYoutubeMarkerButtonIcon(youtubeCurrentMarkerPlayingId, false);
             youtubeCurrentMarkerPlayingId = null;
@@ -960,7 +1443,6 @@ function startYouTubeTimeUpdate() {
     }, 250);
 }
 
-// CONTROLES YOUTUBE
 function youtubeTogglePlay() {
     if (!youtubePlayer) return;
     const state = youtubePlayer.getPlayerState();
@@ -1037,56 +1519,6 @@ function youtubeClearStartTime() {
     document.getElementById('ytStartTimeInput').value = '';
 }
 
-function youtubeClearStartTime() {
-    youtubeHasStartTime = false;
-    youtubeStartTime = 0;
-    document.getElementById('ytStartTimeInput').value = '';
-}
-
-// ============================================
-// NOVO: Copiar tempo atual para marcação
-// ============================================
-function copyCurrentTimeToMarker(tab) {
-    let currentTime = 0;
-    
-    if (tab === 'pc') {
-        // Aba PC - pega tempo do vídeo local
-        if (video && !isNaN(video.currentTime)) {
-            currentTime = video.currentTime;
-        } else {
-            alert('Carregue um vídeo primeiro!');
-            return;
-        }
-    } else if (tab === 'youtube') {
-        // Aba YouTube - pega tempo do player do YouTube
-        if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-            currentTime = youtubePlayer.getCurrentTime();
-        } else {
-            alert('Carregue um vídeo do YouTube primeiro!');
-            return;
-        }
-    }
-    
-    // Converte para formato HH:MM:SS e preenche o input
-    const timeString = secondsToTimeInput(currentTime);
-    
-    if (tab === 'pc') {
-        document.getElementById('markerTime').value = timeString;
-    } else {
-        document.getElementById('ytMarkerTime').value = timeString;
-    }
-    
-    // Feedback visual
-    const input = tab === 'pc' ? document.getElementById('markerTime') : document.getElementById('ytMarkerTime');
-    input.style.backgroundColor = '#48bb78';
-    input.style.color = 'white';
-    setTimeout(() => {
-        input.style.backgroundColor = '';
-        input.style.color = '';
-    }, 500);
-}
-
-// MARCADORES YOUTUBE
 function youtubeAddMarker() {
     if (!youtubePlayer) { alert('Carregue um vídeo primeiro.'); return; }
     const timeInput = document.getElementById('ytMarkerTime');
@@ -1180,7 +1612,6 @@ function youtubeEditMarker(id) {
     input.addEventListener('click', e => e.stopPropagation());
 }
 
-// Toggle play/stop nas marcações YouTube
 function setYoutubeMarkerButtonIcon(id, playing) {
     const btn = document.getElementById(`yt-marker-play-btn-${id}`);
     if (!btn) return;
@@ -1212,7 +1643,6 @@ function youtubeToggleMarkerPlay(id, time, btnEl) {
     setYoutubeMarkerButtonIcon(id, true);
 }
 
-// EXPORTAÇÃO/IMPORTAÇÃO YOUTUBE
 function youtubeExportMarkers() {
     if (youtubeMarkers.length === 0) { alert('Não há marcações para exportar'); return; }
     let txtContent = '';
@@ -1283,7 +1713,94 @@ function youtubeImportMarkersTxt(event) {
     reader.readAsText(file);
 }
 
-// ================= LÓGICA ORIGINAL PC =================
+// ============================================
+// LÓGICA PC
+// ============================================
+
+
+// === Tooltip de tempo: PC ===
+(function attachPcProgressTooltip() {
+  const container = document.getElementById('progressContainer'); // PC
+  const bar = document.getElementById('progressBar');
+  if (!container || !bar) return;
+
+  // Cria o tooltip uma vez
+  const tip = document.createElement('div');
+  tip.className = 'progress-tooltip';
+  tip.style.display = 'none';
+  container.appendChild(tip);
+
+  // Converte um offset X dentro do container em tempo formatado
+  function fractionToTimeString(frac) {
+    if (!video || isNaN(video.duration) || video.duration <= 0) return '00:00:00';
+    const seconds = Math.max(0, Math.min(1, frac)) * video.duration;
+    return formatTime(seconds); // você já tem formatTime(seconds)
+  }
+
+  function updateTip(evt) {
+    const rect = container.getBoundingClientRect();
+    const clientX = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+    const x = clientX - rect.left;
+    const frac = Math.max(0, Math.min(1, x / rect.width));
+    tip.textContent = fractionToTimeString(frac);
+
+    // Posiciona o tooltip
+    const padding = 10;
+    const xClamped = Math.max(padding, Math.min(rect.width - padding, x));
+    tip.style.left = `${xClamped}px`;
+    tip.style.display = 'block';
+  }
+
+  // Eventos
+  container.addEventListener('mousemove', updateTip);
+  container.addEventListener('touchmove', updateTip, { passive: true });
+
+  container.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  container.addEventListener('touchend', () => { tip.style.display = 'none'; });
+})();
+
+
+// === Tooltip de tempo: YouTube ===
+(function attachYtProgressTooltip() {
+  const container = document.getElementById('ytProgressContainer'); // YT
+  const bar = document.getElementById('ytProgressBar');
+  if (!container || !bar) return;
+
+  // Cria o tooltip uma vez
+  const tip = document.createElement('div');
+  tip.className = 'progress-tooltip';
+  tip.style.display = 'none';
+  container.appendChild(tip);
+
+  function fractionToTimeStringYT(frac) {
+    if (!youtubePlayer || typeof youtubePlayer.getDuration !== 'function') return '00:00:00';
+    const dur = youtubePlayer.getDuration() || 0;
+    const seconds = Math.max(0, Math.min(1, frac)) * dur;
+    return formatTime(seconds); // reaproveita sua formatTime(seconds)
+  }
+
+  function updateTip(evt) {
+    const rect = container.getBoundingClientRect();
+    const clientX = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+    const x = clientX - rect.left;
+    const frac = Math.max(0, Math.min(1, x / rect.width));
+    tip.textContent = fractionToTimeStringYT(frac);
+
+    const padding = 10;
+    const xClamped = Math.max(padding, Math.min(rect.width - padding, x));
+    tip.style.left = `${xClamped}px`;
+    tip.style.display = 'block';
+  }
+
+  // Eventos
+  container.addEventListener('mousemove', updateTip);
+  container.addEventListener('touchmove', updateTip, { passive: true });
+
+  container.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  container.addEventListener('touchend', () => { tip.style.display = 'none'; });
+})();
+
+
 document.getElementById('videoInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -1297,6 +1814,95 @@ document.getElementById('videoInput').addEventListener('change', function(e) {
         });
     }
 });
+
+// INCLUIR: clique e arraste na barra de progresso do PC
+(function attachPcProgressSeek() {
+  const container = document.getElementById('progressContainer');
+  if (!container) return;
+
+  let dragging = false;
+
+  function seekToFraction(frac) {
+    if (!video || isNaN(video.duration) || video.duration === 0) return;
+    const newTime = frac * video.duration;
+    video.currentTime = newTime;
+    // atualiza a barra imediatamente
+    document.getElementById('progressBar').style.width = (frac * 100) + '%';
+    // reposiciona indicadores
+    updateProgressMarkers();
+  }
+
+  container.addEventListener('mousedown', (e) => {
+    dragging = true;
+    seekToFraction(getClickFraction(e, container));
+  });
+
+  container.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    seekToFraction(getClickFraction(e, container));
+  });
+
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  // suporte básico a touch
+  container.addEventListener('touchstart', (e) => {
+    dragging = true;
+    seekToFraction(getClickFraction(e, container));
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    seekToFraction(getClickFraction(e, container));
+  }, { passive: true });
+
+  window.addEventListener('touchend', () => { dragging = false; });
+})();
+
+// INCLUIR: clique e arraste na barra de progresso do YouTube
+(function attachYtProgressSeek() {
+  const container = document.getElementById('ytProgressContainer');
+  if (!container) return;
+
+  let dragging = false;
+
+  function seekToFractionYT(frac) {
+    if (!youtubePlayer || typeof youtubePlayer.getDuration !== 'function') return;
+    const duration = youtubePlayer.getDuration();
+    if (!duration || duration <= 0) return;
+    const newTime = frac * duration;
+    // busca precisa (o segundo argumento true faz “precise seek”)
+    if (typeof youtubePlayer.seekTo === 'function') {
+      youtubePlayer.seekTo(newTime, true);
+    }
+    // atualiza a barra imediatamente
+    document.getElementById('ytProgressBar').style.width = (frac * 100) + '%';
+  }
+
+  container.addEventListener('mousedown', (e) => {
+    dragging = true;
+    seekToFractionYT(getClickFraction(e, container));
+  });
+
+  container.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    seekToFractionYT(getClickFraction(e, container));
+  });
+
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  // suporte a touch
+  container.addEventListener('touchstart', (e) => {
+    dragging = true;
+    seekToFractionYT(getClickFraction(e, container));
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    seekToFractionYT(getClickFraction(e, container));
+  }, { passive: true });
+
+  window.addEventListener('touchend', () => { dragging = false; });
+})();
 
 function initVolume() {
     const savedVolume = localStorage.getItem('videoVolume');
@@ -1333,28 +1939,6 @@ function updateVolumeIcon() {
     if (video.volume === 0) btn.textContent = '🔇';
     else if (video.volume < 0.5) btn.textContent = '🔉';
     else btn.textContent = '🔊';
-}
-
-function secondsToTimeInput(seconds) {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-}
-
-function formatTime(seconds) {
-    if (isNaN(seconds)) return '00:00:00';
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-}
-
-function timeToSeconds(timeStr) {
-    const parts = timeStr.split(':').map(Number);
-    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    else if (parts.length === 2) return parts[0] * 60 + parts[1];
-    return 0;
 }
 
 function togglePlay() {
@@ -1606,31 +2190,60 @@ window.addEventListener('load', function() {
 
 video.addEventListener('loadedmetadata', updateProgressMarkers);
 
-document.querySelector('.navbar-toggler')?.addEventListener('click', function() {
-    const collapse = document.getElementById('navbarNav');
-    const isExpanded = this.getAttribute('aria-expanded') === 'true';
-    this.setAttribute('aria-expanded', !isExpanded);
-    if (!isExpanded) { collapse.classList.add('show'); collapse.style.maxHeight = collapse.scrollHeight + 'px'; }
-    else { collapse.classList.remove('show'); collapse.style.maxHeight = null; }
-});
+function secondsToTimeInput(seconds) {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
 
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-        const collapse = document.getElementById('navbarNav');
-        const toggler = document.querySelector('.navbar-toggler');
-        if (window.innerWidth <= 991 && collapse.classList.contains('show')) {
-            collapse.classList.remove('show'); collapse.style.maxHeight = null;
-            toggler.setAttribute('aria-expanded', 'false');
-        }
-    });
-});
 
-window.addEventListener('resize', () => {
-    if (window.innerWidth > 991) {
-        const collapse = document.getElementById('navbarNav');
-        collapse.classList.remove('show'); collapse.style.maxHeight = null;
-        document.querySelector('.navbar-toggler')?.setAttribute('aria-expanded', 'false');
+function formatTime(seconds) {
+    if (isNaN(seconds)) return '00:00:00';
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function timeToSeconds(timeStr) {
+    const parts = timeStr.split(':').map(Number);
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    else if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return 0;
+}
+
+function setMarkerButtonIcon(id, playing) {
+    const btn = document.getElementById(`marker-play-btn-${id}`);
+    if (!btn) return;
+    btn.textContent = playing ? '⏹' : '▶';
+    btn.title = playing ? 'Parar' : 'Reproduzir';
+    if (playing) { btn.classList.remove('btn-primary'); btn.classList.add('btn-danger'); }
+    else { btn.classList.remove('btn-danger'); btn.classList.add('btn-primary'); }
+}
+
+function toggleMarkerPlay(id, time, btnEl) {
+    if (currentMarkerPlayingId === id) {
+        stopVideo();
+        setMarkerButtonIcon(id, false);
+        currentMarkerPlayingId = null;
+        return;
     }
+    if (currentMarkerPlayingId !== null && currentMarkerPlayingId !== id) {
+        setMarkerButtonIcon(currentMarkerPlayingId, false);
+    }
+    video.currentTime = time;
+    video.play();
+    currentMarkerPlayingId = id;
+    setMarkerButtonIcon(id, true);
+}
+
+video.addEventListener('ended', function () {
+    if (currentMarkerPlayingId !== null) { setMarkerButtonIcon(currentMarkerPlayingId, false); currentMarkerPlayingId = null; }
+});
+
+video.addEventListener('pause', function () {
+    if (currentMarkerPlayingId !== null) { setMarkerButtonIcon(currentMarkerPlayingId, false); currentMarkerPlayingId = null; }
 });
 
 // BUSCADOR PC
@@ -1731,39 +2344,6 @@ function saveSearchState(){
     localStorage.setItem('vte_searchQuery', searchQueryInput.value || '');
 }
 
-function setMarkerButtonIcon(id, playing) {
-    const btn = document.getElementById(`marker-play-btn-${id}`);
-    if (!btn) return;
-    btn.textContent = playing ? '⏹' : '▶';
-    btn.title = playing ? 'Parar' : 'Reproduzir';
-    if (playing) { btn.classList.remove('btn-primary'); btn.classList.add('btn-danger'); }
-    else { btn.classList.remove('btn-danger'); btn.classList.add('btn-primary'); }
-}
-
-function toggleMarkerPlay(id, time, btnEl) {
-    if (currentMarkerPlayingId === id) {
-        stopVideo();
-        setMarkerButtonIcon(id, false);
-        currentMarkerPlayingId = null;
-        return;
-    }
-    if (currentMarkerPlayingId !== null && currentMarkerPlayingId !== id) {
-        setMarkerButtonIcon(currentMarkerPlayingId, false);
-    }
-    video.currentTime = time;
-    video.play();
-    currentMarkerPlayingId = id;
-    setMarkerButtonIcon(id, true);
-}
-
-video.addEventListener('ended', function () {
-    if (currentMarkerPlayingId !== null) { setMarkerButtonIcon(currentMarkerPlayingId, false); currentMarkerPlayingId = null; }
-});
-
-video.addEventListener('pause', function () {
-    if (currentMarkerPlayingId !== null) { setMarkerButtonIcon(currentMarkerPlayingId, false); currentMarkerPlayingId = null; }
-});
-
 // BUSCADOR YOUTUBE
 const ytSearchTextDiv = document.getElementById('ytSearchText');
 const ytSearchQueryInput = document.getElementById('ytSearchQuery');
@@ -1852,22 +2432,102 @@ function ytSaveSearchState(){
     localStorage.setItem('vte_yt_searchQuery', ytSearchQueryInput.value || '');
 }
 
-// Resetar botão da marcação apenas quando vídeo terminar ou pausar por outros motivos
-if (typeof YT !== 'undefined') {
-    setInterval(function() {
-        if (youtubePlayer && youtubePlayer.getPlayerState) {
-            const state = youtubePlayer.getPlayerState();
-            // ENDED = 0
-            if (state === YT.PlayerState.ENDED) {
-                if (youtubeCurrentMarkerPlayingId !== null) {
-                    setYoutubeMarkerButtonIcon(youtubeCurrentMarkerPlayingId, false);
-                    youtubeCurrentMarkerPlayingId = null;
-                }
-            }
+// MENU MOBILE
+document.querySelector('.navbar-toggler')?.addEventListener('click', function() {
+    const collapse = document.getElementById('navbarNav');
+    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+    this.setAttribute('aria-expanded', !isExpanded);
+    if (!isExpanded) { collapse.classList.add('show'); collapse.style.maxHeight = collapse.scrollHeight + 'px'; }
+    else { collapse.classList.remove('show'); collapse.style.maxHeight = null; }
+});
+
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+        const collapse = document.getElementById('navbarNav');
+        const toggler = document.querySelector('.navbar-toggler');
+        if (window.innerWidth <= 991 && collapse.classList.contains('show')) {
+            collapse.classList.remove('show'); collapse.style.maxHeight = null;
+            toggler.setAttribute('aria-expanded', 'false');
         }
-    }, 500);
+    });
+});
+
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 991) {
+        const collapse = document.getElementById('navbarNav');
+        collapse.classList.remove('show'); collapse.style.maxHeight = null;
+        document.querySelector('.navbar-toggler')?.setAttribute('aria-expanded', 'false');
+    }
+});
+</script>
+
+<!-- CSS para as abas e PDF -->
+<style>
+.search-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #4a5568;
+    padding-bottom: 10px;
 }
 
-</script>
+.search-tabs button {
+    flex: 1;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.search-tab-content {
+    display: block;
+}
+
+.pdf-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pdf-viewer {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 500px;
+    min-height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+#pdfCanvas, #ytPdfCanvas {
+    max-width: 100%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+#pdfPlaceholder, #ytPdfPlaceholder {
+    color: #64748b;
+    text-align: center;
+    padding: 40px;
+}
+
+@media (max-width: 768px) {
+    .pdf-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .pdf-controls button,
+    .pdf-controls input[type="file"] {
+        width: 100%;
+    }
+}
+</style>
 </body>
 </html>
