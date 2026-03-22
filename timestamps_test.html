@@ -684,11 +684,17 @@
             </div>
 
             <!-- MARCADORES PC -->
+            
             <div class="markers-section">
                 <div class="section-title">📌 MARCAÇÕES</div>
                 <div class="marker-input">
                     <div class="form-group">
                         <label for="markerTime">Tempo:</label>
+                        <button class="btn-secondary" onclick="copyCurrentTimeToMarker('pc')" 
+                            title="Copiar tempo atual do vídeo" 
+                            style="padding: 6px 10px; margin-left: 5px; font-size: 12px;">
+                            📋 Copiar Tempo
+                        </button>
                         <input type="time" id="markerTime" step="1" />
                     </div>
                     <div class="form-group">
@@ -789,11 +795,17 @@
             </div>
 
             <!-- MARCADORES YOUTUBE -->
+            <!-- MARCADORES YOUTUBE -->
             <div class="markers-section">
                 <div class="section-title">📌 MARCAÇÕES (YOUTUBE)</div>
                 <div class="marker-input">
                     <div class="form-group">
                         <label for="ytMarkerTime">Tempo:</label>
+                        <button class="btn-secondary" onclick="copyCurrentTimeToMarker('youtube')" 
+                            title="Copiar tempo atual do vídeo" 
+                            style="padding: 6px 10px; margin-left: 5px; font-size: 12px;">
+                            📋 Copiar Tempo
+                        </button>
                         <input type="time" id="ytMarkerTime" step="1" />
                     </div>
                     <div class="form-group">
@@ -1023,6 +1035,55 @@ function youtubeClearStartTime() {
     youtubeHasStartTime = false;
     youtubeStartTime = 0;
     document.getElementById('ytStartTimeInput').value = '';
+}
+
+function youtubeClearStartTime() {
+    youtubeHasStartTime = false;
+    youtubeStartTime = 0;
+    document.getElementById('ytStartTimeInput').value = '';
+}
+
+// ============================================
+// NOVO: Copiar tempo atual para marcação
+// ============================================
+function copyCurrentTimeToMarker(tab) {
+    let currentTime = 0;
+    
+    if (tab === 'pc') {
+        // Aba PC - pega tempo do vídeo local
+        if (video && !isNaN(video.currentTime)) {
+            currentTime = video.currentTime;
+        } else {
+            alert('Carregue um vídeo primeiro!');
+            return;
+        }
+    } else if (tab === 'youtube') {
+        // Aba YouTube - pega tempo do player do YouTube
+        if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+            currentTime = youtubePlayer.getCurrentTime();
+        } else {
+            alert('Carregue um vídeo do YouTube primeiro!');
+            return;
+        }
+    }
+    
+    // Converte para formato HH:MM:SS e preenche o input
+    const timeString = secondsToTimeInput(currentTime);
+    
+    if (tab === 'pc') {
+        document.getElementById('markerTime').value = timeString;
+    } else {
+        document.getElementById('ytMarkerTime').value = timeString;
+    }
+    
+    // Feedback visual
+    const input = tab === 'pc' ? document.getElementById('markerTime') : document.getElementById('ytMarkerTime');
+    input.style.backgroundColor = '#48bb78';
+    input.style.color = 'white';
+    setTimeout(() => {
+        input.style.backgroundColor = '';
+        input.style.color = '';
+    }, 500);
 }
 
 // MARCADORES YOUTUBE
