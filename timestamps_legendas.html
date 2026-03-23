@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="timestamp.ico?v=2">
+    <title>Video Timestamp Editor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding-top: 76px;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5em;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white !important;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+
+        .navbar-toggler {
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+        }
+
+        .navbar-toggler:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+
+        .navbar-toggler-icon {
+            display: inline-block;
+            width: 24px;
+            height: 2px;
+            background: #fff;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 2px;
+            background: #fff;
+            left: 0;
+            transition: all 0.3s;
+        }
+
+        .navbar-toggler-icon::before {
+            top: -7px;
+        }
+
+        .navbar-toggler-icon::after {
+            top: 7px;
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+            background: transparent;
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .navbar-collapse {
+            transition: max-height 0.3s ease-out;
+        }
+
+        .navbar-collapse:not(.show) {
+            display: none;
+        }
+
+        .navbar-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+        }
+
+        @media (max-width: 991px) {
+            .navbar-nav {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+                margin-top: 10px;
+            }
+            
+            .nav-link {
+                width: 100%;
+                padding: 10px 14px;
+            }
+            
+            .navbar-collapse.show {
+                display: block;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            .navbar-toggler {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .navbar {
+                padding: 0.5rem;
+                border-radius: 10px;
+            }
+            
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            
+            .nav-link {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #1e293b;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 0;
+            min-height: calc(100vh - 180px);
+        }
+
+        .video-section {
+            padding: 25px;
+            background: #0f172a;
+        }
+
+        .video-container {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #334155;
+        }
+
+        video, iframe {
+            width: 100%;
+            display: block;
+            max-height: 500px;
+        }
+
+        .video-controls {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #475569;
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #64748b;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-info {
+            background: #06b6d4;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #0891b2;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+
+        .file-label:hover {
+            background: #2563eb;
+        }
+
+        .time-display {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: #3b82f6;
+            padding: 8px 12px;
+            background: #0f172a;
+            border-radius: 6px;
+            border: 1px solid #334155;
+        }
+
+        .subtitle-container {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #334155;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .subtitle-text {
+            font-size: 15px;
+            line-height: 2;
+            color: #e2e8f0;
+        }
+
+        .subtitle-word {
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .subtitle-word:hover {
+            background: #334155;
+        }
+
+        .subtitle-word.active {
+            background: #f59e0b;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .timestamps-section {
+            background: #1e293b;
+            padding: 25px;
+            border-left: 2px solid #334155;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: #3b82f6;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .timestamp-input-group {
+            margin-bottom: 20px;
+            padding: 18px;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .timestamp-list {
+            max-height: 450px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .timestamp-item {
+            background: #0f172a;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timestamp-item:hover {
+            background: #334155;
+        }
+
+        .timestamp-info {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .timestamp-time {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #3b82f6;
+            font-size: 14px;
+        }
+
+        .timestamp-desc {
+            color: #94a3b8;
+            margin-top: 3px;
+            font-size: 13px;
+        }
+
+        .timestamp-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .timestamp-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .timestamp-btn-play {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .timestamp-btn-play:hover {
+            background: #2563eb;
+        }
+
+        .timestamp-btn-edit {
+            background: #6b7280;
+            color: white;
+        }
+
+        .timestamp-btn-edit:hover {
+            background: #4b5563;
+        }
+
+        .timestamp-btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .timestamp-btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .timestamp-edit-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #3b82f6;
+            border-radius: 4px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .timestamp-edit-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .timestamps-section {
+                border-left: none;
+                border-top: 2px solid #334155;
+            }
+        }
+
+        .subtitle-stats {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #94a3b8;
+            border: 1px solid #334155;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #0f172a;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-container:hover {
+            background: #1e293b;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+
+        .checkbox-container label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: #fbbf24;
+            font-size: 13px;
+        }
+
+        .checkbox-info {
+            font-size: 11px;
+            color: #64748b;
+            margin-left: 28px;
+            margin-top: 3px;
+            margin-bottom: 12px;
+        }
+
+        /* TIMELINE */
+        .timeline-container {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            height: 30px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .timeline-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            width: 0%;
+            transition: width 0.1s linear;
+            border-radius: 4px;
+        }
+
+        .timeline-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #ef4444;
+            opacity: 0.8;
+            transition: all 0.2s;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .timeline-marker:hover {
+            width: 3px;
+            opacity: 1;
+            background: #f59e0b;
+            z-index: 5;
+        }
+
+        .timeline-marker-tooltip {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            border: 1px solid #334155;
+            z-index: 10;
+        }
+
+        .timeline-marker:hover .timeline-marker-tooltip {
+            opacity: 1;
+            visibility: visible;
+            bottom: 40px;
+        }
+
+        .timeline-current-time {
+            position: absolute;
+            top: -28px;
+            left: 0%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: #3b82f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #334155;
+            transition: left 0.1s linear;
+            pointer-events: none;
+        }
+
+        .timeline-duration {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
+        }
+
+        .video-source-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            
+        }
+
+        .video-source-tab {
+            padding: 8px 16px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .video-source-tab.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            color: white;
+        }
+
+        .video-source-tab:hover:not(.active) {
+            border-color: #3b82f6;
+        }
+
+        .youtube-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            background: #0f172a;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Bootstrap -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Video Timestamp Editor</a>
+            <button class="navbar-toggler" type="button" aria-expanded="false" aria-controls="navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
+                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir N. Romanos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Emoções</a></li>
+                    <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="timestamps_legendas.html">TimeStamps com Legendas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Video Timestamp Editor</h1>
+            
+        </div>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-source-tabs">
+                    <button class="video-source-tab active" id="tabPc" type="button">📁 Vídeo do PC</button>
+                    <button class="video-source-tab" id="tabYoutube" type="button">▶️ Vídeo do YouTube</button>
+                </div>
+
+                <div id="pcVideoContainer" class="video-container">
+                    <video id="videoPlayer" controls>
+                        Seu navegador não suporta o elemento de vídeo.
+                    </video>
+                </div>
+
+                <div id="youtubeContainer" class="video-container" style="display: none;">
+                    <div style="padding: 10px;">
+                        <input type="text" id="youtubeUrl" class="youtube-input" placeholder="Cole a URL do YouTube aqui...">
+                        <button class="btn-primary" onclick="loadYouTubeVideo()" style="width: 100%;">Carregar</button>
+                    </div>
+                    <div id="youtubePlayer" style="display: none;"></div>
+                </div>
+
+                <div class="video-controls">
+                    <div class="control-row">
+                        <label class="file-label" id="videoFileLabel">
+                            📁 Carregar Vídeo
+                            <input type="file" id="videoInput" accept="video/*">
+                        </label>
+                        <button class="btn-primary" id="playStopBtn">▶ Play</button>
+                        <button class="btn-secondary" id="pauseBtn">⏸ Pause</button>
+                        <span class="time-display" id="timeDisplay">00:00:00 / 00:00:00</span>
+                    </div>
+                    <div class="control-row">
+                        <label style="color: #94a3b8; font-size: 13px;">Iniciar em: 
+                            <input type="text" id="startTime" placeholder="00:00:00" style="width: 100px; padding: 6px 10px; margin-left: 8px; font-size: 13px;">
+                        </label>
+                        <button class="btn-info" id="setStartBtn">Definir</button>
+                        <button class="btn-danger" id="clearStartBtn">Limpar</button>
+                    </div>
+                </div>
+
+                <!-- TIMELINE -->
+                <div class="timeline-container" id="timelineContainer" style="display: none;">
+                    <div class="timeline-wrapper" id="timelineWrapper">
+                        <div class="timeline-current-time" id="timelineCurrentTime">00:00:00</div>
+                        <div class="timeline-bar" id="timelineBar"></div>
+                        <div class="timeline-markers" id="timelineMarkers"></div>
+                    </div>
+                    <div class="timeline-duration">
+                        <span id="timelineStartTime">00:00:00</span>
+                        <span id="timelineEndTime">00:00:00</span>
+                    </div>
+                </div>
+
+                <div class="subtitle-container">
+                    <div class="control-row" style="margin-bottom: 15px;">
+                        <label class="file-label">
+                            📄 Carregar Legenda (SRT)
+                            <input type="file" id="subtitleInput" accept=".srt,.vtt">
+                        </label>
+                        <button class="btn-danger" id="clearSubtitleBtn" style="display: none;">🗑️ Limpar</button>
+                    </div>
+                    
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="pauseOnSubtitleClick" checked>
+                        <label for="pauseOnSubtitleClick">⏸️ Pausar vídeo ao clicar na legenda</label>
+                    </div>
+                    <div class="checkbox-info">
+                        Quando ativado, o vídeo pausa automaticamente ao clicar em uma palavra
+                    </div>
+                    
+                    <div id="subtitleStats" class="subtitle-stats" style="display: none;"></div>
+                    <div id="subtitleText" class="subtitle-text">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <p>Nenhuma legenda carregada</p>
+                            <p>Selecione um arquivo de legenda (.srt ou .vtt) para sincronizar com o vídeo</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timestamps-section">
+                <h2 class="section-title">
+                    <span>📌</span>
+                    MARCAÇÕES
+                </h2>
+
+                <div class="timestamp-input-group">
+                    <div class="input-group">
+                        <label>Tempo:</label>
+                        <div class="input-row">
+                            <input type="text" id="timestampTime" readonly placeholder="00:00:00">
+                            <button class="btn-info" id="captureTimeBtn" style="white-space: nowrap;">📋 Copiar</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="timestampDesc">Descrição (opcional):</label>
+                        <textarea id="timestampDesc" rows="2" placeholder="Digite uma descrição..."></textarea>
+                    </div>
+                    <button class="btn-success" id="addTimestampBtn" style="width: 100%; margin-top: 5px;">
+                        + Adicionar Marcação
+                    </button>
+                </div>
+
+                <button class="btn-danger" id="clearAllTimestampsBtn" style="width: 100%; margin-bottom: 20px;">
+                    🗑️ Limpar Todas
+                </button>
+
+                <div id="timestampList" class="timestamp-list">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>Nenhuma marcação adicionada</p>
+                        <p>Adicione timestamps para testar</p>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="btn-primary" id="exportTxtBtn">📄 TXT</button>
+                    <button class="btn-success" id="exportJsonBtn">💾 JSON</button>
+                    <label class="file-label">
+                        📁 Importar JSON
+                        <input type="file" id="importJsonInput" accept=".json">
+                    </label>
+                    <label class="file-label">
+                        📄 Importar TXT
+                        <input type="file" id="importTxtInput" accept=".txt">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Menu Hambúrguer - Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            var toggler = document.querySelector('.navbar-toggler');
+            var navbarCollapse = document.querySelector('.navbar-collapse');
+            
+            if (toggler && navbarCollapse) {
+                toggler.addEventListener('click', function() {
+                    var isExpanded = this.getAttribute('aria-expanded') === 'true';
+                    this.setAttribute('aria-expanded', !isExpanded);
+                    navbarCollapse.classList.toggle('show');
+                });
+                
+                // Fechar menu ao clicar em um link
+                document.querySelectorAll('.nav-link').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        toggler.setAttribute('aria-expanded', 'false');
+                        navbarCollapse.classList.remove('show');
+                    });
+                });
+            }
+        });
+
+        // Elementos DOM
+        var videoPlayer = document.getElementById('videoPlayer');
+        var videoInput = document.getElementById('videoInput');
+        var subtitleInput = document.getElementById('subtitleInput');
+        var subtitleText = document.getElementById('subtitleText');
+        var subtitleStats = document.getElementById('subtitleStats');
+        var timeDisplay = document.getElementById('timeDisplay');
+        var timestampTime = document.getElementById('timestampTime');
+        var timestampDesc = document.getElementById('timestampDesc');
+        var timestampList = document.getElementById('timestampList');
+        var pauseOnSubtitleClick = document.getElementById('pauseOnSubtitleClick');
+        
+        // Timeline elements
+        var timelineContainer = document.getElementById('timelineContainer');
+        var timelineWrapper = document.getElementById('timelineWrapper');
+        var timelineBar = document.getElementById('timelineBar');
+        var timelineMarkers = document.getElementById('timelineMarkers');
+        var timelineCurrentTime = document.getElementById('timelineCurrentTime');
+        var timelineStartTime = document.getElementById('timelineStartTime');
+        var timelineEndTime = document.getElementById('timelineEndTime');
+        
+        var subtitles = [];
+        var timestamps = [];
+        var currentStartTime = 0;
+        var isPlaying = false;
+        var currentVideoSource = 'pc';
+
+        // Event listeners para abas de vídeo
+        document.getElementById('tabPc').addEventListener('click', function() {
+            switchVideoSource('pc');
+        });
+        
+        document.getElementById('tabYoutube').addEventListener('click', function() {
+            switchVideoSource('youtube');
+        });
+
+        // Trocar fonte de vídeo
+        function switchVideoSource(source) {
+            currentVideoSource = source;
+            var tabs = document.querySelectorAll('.video-source-tab');
+            var pcContainer = document.getElementById('pcVideoContainer');
+            var youtubeContainer = document.getElementById('youtubeContainer');
+            var videoFileLabel = document.getElementById('videoFileLabel');
+            
+            if (source === 'pc') {
+                tabs[0].classList.add('active');
+                tabs[1].classList.remove('active');
+                pcContainer.style.display = 'block';
+                youtubeContainer.style.display = 'none';
+                videoFileLabel.style.display = 'inline-flex';
+            } else {
+                tabs[0].classList.remove('active');
+                tabs[1].classList.add('active');
+                pcContainer.style.display = 'none';
+                youtubeContainer.style.display = 'block';
+                videoFileLabel.style.display = 'none';
+            }
+        }
+
+        // Carregar vídeo do YouTube
+        function loadYouTubeVideo() {
+            var url = document.getElementById('youtubeUrl').value;
+            if (!url) {
+                alert('Por favor, insira uma URL do YouTube');
+                return;
+            }
+            
+            var videoId = extractYouTubeID(url);
+            if (!videoId) {
+                alert('URL do YouTube inválida');
+                return;
+            }
+            
+            var youtubePlayer = document.getElementById('youtubePlayer');
+            youtubePlayer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + videoId + '?enablejsapi=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+            youtubePlayer.style.display = 'block';
+            
+            timelineContainer.style.display = 'block';
+            updateTimelineDuration();
+        }
+
+        function extractYouTubeID(url) {
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        // Carregar vídeo do PC
+        videoInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var url = URL.createObjectURL(file);
+                videoPlayer.src = url;
+                videoPlayer.load();
+                
+                videoPlayer.onloadedmetadata = function() {
+                    updateTimeDisplay();
+                    updateTimelineDuration();
+                    timelineContainer.style.display = 'block';
+                };
+            }
+        });
+
+        // Controles de vídeo - Play/Stop unificado
+        var playStopBtn = document.getElementById('playStopBtn');
+        
+        playStopBtn.addEventListener('click', function() {
+            if (isPlaying) {
+                // Stop
+                if (currentVideoSource === 'pc') {
+                    videoPlayer.pause();
+                    videoPlayer.currentTime = 0;
+                } else {
+                    var youtubePlayer = document.getElementById('youtubePlayer');
+                    var iframe = youtubePlayer.querySelector('iframe');
+                    if (iframe) {
+                        var src = iframe.src;
+                        iframe.src = src;
+                    }
+                }
+                playStopBtn.innerHTML = '▶ Play';
+                playStopBtn.classList.remove('btn-danger');
+                playStopBtn.classList.add('btn-primary');
+                isPlaying = false;
+            } else {
+                // Play
+                if (currentVideoSource === 'pc') {
+                    videoPlayer.play();
+                }
+                playStopBtn.innerHTML = '⏹ Stop';
+                playStopBtn.classList.remove('btn-primary');
+                playStopBtn.classList.add('btn-danger');
+                isPlaying = true;
+            }
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            if (currentVideoSource === 'pc') {
+                videoPlayer.pause();
+            }
+            if (isPlaying) {
+                playStopBtn.innerHTML = '▶ Play';
+                playStopBtn.classList.remove('btn-danger');
+                playStopBtn.classList.add('btn-primary');
+                isPlaying = false;
+            }
+        });
+
+        if (currentVideoSource === 'pc') {
+            videoPlayer.addEventListener('play', function() {
+                isPlaying = true;
+                playStopBtn.innerHTML = '⏹ Stop';
+                playStopBtn.classList.remove('btn-primary');
+                playStopBtn.classList.add('btn-danger');
+            });
+
+            videoPlayer.addEventListener('pause', function() {
+                isPlaying = false;
+                playStopBtn.innerHTML = '▶ Play';
+                playStopBtn.classList.remove('btn-danger');
+                playStopBtn.classList.add('btn-primary');
+            });
+        }
+
+        // Atualizar display de tempo
+        function updateTimeDisplay() {
+            var current = '00:00:00';
+            var duration = '00:00:00';
+            
+            if (currentVideoSource === 'pc') {
+                current = formatTime(videoPlayer.currentTime);
+                duration = formatTime(videoPlayer.duration || 0);
+            }
+            
+            timeDisplay.textContent = current + ' / ' + duration;
+        }
+
+        if (currentVideoSource === 'pc') {
+            videoPlayer.addEventListener('timeupdate', function() {
+                updateTimeDisplay();
+                updateTimelineProgress();
+                highlightCurrentWord(videoPlayer.currentTime);
+            });
+        }
+
+        // Timeline Functions
+        function updateTimelineDuration() {
+            var duration = 0;
+            if (currentVideoSource === 'pc') {
+                duration = videoPlayer.duration || 0;
+            }
+            timelineStartTime.textContent = '00:00:00';
+            timelineEndTime.textContent = formatTime(duration);
+        }
+
+        function updateTimelineProgress() {
+            var duration = 1;
+            var currentTime = 0;
+            
+            if (currentVideoSource === 'pc') {
+                duration = videoPlayer.duration || 1;
+                currentTime = videoPlayer.currentTime;
+            }
+            
+            var progress = (currentTime / duration) * 100;
+            
+            timelineBar.style.width = progress + '%';
+            timelineCurrentTime.style.left = progress + '%';
+            timelineCurrentTime.textContent = formatTime(currentTime);
+        }
+
+        function renderTimelineMarkers() {
+            timelineMarkers.innerHTML = '';
+            
+            var duration = 1;
+            if (currentVideoSource === 'pc') {
+                duration = videoPlayer.duration || 1;
+            }
+            
+            timestamps.forEach(function(ts) {
+                var position = (ts.seconds / duration) * 100;
+                
+                var marker = document.createElement('div');
+                marker.className = 'timeline-marker';
+                marker.style.left = position + '%';
+                
+                var tooltip = document.createElement('div');
+                tooltip.className = 'timeline-marker-tooltip';
+                tooltip.innerHTML = ts.time + '<br>' + (ts.description || 'Sem descrição');
+                
+                marker.appendChild(tooltip);
+                
+                marker.style.pointerEvents = 'auto';
+                marker.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    jumpToTimestamp(ts.seconds);
+                });
+                
+                timelineMarkers.appendChild(marker);
+            });
+        }
+
+        timelineWrapper.addEventListener('click', function(e) {
+            var rect = timelineWrapper.getBoundingClientRect();
+            var clickX = e.clientX - rect.left;
+            var width = rect.width;
+            
+            var duration = 1;
+            if (currentVideoSource === 'pc') {
+                duration = videoPlayer.duration || 1;
+            }
+            
+            var clickTime = (clickX / width) * duration;
+            
+            if (currentVideoSource === 'pc') {
+                videoPlayer.currentTime = clickTime;
+                videoPlayer.play();
+            }
+        });
+
+        // Carregar legenda
+        subtitleInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            
+            var validTypes = ['.srt', '.vtt'];
+            var fileExt = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!validTypes.includes(fileExt)) {
+                alert('Formato inválido! Use arquivos .srt ou .vtt');
+                return;
+            }
+            
+            var reader = new FileReader();
+            
+            reader.onload = function(event) {
+                var content = event.target.result;
+                
+                try {
+                    var format = fileExt === '.vtt' ? 'vtt' : 'srt';
+                    parseSubtitle(content, format);
+                    
+                    if (subtitles.length === 0) {
+                        alert('Nenhum timestamp encontrado no arquivo!');
+                    } else {
+                        document.getElementById('clearSubtitleBtn').style.display = 'inline-flex';
+                        
+                        var uniqueTimestamps = [];
+                        subtitles.forEach(function(s) {
+                            var floor = Math.floor(s.start);
+                            if (uniqueTimestamps.indexOf(floor) === -1) {
+                                uniqueTimestamps.push(floor);
+                            }
+                        });
+                        
+                        subtitleStats.style.display = 'block';
+                        subtitleStats.innerHTML = '<strong>✅ Legenda Carregada!</strong><br>' +
+                            '📊 ' + uniqueTimestamps.length + ' timestamps | ' +
+                            '📝 ' + subtitles.length + ' palavras | ' +
+                            '📄 Arquivo: ' + file.name;
+                    }
+                } catch (error) {
+                    alert('Erro ao processar legenda: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+            this.value = '';
+        });
+
+        document.getElementById('clearSubtitleBtn').addEventListener('click', function() {
+            subtitles = [];
+            subtitleText.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>Nenhuma legenda carregada</p></div>';
+            subtitleStats.style.display = 'none';
+            this.style.display = 'none';
+        });
+
+        // Parse de legenda
+        function parseSubtitle(content, format) {
+            subtitles = [];
+            var cleanContent = content;
+            
+            if (format === 'vtt') {
+                var vttHeaderEnd = cleanContent.search(/[\r\n][\r\n]/);
+                if (vttHeaderEnd !== -1) {
+                    cleanContent = cleanContent.substring(vttHeaderEnd);
+                }
+            }
+            
+            var blocks = cleanContent.split(/(\r\n\s*\r\n|\n\s*\n)/);
+            
+            blocks.forEach(function(block) {
+                if (!block || block.match(/^\s*[\r\n]*$/)) return;
+                
+                var lines = block.trim().split(/\r\n|\n/);
+                if (lines.length < 2) return;
+                
+                var timeLineIndex = -1;
+                var startTimeStr = '';
+                var endTimeStr = '';
+                
+                for (var i = 0; i < lines.length; i++) {
+                    if (lines[i].indexOf('-->') !== -1) {
+                        timeLineIndex = i;
+                        var parts = lines[i].split('-->');
+                        if (parts.length === 2) {
+                            startTimeStr = parts[0].trim();
+                            endTimeStr = parts[1].trim();
+                        }
+                        break;
+                    }
+                }
+                
+                if (timeLineIndex === -1) return;
+                
+                try {
+                    var startTime = parseTime(startTimeStr);
+                    var endTime = parseTime(endTimeStr);
+                    
+                    var textLines = lines.slice(timeLineIndex + 1);
+                    var text = textLines.join(' ').trim();
+                    
+                    if (!text) return;
+                    
+                    var words = text.split(/\s+/).filter(function(w) { return w.length > 0; });
+                    
+                    words.forEach(function(word, wordIndex) {
+                        var wordDuration = (endTime - startTime) / words.length;
+                        var wordStart = startTime + (wordIndex * wordDuration);
+                        var wordEnd = wordStart + wordDuration;
+                        
+                        subtitles.push({
+                            text: word.replace(/[<>]/g, ''),
+                            start: wordStart,
+                            end: wordEnd,
+                            index: subtitles.length
+                        });
+                    });
+                } catch (error) {
+                    console.error('Erro ao processar bloco:', error);
+                }
+            });
+            
+            if (subtitles.length > 0) {
+                renderSubtitles();
+            }
+        }
+
+        // Renderizar legendas
+        function renderSubtitles() {
+            if (subtitles.length === 0) {
+                subtitleText.innerHTML = '<p>Nenhuma legenda carregada</p>';
+                return;
+            }
+            
+            var html = '';
+            subtitles.forEach(function(word, index) {
+                html += '<span class="subtitle-word" data-index="' + index + '" data-start="' + word.start + '" data-end="' + word.end + '">' + word.text + ' </span>';
+            });
+            
+            subtitleText.innerHTML = html;
+            
+            document.querySelectorAll('.subtitle-word').forEach(function(word) {
+                word.addEventListener('click', function() {
+                    var startTime = parseFloat(this.dataset.start);
+                    
+                    if (currentVideoSource === 'pc') {
+                        videoPlayer.currentTime = startTime;
+                        
+                        if (pauseOnSubtitleClick.checked) {
+                            videoPlayer.pause();
+                        } else {
+                            videoPlayer.play();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Destacar palavra atual
+        function highlightCurrentWord(currentTime) {
+            document.querySelectorAll('.subtitle-word').forEach(function(word) {
+                word.classList.remove('active');
+                var start = parseFloat(word.dataset.start);
+                var end = parseFloat(word.dataset.end);
+                
+                if (currentTime >= start && currentTime <= end) {
+                    word.classList.add('active');
+                    word.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+
+        // Funções de tempo
+        function parseTime(timeStr) {
+            var parts = timeStr.replace(',', '.').split(':');
+            var seconds = parts[2].split('.');
+            return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseFloat(seconds[0] + '.' + (seconds[1] || '0'));
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '00:00:00';
+            
+            var hrs = Math.floor(seconds / 3600);
+            var mins = Math.floor((seconds % 3600) / 60);
+            var secs = Math.floor(seconds % 60);
+            
+            return padZero(hrs) + ':' + padZero(mins) + ':' + padZero(secs);
+        }
+
+        function padZero(num) {
+            return String(num).padStart(2, '0');
+        }
+
+        // Capturar tempo
+        document.getElementById('captureTimeBtn').addEventListener('click', function() {
+            var currentTime = 0;
+            if (currentVideoSource === 'pc') {
+                currentTime = videoPlayer.currentTime;
+            }
+            timestampTime.value = formatTime(currentTime);
+        });
+
+        // Tempo de início
+        document.getElementById('setStartBtn').addEventListener('click', function() {
+            var timeStr = document.getElementById('startTime').value;
+            if (timeStr && currentVideoSource === 'pc') {
+                currentStartTime = parseTime(timeStr);
+                videoPlayer.currentTime = currentStartTime;
+            }
+        });
+
+        document.getElementById('clearStartBtn').addEventListener('click', function() {
+            document.getElementById('startTime').value = '';
+            currentStartTime = 0;
+        });
+
+        // Adicionar timestamp
+        document.getElementById('addTimestampBtn').addEventListener('click', function() {
+            var currentTime = 0;
+            if (currentVideoSource === 'pc') {
+                currentTime = videoPlayer.currentTime;
+            }
+            
+            var time = timestampTime.value || formatTime(currentTime);
+            var desc = timestampDesc.value.trim();
+            
+            if (!time) {
+                alert('Por favor, capture ou digite um tempo válido');
+                return;
+            }
+            
+            var timestamp = {
+                id: Date.now(),
+                time: time,
+                description: desc,
+                seconds: parseTime(time)
+            };
+            
+            timestamps.push(timestamp);
+            timestamps.sort(function(a, b) { return a.seconds - b.seconds; });
+            
+            renderTimestamps();
+            renderTimelineMarkers();
+            timestampDesc.value = '';
+        });
+
+        // Renderizar timestamps
+        function renderTimestamps() {
+            if (timestamps.length === 0) {
+                timestampList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nenhuma marcação adicionada</p><p>Adicione timestamps para testar</p></div>';
+                return;
+            }
+            
+            var html = '';
+            timestamps.forEach(function(ts) {
+                html += '<div class="timestamp-item" data-id="' + ts.id + '" data-seconds="' + ts.seconds + '">' +
+                    '<div class="timestamp-info" data-action="jump" data-seconds="' + ts.seconds + '">' +
+                    '<div class="timestamp-time" id="time-' + ts.id + '">' + ts.time + '</div>' +
+                    '<div class="timestamp-desc" id="desc-' + ts.id + '">' + (ts.description || 'Sem descrição') + '</div>' +
+                    '</div>' +
+                    '<div class="timestamp-actions">' +
+                    '<button class="timestamp-btn timestamp-btn-play" data-action="jump" data-seconds="' + ts.seconds + '" title="Reproduzir">▶</button>' +
+                    '<button class="timestamp-btn timestamp-btn-edit" data-action="edit" data-id="' + ts.id + '" title="Editar">✏️</button>' +
+                    '<button class="timestamp-btn timestamp-btn-delete" data-action="delete" data-id="' + ts.id + '" title="Excluir">🗑️</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            
+            timestampList.innerHTML = html;
+            
+            // Adicionar event listeners
+            document.querySelectorAll('[data-action="jump"]').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    jumpToTimestamp(parseFloat(this.dataset.seconds));
+                });
+            });
+            
+            document.querySelectorAll('[data-action="edit"]').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    editTimestamp(parseFloat(this.dataset.id));
+                });
+            });
+            
+            document.querySelectorAll('[data-action="delete"]').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    deleteTimestamp(parseFloat(this.dataset.id));
+                });
+            });
+        }
+
+        // Funções de timestamp
+        function jumpToTimestamp(seconds) {
+            if (currentVideoSource === 'pc') {
+                videoPlayer.currentTime = seconds;
+                videoPlayer.play();
+            }
+        }
+
+        function deleteTimestamp(id) {
+            timestamps = timestamps.filter(function(ts) { return ts.id !== id; });
+            renderTimestamps();
+            renderTimelineMarkers();
+        }
+
+        // Editar timestamp (tempo e descrição)
+        function editTimestamp(id) {
+            var timestamp = timestamps.find(function(ts) { return ts.id === id; });
+            if (!timestamp) return;
+            
+            var item = document.querySelector('.timestamp-item[data-id="' + id + '"]');
+            if (!item) return;
+            
+            var timeElement = document.getElementById('time-' + id);
+            var descElement = document.getElementById('desc-' + id);
+            var infoDiv = item.querySelector('.timestamp-info');
+            
+            timeElement.style.display = 'none';
+            descElement.style.display = 'none';
+            
+            var timeInput = document.createElement('input');
+            timeInput.type = 'text';
+            timeInput.className = 'timestamp-edit-input';
+            timeInput.value = timestamp.time;
+            timeInput.placeholder = 'Tempo (00:00:00)';
+            
+            var descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.className = 'timestamp-edit-input';
+            descInput.value = timestamp.description || '';
+            descInput.placeholder = 'Descrição';
+            
+            infoDiv.innerHTML = '';
+            infoDiv.appendChild(timeInput);
+            infoDiv.appendChild(descInput);
+            
+            timeInput.focus();
+            timeInput.select();
+            
+            function saveEdit() {
+                var newTime = timeInput.value.trim();
+                var newDesc = descInput.value.trim();
+                
+                if (!newTime) {
+                    alert('Tempo inválido');
+                    renderTimestamps();
+                    renderTimelineMarkers();
+                    return;
+                }
+                
+                if (!/^\d{2}:\d{2}:\d{2}$/.test(newTime)) {
+                    alert('Formato de tempo inválido. Use HH:MM:SS');
+                    return;
+                }
+                
+                timestamp.time = newTime;
+                timestamp.description = newDesc;
+                timestamp.seconds = parseTime(newTime);
+                
+                timestamps.sort(function(a, b) { return a.seconds - b.seconds; });
+                
+                renderTimestamps();
+                renderTimelineMarkers();
+            }
+            
+            timeInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    descInput.focus();
+                    descInput.select();
+                } else if (e.key === 'Escape') {
+                    renderTimestamps();
+                    renderTimelineMarkers();
+                }
+            });
+            
+            descInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    saveEdit();
+                } else if (e.key === 'Escape') {
+                    renderTimestamps();
+                    renderTimelineMarkers();
+                }
+            });
+            
+            timeInput.addEventListener('blur', saveEdit);
+            descInput.addEventListener('blur', saveEdit);
+        }
+
+        // Limpar todos os timestamps
+        document.getElementById('clearAllTimestampsBtn').addEventListener('click', function() {
+            if (confirm('Deseja realmente limpar todas as marcações?')) {
+                timestamps = [];
+                renderTimestamps();
+                renderTimelineMarkers();
+            }
+        });
+
+        // Exportar TXT
+        document.getElementById('exportTxtBtn').addEventListener('click', function() {
+            if (timestamps.length === 0) {
+                alert('Nenhuma marcação para exportar');
+                return;
+            }
+            
+            var content = timestamps.map(function(ts) {
+                return ts.time + ' ' + ts.description;
+            }).join('\r\n');
+            
+            downloadFile(content, 'timestamps.txt', 'text/plain');
+        });
+
+        // Exportar JSON
+        document.getElementById('exportJsonBtn').addEventListener('click', function() {
+            if (timestamps.length === 0) {
+                alert('Nenhuma marcação para exportar');
+                return;
+            }
+            
+            var content = JSON.stringify(timestamps, null, 2);
+            downloadFile(content, 'timestamps.json', 'application/json');
+        });
+
+        // Download de arquivo
+        function downloadFile(content, filename, type) {
+            var blob = new Blob([content], { type: type });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Importar JSON
+        document.getElementById('importJsonInput').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        var imported = JSON.parse(event.target.result);
+                        timestamps = imported;
+                        renderTimestamps();
+                        renderTimelineMarkers();
+                        alert('✅ Marcações importadas com sucesso!');
+                    } catch (err) {
+                        alert('❌ Erro ao importar arquivo. Verifique o formato.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Importar TXT
+        document.getElementById('importTxtInput').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        var lines = event.target.result.split(/[\r\n]+/);
+                        timestamps = [];
+                        
+                        lines.forEach(function(line) {
+                            var match = line.match(/(\d{2}:\d{2}:\d{2})\s*(.*)/);
+                            if (match) {
+                                timestamps.push({
+                                    id: Date.now() + Math.random(),
+                                    time: match[1],
+                                    description: match[2].trim(),
+                                    seconds: parseTime(match[1])
+                                });
+                            }
+                        });
+                        
+                        timestamps.sort(function(a, b) { return a.seconds - b.seconds; });
+                        renderTimestamps();
+                        renderTimelineMarkers();
+                        alert('✅ Marcações importadas com sucesso!');
+                    } catch (err) {
+                        alert('❌ Erro ao importar arquivo. Verifique o formato.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+    </script>
+</body>
+</html>
