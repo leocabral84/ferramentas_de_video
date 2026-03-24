@@ -1482,6 +1482,18 @@
                 word.addEventListener('click', function() {
                     var startTime = parseFloat(this.dataset.start);
                     
+                    // ✅ ADICIONE ISSO: Preenche automaticamente o campo de tempo
+                    timestampTime.value = formatTime(startTime);
+                    
+                    // Remove destaque de outras palavras
+                    document.querySelectorAll('.subtitle-word').forEach(function(w) {
+                        w.classList.remove('active');
+                    });
+                    
+                    // Adiciona destaque nesta palavra
+                    this.classList.add('active');
+                    
+                    // Pula para o tempo no vídeo
                     if (currentVideoSource === 'pc') {
                         videoPlayer.currentTime = startTime;
                         
