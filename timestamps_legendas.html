@@ -51,6 +51,16 @@
             align-items: center;
             justify-content: center;
             background: transparent;
+            position: relative;
+            z-index: 1000;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .navbar-toggler:hover {
+            background: rgba(255,255,255,0.1);
         }
 
         .navbar-toggler:focus {
@@ -100,7 +110,7 @@
         }
 
         .navbar-collapse {
-            transition: max-height 0.3s ease-out;
+            transition: all 0.3s ease;
         }
 
         .navbar-collapse:not(.show) {
@@ -122,26 +132,51 @@
         }
 
         @media (max-width: 991px) {
+            .navbar-toggler {
+                display: flex !important;
+                order: 2;
+                margin-left: auto;
+            }
+            
+            .navbar-collapse {
+                display: none !important;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 0 0 8px 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 1000;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            .navbar-collapse.show {
+                display: block !important;
+            }
+            
             .navbar-nav {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 2px;
-                margin-top: 10px;
+                margin: 15px 0;
+                padding: 0 15px;
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-10px);
+                transition: all 0.3s ease;
+            }
+            
+            .navbar-collapse.show .navbar-nav {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
             }
             
             .nav-link {
                 width: 100%;
                 padding: 10px 14px;
-            }
-            
-            .navbar-collapse.show {
-                display: block;
-                max-height: 400px;
-                overflow-y: auto;
-            }
-
-            .navbar-toggler {
-                display: flex;
+                border-radius: 6px;
             }
         }
 
@@ -208,6 +243,114 @@
             width: 100%;
             display: block;
             max-height: 500px;
+        }
+
+        /* TIMELINE - MOVIDA PARA CÁ (acima dos controles) */
+        .timeline-container {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            height: 30px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .timeline-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            width: 0%;
+            transition: width 0.1s linear;
+            border-radius: 4px;
+        }
+
+        .timeline-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #ef4444;
+            opacity: 0.8;
+            transition: all 0.2s;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .timeline-marker:hover {
+            width: 3px;
+            opacity: 1;
+            background: #f59e0b;
+            z-index: 5;
+        }
+
+        .timeline-marker-tooltip {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            border: 1px solid #334155;
+            z-index: 10;
+        }
+
+        .timeline-marker:hover .timeline-marker-tooltip {
+            opacity: 1;
+            visibility: visible;
+            bottom: 40px;
+        }
+
+        .timeline-current-time {
+            position: absolute;
+            top: -28px;
+            left: 0%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: #3b82f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #334155;
+            transition: left 0.1s linear;
+            pointer-events: none;
+        }
+
+        .timeline-duration {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
         }
 
         .video-controls {
@@ -320,6 +463,58 @@
             background: #0f172a;
             border-radius: 6px;
             border: 1px solid #334155;
+        }
+
+        /* Timestamp Controls - MOVIDO PARA CÁ (acima das legendas) */
+        .timestamp-controls-top {
+            background: #1e293b;
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #334155;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .timestamp-controls-top .input-group {
+            margin-bottom: 12px;
+        }
+
+        .timestamp-controls-top .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .timestamp-controls-top .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .timestamp-controls-top .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .timestamp-controls-top input[type="text"],
+        .timestamp-controls-top textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .timestamp-controls-top input[type="text"]:focus,
+        .timestamp-controls-top textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .subtitle-container {
@@ -601,119 +796,10 @@
             margin-bottom: 12px;
         }
 
-        /* TIMELINE */
-        .timeline-container {
-            background: #1e293b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #334155;
-        }
-
-        .timeline-wrapper {
-            position: relative;
-            height: 30px;
-            background: #0f172a;
-            border-radius: 4px;
-            overflow: hidden;
-            cursor: pointer;
-        }
-
-        .timeline-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
-            width: 0%;
-            transition: width 0.1s linear;
-            border-radius: 4px;
-        }
-
-        .timeline-markers {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .timeline-marker {
-            position: absolute;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            background: #ef4444;
-            opacity: 0.8;
-            transition: all 0.2s;
-            cursor: pointer;
-            pointer-events: auto;
-        }
-
-        .timeline-marker:hover {
-            width: 3px;
-            opacity: 1;
-            background: #f59e0b;
-            z-index: 5;
-        }
-
-        .timeline-marker-tooltip {
-            position: absolute;
-            bottom: 35px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #0f172a;
-            color: #e2e8f0;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s;
-            border: 1px solid #334155;
-            z-index: 10;
-        }
-
-        .timeline-marker:hover .timeline-marker-tooltip {
-            opacity: 1;
-            visibility: visible;
-            bottom: 40px;
-        }
-
-        .timeline-current-time {
-            position: absolute;
-            top: -28px;
-            left: 0%;
-            transform: translateX(-50%);
-            background: #0f172a;
-            color: #3b82f6;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            font-family: 'Courier New', monospace;
-            border: 1px solid #334155;
-            transition: left 0.1s linear;
-            pointer-events: none;
-        }
-
-        .timeline-duration {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 6px;
-            font-size: 11px;
-            color: #94a3b8;
-            font-family: 'Courier New', monospace;
-        }
-
         .video-source-tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
-            
         }
 
         .video-source-tab {
@@ -730,7 +816,6 @@
         .video-source-tab.active {
             background: #3b82f6;
             border-color: #3b82f6;
-            color: white;
             color: white;
         }
 
@@ -775,7 +860,7 @@
             <button class="navbar-toggler" type="button" aria-expanded="false" aria-controls="navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
                     <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
@@ -798,14 +883,13 @@
     <div class="container">
         <div class="header">
             <h1>🎬 Video Timestamp Editor</h1>
-            
         </div>
 
         <div class="main-content">
             <div class="video-section">
                 <div class="video-source-tabs">
-                    <button class="video-source-tab active" id="tabPc" type="button">📁 Vídeo do PC</button>
-                    <button class="video-source-tab" id="tabYoutube" type="button">▶️ Vídeo do YouTube</button>
+                    <button class="video-source-tab active" id="tabPc" type="button">▶️ Vídeo do PC</button>
+                    <button class="video-source-tab" id="tabYoutube" type="button"></button>
                 </div>
 
                 <div id="pcVideoContainer" class="video-container">
@@ -816,12 +900,26 @@
 
                 <div id="youtubeContainer" class="video-container" style="display: none;">
                     <div style="padding: 10px;">
-                        <input type="text" id="youtubeUrl" class="youtube-input" placeholder="Cole a URL do YouTube aqui...">
-                        <button class="btn-primary" onclick="loadYouTubeVideo()" style="width: 100%;">Carregar</button>
+                        
+                        
                     </div>
                     <div id="youtubePlayer" style="display: none;"></div>
                 </div>
 
+                <!-- TIMELINE - MOVIDA PARA CÁ (acima dos controles do vídeo) -->
+                <div class="timeline-container" id="timelineContainer" style="display: none;">
+                    <div class="timeline-wrapper" id="timelineWrapper">
+                        <div class="timeline-current-time" id="timelineCurrentTime">00:00:00</div>
+                        <div class="timeline-bar" id="timelineBar"></div>
+                        <div class="timeline-markers" id="timelineMarkers"></div>
+                    </div>
+                    <div class="timeline-duration">
+                        <span id="timelineStartTime">00:00:00</span>
+                        <span id="timelineEndTime">00:00:00</span>
+                    </div>
+                </div>
+
+                <!-- Video Controls - MOVIDOS PARA BAIXO da timeline -->
                 <div class="video-controls">
                     <div class="control-row">
                         <label class="file-label" id="videoFileLabel">
@@ -841,17 +939,22 @@
                     </div>
                 </div>
 
-                <!-- TIMELINE -->
-                <div class="timeline-container" id="timelineContainer" style="display: none;">
-                    <div class="timeline-wrapper" id="timelineWrapper">
-                        <div class="timeline-current-time" id="timelineCurrentTime">00:00:00</div>
-                        <div class="timeline-bar" id="timelineBar"></div>
-                        <div class="timeline-markers" id="timelineMarkers"></div>
+                <!-- Timestamp Controls - MOVIDO PARA CÁ (acima das legendas) -->
+                <div class="timestamp-controls-top">
+                    <div class="input-group">
+                        <label>⏱️ Tempo:</label>
+                        <div class="input-row">
+                            <input type="text" id="timestampTime" placeholder="00:00:00">
+                            <button class="btn-info" id="captureTimeBtn" style="white-space: nowrap;">📋 Copiar</button>
+                        </div>
                     </div>
-                    <div class="timeline-duration">
-                        <span id="timelineStartTime">00:00:00</span>
-                        <span id="timelineEndTime">00:00:00</span>
+                    <div class="input-group">
+                        <label for="timestampDesc">Descrição (opcional):</label>
+                        <textarea id="timestampDesc" rows="2" placeholder="Digite uma descrição..."></textarea>
                     </div>
+                    <button class="btn-success" id="addTimestampBtn" style="width: 100%; margin-top: 5px;">
+                        + Adicionar Marcação
+                    </button>
                 </div>
 
                 <div class="subtitle-container">
@@ -888,23 +991,6 @@
                     MARCAÇÕES
                 </h2>
 
-                <div class="timestamp-input-group">
-                    <div class="input-group">
-                        <label>Tempo:</label>
-                        <div class="input-row">
-                            <input type="text" id="timestampTime" readonly placeholder="00:00:00">
-                            <button class="btn-info" id="captureTimeBtn" style="white-space: nowrap;">📋 Copiar</button>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="timestampDesc">Descrição (opcional):</label>
-                        <textarea id="timestampDesc" rows="2" placeholder="Digite uma descrição..."></textarea>
-                    </div>
-                    <button class="btn-success" id="addTimestampBtn" style="width: 100%; margin-top: 5px;">
-                        + Adicionar Marcação
-                    </button>
-                </div>
-
                 <button class="btn-danger" id="clearAllTimestampsBtn" style="width: 100%; margin-bottom: 20px;">
                     🗑️ Limpar Todas
                 </button>
@@ -933,15 +1019,40 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+
+        
+
+    // ... (todo o seu código atual fica aqui)
+
+    // === NOVO CÓDIGO: Menu esconder ao rolar ===
+    let lastScroll = 0;
+    const navbar = document.querySelector('.navbar');
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            // Rolando para baixo → esconde o menu
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            // Rolando para cima → mostra o menu
+            navbar.style.transform = 'translateY(0)';
+        }
+
+        lastScroll = currentScroll;
+    });
+
+
         // Menu Hambúrguer - Toggle
         document.addEventListener('DOMContentLoaded', function() {
             var toggler = document.querySelector('.navbar-toggler');
             var navbarCollapse = document.querySelector('.navbar-collapse');
             
             if (toggler && navbarCollapse) {
-                toggler.addEventListener('click', function() {
+                toggler.addEventListener('click', function(e) {
+                    e.preventDefault();
                     var isExpanded = this.getAttribute('aria-expanded') === 'true';
                     this.setAttribute('aria-expanded', !isExpanded);
                     navbarCollapse.classList.toggle('show');
@@ -953,6 +1064,14 @@
                         toggler.setAttribute('aria-expanded', 'false');
                         navbarCollapse.classList.remove('show');
                     });
+                });
+                
+                // Fechar menu ao clicar fora
+                document.addEventListener('click', function(e) {
+                    if (!toggler.contains(e.target) && !navbarCollapse.contains(e.target)) {
+                        toggler.setAttribute('aria-expanded', 'false');
+                        navbarCollapse.classList.remove('show');
+                    }
                 });
             }
         });
