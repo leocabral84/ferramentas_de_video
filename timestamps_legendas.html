@@ -256,7 +256,7 @@
 
         .timeline-wrapper {
             position: relative;
-            height: 30px;
+            height: 10px;
             background: #0f172a;
             border-radius: 4px;
             overflow: hidden;
@@ -850,6 +850,16 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
+
+        .subtitle-word.highlight {
+            background: #3b82f6 !important;
+            color: #0f172a !important;
+            font-weight: 700;
+            border-radius: 4px;
+        }
+        #descTemplates option {
+            background: #0f172a;
+        }
     </style>
 </head>
 <body>
@@ -906,6 +916,26 @@
                     <div id="youtubePlayer" style="display: none;"></div>
                 </div>
 
+                <!-- Controle de Velocidade -->
+                <div class="speed-control" style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; color: #94a3b8; margin-right: 8px;">
+                        Velocidade:
+                    </label>
+
+                    <select id="playbackRate" 
+                            style="width: 90px; padding: 4px 6px; font-size: 13px; 
+                                background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 6px;"
+                            title="Controlar velocidade do vídeo">
+
+                        <option value="0.5">0.5x</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1.0x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2.0x</option>
+                    </select>
+                </div>
+
                 <!-- TIMELINE - MOVIDA PARA CÁ (acima dos controles do vídeo) -->
                 <div class="timeline-container" id="timelineContainer" style="display: none;">
                     <div class="timeline-wrapper" id="timelineWrapper">
@@ -926,8 +956,8 @@
                             📁 Carregar Vídeo
                             <input type="file" id="videoInput" accept="video/*">
                         </label>
-                        <button class="btn-primary" id="playStopBtn">▶ Play</button>
-                        <button class="btn-secondary" id="pauseBtn">⏸ Pause</button>
+                        <button class="btn-primary" id="playStopBtn" title="Espaço: Play/Pause">▶ Play</button>
+                        <button class="btn-secondary" id="pauseBtn" title="Espaço: Play/Pause">⏸ Pause</button>
                         <span class="time-display" id="timeDisplay">00:00:00 / 00:00:00</span>
                     </div>
                     <div class="control-row">
@@ -945,16 +975,92 @@
                         <label>⏱️ Tempo:</label>
                         <div class="input-row">
                             <input type="text" id="timestampTime" placeholder="00:00:00">
-                            <button class="btn-info" id="captureTimeBtn" style="white-space: nowrap;">📋 Copiar</button>
+
+                            <button class="btn-info" 
+                                    id="captureTimeBtn" 
+                                    style="white-space: nowrap;" 
+                                    title="Copiar tempo atual">
+                                📋 Copiar
+                            </button>
+
+                            <button class="btn-secondary"
+                                    id="undoTimestampBtn"
+                                    style="white-space: nowrap;"
+                                    title="Desfazer última marcação (Ctrl+Z)">
+                                ↩️ Desfazer
+                            </button>
                         </div>
                     </div>
                     <div class="input-group">
                         <label for="timestampDesc">Descrição (opcional):</label>
-                        <textarea id="timestampDesc" rows="2" placeholder="Digite uma descrição..."></textarea>
+
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+
+                            <!-- Campo de descrição -->
+                            <textarea id="timestampDesc" rows="2"
+                                placeholder="Digite uma descrição..."
+                                style="width: 45%; resize: vertical;"></textarea>
+
+                            <!-- Dropdown de modelos -->
+                            <select id="descTemplates"
+                                style="padding: 6px; background:#0f172a; border:1px solid #334155;
+                                    color:#e2e8f0; border-radius:6px; width: 20%;">
+                                <option value="">Modelos...</option>
+                            </select>
+
+                            <!-- Botão salvar -->
+                            <button id="saveTemplateBtn"
+                                    class="btn-success"
+                                    style="padding: 8px 12px; white-space: nowrap; font-size: 13px;">
+                                Salvar
+                            </button>
+
+                            <!-- Botão excluir -->
+                            <button id="deleteTemplateBtn"
+                                    class="btn-danger"
+                                    style="padding: 8px 12px; white-space: nowrap; font-size: 13px;">
+                                Excluir
+                            </button>
+
+                        </div>
                     </div>
-                    <button class="btn-success" id="addTimestampBtn" style="width: 100%; margin-top: 5px;">
-                        + Adicionar Marcação
-                    </button>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+
+                        <!-- Botão de adicionar marcação -->
+                        <button class="btn-success" 
+                                id="addTimestampBtn" 
+                                title="M: adicionar marcação"
+                                style="white-space: nowrap;">
+                            + Adicionar Marcação
+                        </button>
+
+                        <!-- Sistema de busca -->
+                        <div id="searchContainer" 
+                            class="search-hidden" 
+                            style="display: flex; gap: 6px; align-items: center;">
+
+                            <input id="searchInput"
+                                type="text"
+                                placeholder="Buscar..."
+                                style="width: 150px; padding: 6px 8px; border-radius: 6px;
+                                        background:#0f172a; border:1px solid #334155; 
+                                        color:#e2e8f0; font-size: 13px;">
+
+                            <button id="searchPrevBtn" 
+                                    class="btn-secondary" 
+                                    style="padding: 4px 8px; font-size: 13px;">
+                                ⬅️
+                            </button>
+
+                            <button id="searchNextBtn" 
+                                    class="btn-secondary" 
+                                    style="padding: 4px 8px; font-size: 13px;">
+                                ➡️
+                            </button>
+                        </div>
+
+                    </div>
+
                 </div>
 
                 <div class="subtitle-container">
@@ -973,7 +1079,8 @@
                     <div class="checkbox-info">
                         Quando ativado, o vídeo pausa automaticamente ao clicar em uma palavra
                     </div>
-                    
+
+                                        
                     <div id="subtitleStats" class="subtitle-stats" style="display: none;"></div>
                     <div id="subtitleText" class="subtitle-text">
                         <div class="empty-state">
@@ -990,6 +1097,8 @@
                     <span>📌</span>
                     MARCAÇÕES
                 </h2>
+
+                
 
                 <button class="btn-danger" id="clearAllTimestampsBtn" style="width: 100%; margin-bottom: 20px;">
                     🗑️ Limpar Todas
@@ -1014,6 +1123,9 @@
                         📄 Importar TXT
                         <input type="file" id="importTxtInput" accept=".txt">
                     </label>
+                    <button class="btn-info" id="copyYoutubeBtn" title="Copiar timestamps no formato YouTube">
+                        📋 Copiar YouTube
+                    </button>
                 </div>
             </div>
         </div>
@@ -1839,6 +1951,274 @@
                 reader.readAsText(file);
             }
         });
+
+        // === Atalho: ESPAÇO → Play/Pause ===
+        document.addEventListener("keydown", function(e) {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+            if (e.code === "Space") {
+                e.preventDefault();
+                if (currentVideoSource === "pc") {
+                    if (videoPlayer.paused) {
+                        videoPlayer.play();
+                    } else {
+                        videoPlayer.pause();
+                    }
+                }
+            }
+        });
+
+        // === Atalho: M → Adicionar marcação ===
+        document.addEventListener("keydown", function(e) {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+            if (e.key.toLowerCase() === "m") {
+                e.preventDefault();
+                document.getElementById("addTimestampBtn").click();
+            }
+        });
+
+        // === Atalhos: ← → para avançar/retroceder 5s ===
+        document.addEventListener("keydown", function(e) {
+            if (currentVideoSource !== "pc") return;
+
+            const skipAmount = 5; // Altere se quiser outro valor
+
+            if (e.code === "ArrowLeft") {
+                e.preventDefault();
+                videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - skipAmount);
+            }
+            if (e.code === "ArrowRight") {
+                e.preventDefault();
+                videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + skipAmount);
+            }
+        });
+
+        // === Função para desfazer última marcação ===
+        function undoLastTimestamp() {
+            if (timestamps.length === 0) return;
+            timestamps.pop();
+            renderTimestamps();
+            renderTimelineMarkers();
+        }
+
+        // Botão Desfazer
+        document.getElementById("undoTimestampBtn").addEventListener("click", undoLastTimestamp);
+        // === Atalho: CTRL + Z → desfazer marcação ===
+        document.addEventListener("keydown", function(e) {
+            if (e.ctrlKey && e.key.toLowerCase() === "z") {
+                e.preventDefault();
+                undoLastTimestamp();
+            }
+        });
+
+        // Controle de velocidade de reprodução
+        var playbackSelect = document.getElementById("playbackRate");
+
+        playbackSelect.addEventListener("change", function () {
+            if (currentVideoSource === "pc") {
+                videoPlayer.playbackRate = parseFloat(this.value);
+            }
+        });
+
+        // ===============================
+        // ✅ BUSCA HORIZONTAL (SEM TOGGLE)
+        // ===============================
+
+        // ELEMENTOS
+        const searchContainer = document.getElementById("searchContainer");
+        const searchInput = document.getElementById("searchInput");
+        const searchPrevBtn = document.getElementById("searchPrevBtn");
+        const searchNextBtn = document.getElementById("searchNextBtn");
+
+        let searchResults = [];
+        let currentSearchIndex = -1;
+
+        // ✅ Limpar destaques
+        function clearSearchHighlight() {
+            document.querySelectorAll(".subtitle-word").forEach(w => {
+                w.classList.remove("highlight");
+            });
+        }
+
+        // ✅ Busca em tempo real
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.trim().toLowerCase();
+
+            clearSearchHighlight();
+            searchResults = [];
+            currentSearchIndex = -1;
+
+            if (query === "") return;
+
+            // Percorre palavras das legendas
+            document.querySelectorAll(".subtitle-word").forEach(word => {
+                if (word.textContent.toLowerCase().includes(query)) {
+                    word.classList.add("highlight");
+                    searchResults.push(word);
+                }
+            });
+
+            // Move para a primeira ocorrência
+            if (searchResults.length > 0) {
+                currentSearchIndex = 0;
+                scrollToCurrentSearch();
+            }
+        });
+
+        // ✅ Rola até a ocorrência atual
+        function scrollToCurrentSearch() {
+            if (currentSearchIndex >= 0 && currentSearchIndex < searchResults.length) {
+                searchResults[currentSearchIndex].scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+            }
+        }
+
+        // ✅ Botão → próxima ocorrência
+        searchNextBtn.addEventListener("click", () => {
+            if (searchResults.length === 0) return;
+
+            currentSearchIndex++;
+            if (currentSearchIndex >= searchResults.length) currentSearchIndex = 0;
+
+            scrollToCurrentSearch();
+        });
+
+        // ✅ Botão → ocorrência anterior
+        searchPrevBtn.addEventListener("click", () => {
+            if (searchResults.length === 0) return;
+
+            currentSearchIndex--;
+            if (currentSearchIndex < 0) currentSearchIndex = searchResults.length - 1;
+
+            scrollToCurrentSearch();
+        });
+
+        // ✅ Atalhos do teclado (↑ e ↓) para navegar na busca
+        document.addEventListener("keydown", function (e) {
+            // Evita conflito com campos de digitação
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+            // Seta para baixo → próxima
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (searchResults.length > 0) {
+                    currentSearchIndex++;
+                    if (currentSearchIndex >= searchResults.length) currentSearchIndex = 0;
+                    scrollToCurrentSearch();
+                }
+            }
+
+            // Seta para cima → anterior
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (searchResults.length > 0) {
+                    currentSearchIndex--;
+                    if (currentSearchIndex < 0) currentSearchIndex = searchResults.length - 1;
+                    scrollToCurrentSearch();
+                }
+            }
+        });
+
+        // ✅ Copiar timestamps no formato YouTube
+        document.getElementById("copyYoutubeBtn").addEventListener("click", function () {
+
+            if (timestamps.length === 0) {
+                alert("Nenhuma marcação para copiar!");
+                return;
+            }
+
+            // Converte para formato YouTube:
+            // 00:00 Título
+            let youtubeFormatted = timestamps.map(ts => {
+                let desc = ts.description?.trim() || "";
+                return `${ts.time} ${desc}`;
+            }).join("\n");
+
+            // Copiar para a área de transferência
+            navigator.clipboard.writeText(youtubeFormatted)
+                .then(() => {
+                    alert("✅ Marcações copiadas no formato YouTube!");
+                })
+                .catch(() => {
+                    alert("❌ Erro ao copiar!");
+                });
+        });
+
+        // =========================================
+        // ✅ SISTEMA DE MODELOS DE DESCRIÇÃO
+        // =========================================
+
+        let savedTemplates = JSON.parse(localStorage.getItem("descTemplates") || "[]");
+
+        const descInput = document.getElementById("timestampDesc");
+        const descTemplates = document.getElementById("descTemplates");
+        const saveTemplateBtn = document.getElementById("saveTemplateBtn");
+        const deleteTemplateBtn = document.getElementById("deleteTemplateBtn");
+
+        // ✅ Carregar templates salvos na dropdown
+        function loadTemplates() {
+            descTemplates.innerHTML = `<option value="">Modelos...</option>`;
+
+            savedTemplates.forEach(t => {
+                const option = document.createElement("option");
+                option.value = t;
+                option.textContent = t;
+                descTemplates.appendChild(option);
+            });
+        }
+
+        loadTemplates();
+
+        // ✅ Inserir modelo no campo de descrição ao selecionar
+        descTemplates.addEventListener("change", function () {
+            if (this.value.trim() !== "") {
+                // Insere preservando o texto atual
+                if (descInput.value.trim() === "") {
+                    descInput.value = this.value;
+                } else {
+                    descInput.value = this.value + " " + descInput.value;
+                }
+            }
+        });
+
+        // ✅ Salvar modelo
+        saveTemplateBtn.addEventListener("click", function () {
+            const text = descInput.value.trim();
+
+            if (text === "") {
+                alert("Digite um texto para salvar como modelo.");
+                return;
+            }
+
+            if (!savedTemplates.includes(text)) {
+                savedTemplates.push(text);
+                localStorage.setItem("descTemplates", JSON.stringify(savedTemplates));
+                loadTemplates();
+                alert("✅ Modelo salvo!");
+            } else {
+                alert("⚠️ Esse modelo já existe.");
+            }
+        });
+
+        // ✅ Excluir modelo selecionado
+        deleteTemplateBtn.addEventListener("click", function () {
+            const selected = descTemplates.value;
+
+            if (!selected) {
+                alert("Selecione um modelo para excluir.");
+                return;
+            }
+
+            if (confirm("Deseja excluir este modelo?")) {
+                savedTemplates = savedTemplates.filter(t => t !== selected);
+                localStorage.setItem("descTemplates", JSON.stringify(savedTemplates));
+                loadTemplates();
+                alert("🗑️ Modelo excluído!");
+            }
+        });
+
+        
     </script>
 </body>
 </html>
