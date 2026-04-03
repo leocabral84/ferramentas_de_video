@@ -879,6 +879,18 @@
         #descTemplates option {
             background: #0f172a;
         }
+
+        #searchSimilarityBtn {
+            align-self: center;
+        }
+
+        .similarity-btn {
+            box-shadow: 0 4px 10px rgba(6,182,212,0.25);
+        }
+
+            .similarity-btn:hover {
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
@@ -1082,6 +1094,55 @@
 
                 </div>
 
+                <!-- 🔍 BUSCA POR SIMILARIDADE NAS LEGENDAS -->
+                <div class="similarity-search-wrapper" style="margin-top: 16px; margin-bottom: 16px;">
+
+                    <label style="font-size: 13px; color: #94a3b8; margin-bottom: 6px;">
+                        🔍 Buscar trecho nas legendas
+                    </label>
+
+                    <!-- Área que realmente alinha -->
+                    <div style="display: flex; gap: 10px; align-items: center;">
+
+                        <!-- Textarea -->
+                        <textarea
+                        id="textSimilarityInput"
+                        rows="3"
+                        placeholder="Cole aqui um trecho do texto (PDF, roteiro, etc.)"
+                        style="
+                            flex: 1;
+                            padding: 8px;
+                            border-radius: 6px;
+                            background: #0f172a;
+                            border: 1px solid #334155;
+                            color: #e2e8f0;
+                            resize: vertical;
+                            min-height: 66px;
+                            max-height: 90px;
+                        ">
+                        </textarea>
+
+                        <!-- Botão -->
+                        <button
+                        id="searchSimilarityBtn"
+                        class="btn-info"
+                        style="
+                            white-space: nowrap;
+                            padding: 10px 14px;
+                            height: fit-content;
+                        ">
+                        🔍 Buscar Similaridade
+                        </button>
+
+                    </div>
+
+                    <div
+                        id="similarityFeedback"
+                        style="font-size: 12px; color:#94a3b8; line-height: 1.2; margin-top: 4px;">
+                    </div>
+
+                </div>
+
                 <div class="subtitle-container">
                     <div class="control-row" style="margin-bottom: 15px;">
                         <label class="file-label">
@@ -1145,37 +1206,6 @@
                     <button class="btn-info" id="copyYoutubeBtn" title="Copiar timestamps no formato YouTube">
                         📋 Copiar YouTube
                     </button>
-                </div>
-                <!-- 🔍 BUSCA POR SIMILARIDADE NAS LEGENDAS -->
-                <div class="similarity-search-wrapper">
-
-                    <div class="similarity-search">
-                        <label style="font-size: 13px; color: #94a3b8; margin-bottom: 6px; display:block;">
-                            🔍 Buscar trecho nas legendas
-                        </label>
-
-                        <textarea
-                            id="textSimilarityInput"
-                            rows="12"
-                            placeholder="Cole aqui um trecho do texto (PDF, roteiro, etc.)"
-                            style="width:100%; padding:10px; border-radius:6px;
-                                background:#0f172a; border:1px solid #334155;
-                                color:#e2e8f0; resize: vertical;">
-                        </textarea>
-
-                        <button
-                            id="searchSimilarityBtn"
-                            class="btn-info"
-                            style="margin-top: 8px; width: 100%;">
-                            🔍 Buscar Similaridade
-                        </button>
-
-                        <div
-                            id="similarityFeedback"
-                            style="margin-top: 6px; font-size: 12px; color:#94a3b8;">
-                        </div>
-                    </div>
-
                 </div>
 
             </div>
