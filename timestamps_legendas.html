@@ -554,14 +554,17 @@
             background: #1e293b;
             padding: 25px;
             border-left: 2px solid #334155;
-            
-            /* 🔽 NOVO */
+
             display: flex;
             flex-direction: column;
-            height: 100%;
-        
 
+            height: calc(100vh - 180px);
+            overflow: hidden;
+
+            /* ✅ AQUI você desce a coluna */
+            margin-top: 530px;
         }
+
 
         .similarity-search-wrapper {
             margin-top: 16px;
