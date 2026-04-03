@@ -1892,13 +1892,26 @@
             };
             
             timestamps.push(timestamp);
-            timestamps.sort(function(a, b) { return a.seconds - b.seconds; });
-            
+            timestamps.sort(function(a, b) {
+            return a.seconds - b.seconds;
+            });
+
             renderTimestamps();
             renderTimelineMarkers();
+
+            /* ✅ SCROLL SEGURO */
+            setTimeout(scrollTimestampsToBottom, 0);
+
             timestampDesc.value = '';
             saveTimestamps();
+
         });
+
+        function scrollTimestampsToBottom() {
+            const list = document.getElementById("timestampList");
+            if (!list) return;
+            list.scrollTop = list.scrollHeight;
+        }
 
         // Renderizar timestamps
         function renderTimestamps() {
