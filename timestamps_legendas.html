@@ -563,6 +563,16 @@
 
         }
 
+        .similarity-search-wrapper {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px solid #334155;
+            }
+
+            .similarity-search {
+            flex-shrink: 0; /* EVITA que ela seja empurrada */
+            }
+
         .section-title {
             font-size: 1.3em;
             color: #3b82f6;
@@ -624,10 +634,11 @@
         }
 
         .timestamp-list {
-            flex: 1;
-            overflow-y: auto;
+            flex: 1;                  /* ocupa o espaço disponível */
+            overflow-y: auto;         /* scroll interno */
             margin-top: 20px;
-        }
+            padding-right: 5px;       /* espaço pro scroll */
+            }
 
         .timestamp-item {
             background: #0f172a;
@@ -748,6 +759,7 @@
             }
             
             .timestamps-section {
+                height: calc(100vh - 180px); /* ajustável ao layout */
                 border-left: none;
                 border-top: 2px solid #334155;
             }
@@ -1135,32 +1147,35 @@
                     </button>
                 </div>
                 <!-- 🔍 BUSCA POR SIMILARIDADE NAS LEGENDAS -->
-                <div class="similarity-search" style="margin-top: 18px;">
-                
-                <label style="font-size: 13px; color: #94a3b8; margin-bottom: 6px; display:block;">
-                    🔍 Buscar trecho nas legendas
-                </label>
+                <div class="similarity-search-wrapper">
 
-                <textarea
-                    id="textSimilarityInput"
-                    rows="12"
-                    placeholder="Cole aqui um trecho do texto (PDF, roteiro, etc.)"
-                    style="width:100%; padding:10px; border-radius:6px;
-                        background:#0f172a; border:1px solid #334155;
-                        color:#e2e8f0; resize: vertical;">
-                </textarea>
+                    <div class="similarity-search">
+                        <label style="font-size: 13px; color: #94a3b8; margin-bottom: 6px; display:block;">
+                            🔍 Buscar trecho nas legendas
+                        </label>
 
-                <button
-                    id="searchSimilarityBtn"
-                    class="btn-info"
-                    style="margin-top: 8px; width: 100%;">
-                    🔍 Buscar Similaridade
-                </button>
+                        <textarea
+                            id="textSimilarityInput"
+                            rows="12"
+                            placeholder="Cole aqui um trecho do texto (PDF, roteiro, etc.)"
+                            style="width:100%; padding:10px; border-radius:6px;
+                                background:#0f172a; border:1px solid #334155;
+                                color:#e2e8f0; resize: vertical;">
+                        </textarea>
 
-                <div
-                    id="similarityFeedback"
-                    style="margin-top: 6px; font-size: 12px; color:#94a3b8;">
-                </div>
+                        <button
+                            id="searchSimilarityBtn"
+                            class="btn-info"
+                            style="margin-top: 8px; width: 100%;">
+                            🔍 Buscar Similaridade
+                        </button>
+
+                        <div
+                            id="similarityFeedback"
+                            style="margin-top: 6px; font-size: 12px; color:#94a3b8;">
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
