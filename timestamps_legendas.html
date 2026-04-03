@@ -894,6 +894,11 @@
             .similarity-btn:hover {
             transform: translateY(-1px);
         }
+
+        #timeDisplayBottom {
+            position: sticky;
+            bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -1211,6 +1216,11 @@
                     </button>
                 </div>
 
+                <div class="time-display mt-3 text-center" id="timeDisplayBottom">
+                    00:00:00 / 00:00:00
+                </div>
+
+
             </div>
         </div>
     </div>
@@ -1439,16 +1449,26 @@
 
         // Atualizar display de tempo
         function updateTimeDisplay() {
-            var current = '00:00:00';
-            var duration = '00:00:00';
-            
+            let current = '00:00:00';
+            let duration = '00:00:00';
+
             if (currentVideoSource === 'pc') {
                 current = formatTime(videoPlayer.currentTime);
                 duration = formatTime(videoPlayer.duration || 0);
             }
-            
-            timeDisplay.textContent = current + ' / ' + duration;
+
+            const text = `${current} / ${duration}`;
+
+            // Display principal
+            timeDisplay.textContent = text;
+
+            // ✅ Display inferior (novo)
+            const bottom = document.getElementById("timeDisplayBottom");
+            if (bottom) {
+                bottom.textContent = text;
+            }
         }
+
 
         if (currentVideoSource === 'pc') {
             videoPlayer.addEventListener('timeupdate', function() {
