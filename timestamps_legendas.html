@@ -554,6 +554,13 @@
             background: #1e293b;
             padding: 25px;
             border-left: 2px solid #334155;
+            
+            /* 🔽 NOVO */
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        
+
         }
 
         .section-title {
@@ -617,7 +624,7 @@
         }
 
         .timestamp-list {
-            max-height: 450px;
+            flex: 1;
             overflow-y: auto;
             margin-top: 20px;
         }
@@ -1214,7 +1221,8 @@
         var currentStartTime = 0;
         var isPlaying = false;
         var currentVideoSource = 'pc';
-
+        
+        
         // Event listeners para abas de vídeo
         document.getElementById('tabPc').addEventListener('click', function() {
             switchVideoSource('pc');
@@ -1654,6 +1662,36 @@
             return String(num).padStart(2, '0');
         }
 
+        // ===============================
+        // ✅ PERSISTÊNCIA DE MARCAÇÕES
+        // ===============================
+        const STORAGE_KEY_TIMESTAMPS = "video_timestamps_saved";
+
+        // Salvar timestamps no localStorage
+        function saveTimestamps() {
+        localStorage.setItem(
+            STORAGE_KEY_TIMESTAMPS,
+            JSON.stringify(timestamps)
+        );
+        }
+
+        // Carregar timestamps do localStorage
+        function loadTimestamps() {
+        const saved = localStorage.getItem(STORAGE_KEY_TIMESTAMPS);
+        if (!saved) return;
+
+        try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+            timestamps = parsed;
+            renderTimestamps();
+            renderTimelineMarkers();
+            }
+        } catch (e) {
+            console.error("Erro ao carregar marcações salvas", e);
+        }
+        }
+
         // Capturar tempo
         document.getElementById('captureTimeBtn').addEventListener('click', function() {
             var currentTime = 0;
@@ -1705,6 +1743,7 @@
             renderTimestamps();
             renderTimelineMarkers();
             timestampDesc.value = '';
+            saveTimestamps();
         });
 
         // Renderizar timestamps
@@ -1766,6 +1805,7 @@
             timestamps = timestamps.filter(function(ts) { return ts.id !== id; });
             renderTimestamps();
             renderTimelineMarkers();
+            saveTimestamps();
         }
 
         // Editar timestamp (tempo e descrição)
@@ -1826,6 +1866,7 @@
                 
                 renderTimestamps();
                 renderTimelineMarkers();
+                saveTimestamps();
             }
             
             timeInput.addEventListener('keydown', function(e) {
@@ -1855,9 +1896,10 @@
         document.getElementById('clearAllTimestampsBtn').addEventListener('click', function() {
             if (confirm('Deseja realmente limpar todas as marcações?')) {
                 timestamps = [];
+                localStorage.removeItem(STORAGE_KEY_TIMESTAMPS);
                 renderTimestamps();
                 renderTimelineMarkers();
-            }
+                }
         });
 
         // Exportar TXT
@@ -1998,6 +2040,7 @@
             timestamps.pop();
             renderTimestamps();
             renderTimelineMarkers();
+            saveTimestamps();
         }
 
         // Botão Desfazer
@@ -2217,6 +2260,9 @@
                 alert("🗑️ Modelo excluído!");
             }
         });
+
+        // ✅ Restaurar marcações salvas ao abrir a página
+        loadTimestamps();
 
         
     </script>
