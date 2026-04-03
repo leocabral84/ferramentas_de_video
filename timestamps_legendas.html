@@ -1134,6 +1134,35 @@
                         📋 Copiar YouTube
                     </button>
                 </div>
+                <!-- 🔍 BUSCA POR SIMILARIDADE NAS LEGENDAS -->
+                <div class="similarity-search" style="margin-top: 18px;">
+                
+                <label style="font-size: 13px; color: #94a3b8; margin-bottom: 6px; display:block;">
+                    🔍 Buscar trecho nas legendas
+                </label>
+
+                <textarea
+                    id="textSimilarityInput"
+                    rows="12"
+                    placeholder="Cole aqui um trecho do texto (PDF, roteiro, etc.)"
+                    style="width:100%; padding:10px; border-radius:6px;
+                        background:#0f172a; border:1px solid #334155;
+                        color:#e2e8f0; resize: vertical;">
+                </textarea>
+
+                <button
+                    id="searchSimilarityBtn"
+                    class="btn-info"
+                    style="margin-top: 8px; width: 100%;">
+                    🔍 Buscar Similaridade
+                </button>
+
+                <div
+                    id="similarityFeedback"
+                    style="margin-top: 6px; font-size: 12px; color:#94a3b8;">
+                </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -1627,6 +1656,83 @@
             });
         }
 
+        // ========================================
+        // ✅ BUSCA POR SIMILARIDADE NAS LEGENDAS
+        // ========================================
+
+        function normalizeText(text) {
+            return text
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9\s]/g, "")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function findBestSubtitleMatch(inputText, minSimilarity = 0.30) {
+
+            if (!subtitles || subtitles.length === 0) return null;
+
+            const inputWords = normalizeText(inputText).split(" ");
+            if (inputWords.length < 3) return null;
+
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (let i = 0; i <= subtitles.length - inputWords.length; i++) {
+
+                const windowWords = subtitles
+                    .slice(i, i + inputWords.length)
+                    .map(w => normalizeText(w.text));
+
+                const commonCount = inputWords.filter(w => windowWords.includes(w)).length;
+                const similarity = commonCount / inputWords.length;
+
+                if (similarity > bestScore) {
+                    bestScore = similarity;
+                    bestMatch = {
+                        similarity,
+                        startTime: subtitles[i].start,
+                        startIndex: i,
+                        length: inputWords.length
+                    };
+                }
+            }
+
+            return (bestMatch && bestMatch.similarity >= minSimilarity)
+                ? bestMatch
+                : null;
+        }
+
+        function goToSubtitleMatch(match) {
+
+            // Pula o vídeo
+            if (currentVideoSource === "pc") {
+                videoPlayer.currentTime = match.startTime;
+                videoPlayer.pause();
+            }
+
+            // Limpa destaques anteriores
+            document.querySelectorAll(".subtitle-word").forEach(w => {
+                w.classList.remove("highlight");
+            });
+
+            // Destaca o trecho encontrado
+            for (let i = match.startIndex; i < match.startIndex + match.length; i++) {
+                const el = document.querySelector(`.subtitle-word[data-index="${i}"]`);
+                if (el) el.classList.add("highlight");
+            }
+
+            // Scroll automático
+            const first = document.querySelector(
+                `.subtitle-word[data-index="${match.startIndex}"]`
+            );
+            if (first) {
+                first.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+
         // Destacar palavra atual
         function highlightCurrentWord(currentTime) {
             document.querySelectorAll('.subtitle-word').forEach(function(word) {
@@ -1791,6 +1897,33 @@
                     deleteTimestamp(parseFloat(this.dataset.id));
                 });
             });
+
+            document.getElementById("searchSimilarityBtn")
+                              
+
+                .addEventListener("click", function () {
+
+                    const text = document.getElementById("textSimilarityInput").value;
+                    const feedback = document.getElementById("similarityFeedback");
+
+                    if (!text.trim()) {
+                        feedback.textContent = "⚠️ Cole um texto para buscar.";
+                        return;
+                    }
+
+                    const result = findBestSubtitleMatch(text, 0.30);
+
+                    if (!result) {
+                        feedback.textContent =
+                            "❌ Nenhum trecho com similaridade ≥ 30% encontrado.";
+                        return;
+                    }
+
+                    goToSubtitleMatch(result);
+
+                    feedback.textContent =
+                        `✅ Trecho encontrado — Similaridade: ${(result.similarity * 100).toFixed(1)}%`;
+                });
         }
 
         // Funções de timestamp
