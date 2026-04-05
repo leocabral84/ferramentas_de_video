@@ -992,8 +992,8 @@
                 <div class="video-controls">
                     <div class="control-row">
                         <label class="file-label" id="videoFileLabel">
-                            📁 Carregar Vídeo
-                            <input type="file" id="videoInput" accept="video/*">
+                            📁 Carregar Arquivo
+                            <input type="file" id="videoInput" accept="video/*,audio/mp3,audio/mpeg,audio/wav" />
                         </label>
                         <button class="btn-primary" id="playStopBtn" title="Espaço: Play/Pause">▶ Play</button>
                         <button class="btn-secondary" id="pauseBtn" title="Espaço: Play/Pause">⏸ Pause</button>
@@ -1372,18 +1372,25 @@
 
         // Carregar vídeo do PC
         videoInput.addEventListener('change', function(e) {
-            var file = e.target.files[0];
-            if (file) {
-                var url = URL.createObjectURL(file);
-                videoPlayer.src = url;
-                videoPlayer.load();
-                
-                videoPlayer.onloadedmetadata = function() {
-                    updateTimeDisplay();
-                    updateTimelineDuration();
-                    timelineContainer.style.display = 'block';
-                };
-            }
+        var file = e.target.files[0];
+        if (!file) return;
+
+        var url = URL.createObjectURL(file);
+        videoPlayer.src = url;
+        videoPlayer.load();
+
+        // ✅ Detecta tipo do arquivo
+        if (file.type.startsWith('audio/')) {
+            videoPlayer.style.maxHeight = '80px'; // visual de player de áudio
+        } else {
+            videoPlayer.style.maxHeight = '500px'; // padrão vídeo
+        }
+
+        videoPlayer.onloadedmetadata = function () {
+            updateTimeDisplay();
+            updateTimelineDuration();
+            timelineContainer.style.display = 'block';
+        };
         });
 
         // Controles de vídeo - Play/Stop unificado
