@@ -993,7 +993,7 @@
                     <div class="control-row">
                         <label class="file-label" id="videoFileLabel">
                             📁 Carregar Arquivo
-                            <input type="file" id="videoInput" accept="video/*,audio/mp3,audio/mpeg,audio/wav" />
+                            <input type="file" id="videoInput" accept="video/mp4,video/x-m4v,video/*,audio/mp3,audio/mpeg,audio/wav,audio/*">
                         </label>
                         <button class="btn-primary" id="playStopBtn" title="Espaço: Play/Pause">▶ Play</button>
                         <button class="btn-secondary" id="pauseBtn" title="Espaço: Play/Pause">⏸ Pause</button>
@@ -1142,6 +1142,11 @@
                         🔍 Buscar Similaridade
                         </button>
 
+                    </div>
+
+                    <!-- Barra de Progresso da Busca -->
+                    <div id="similarityProgressContainer" style="display: none; margin-top: 8px; background: #334155; height: 6px; border-radius: 3px; overflow: hidden;">
+                        <div id="similarityProgressBar" style="width: 0%; height: 100%; background: #3b82f6; transition: width 0.1s;"></div>
                     </div>
 
                     <div
@@ -1370,27 +1375,30 @@
             return (match && match[2].length === 11) ? match[2] : null;
         }
 
-        // Carregar vídeo do PC
+        
+        // Carregar vídeo/áudio do PC
         videoInput.addEventListener('change', function(e) {
-        var file = e.target.files[0];
-        if (!file) return;
+            var file = e.target.files[0];
+            if (file) {
+                var url = URL.createObjectURL(file);
+                videoPlayer.src = url;
+                videoPlayer.load();
+                
+                videoPlayer.onloadedmetadata = function() {
+                    updateTimeDisplay();
+                    updateTimelineDuration();
+                    timelineContainer.style.display = 'block';
+                    
+                    // Ajuste opcional: Se for áudio (sem dimensões de vídeo), 
+                    // o player nativo já lida com isso, mas garantimos que a UI não quebre.
+                    console.log("Mídia carregada: " + file.type);
+                };
 
-        var url = URL.createObjectURL(file);
-        videoPlayer.src = url;
-        videoPlayer.load();
-
-        // ✅ Detecta tipo do arquivo
-        if (file.type.startsWith('audio/')) {
-            videoPlayer.style.maxHeight = '80px'; // visual de player de áudio
-        } else {
-            videoPlayer.style.maxHeight = '500px'; // padrão vídeo
-        }
-
-        videoPlayer.onloadedmetadata = function () {
-            updateTimeDisplay();
-            updateTimelineDuration();
-            timelineContainer.style.display = 'block';
-        };
+                // Tratamento de erro caso o navegador não suporte o formato
+                videoPlayer.onerror = function() {
+                    alert("Erro ao carregar o arquivo. O formato pode não ser suportado pelo seu navegador.");
+                };
+            }
         });
 
         // Controles de vídeo - Play/Stop unificado
@@ -1745,36 +1753,80 @@
                 .trim();
         }
 
-        function findBestSubtitleMatch(inputText, minSimilarity = 0.30) {
+        // ========================================
+        // ✅ BUSCA POR SIMILARIDADE OTIMIZADA (NON-BLOCKING)
+        // ========================================
 
+        function normalizeText(text) {
+            return text
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9\s]/g, "")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        // Nova versão assíncrona que não trava o navegador
+        async function findBestSubtitleMatchAsync(inputText, minSimilarity = 0.30) {
             if (!subtitles || subtitles.length === 0) return null;
 
             const inputWords = normalizeText(inputText).split(" ");
             if (inputWords.length < 3) return null;
 
+            // Elementos de UI para feedback
+            const progressContainer = document.getElementById("similarityProgressContainer");
+            const progressBar = document.getElementById("similarityProgressBar");
+            const feedback = document.getElementById("similarityFeedback");
+            
+            // Mostrar barra de progresso
+            if(progressContainer) progressContainer.style.display = 'block';
+            if(progressBar) progressBar.style.width = '0%';
+            if(feedback) feedback.textContent = "🔍 Analisando legendas...";
+
             let bestMatch = null;
             let bestScore = 0;
+            
+            const totalIterations = subtitles.length - inputWords.length;
+            if (totalIterations <= 0) return null;
 
-            for (let i = 0; i <= subtitles.length - inputWords.length; i++) {
+            const CHUNK_SIZE = 500; // Processa 500 itens por "respiro"
 
-                const windowWords = subtitles
-                    .slice(i, i + inputWords.length)
-                    .map(w => normalizeText(w.text));
+            for (let i = 0; i <= totalIterations; i += CHUNK_SIZE) {
+                // Define o fim deste lote
+                const end = Math.min(i + CHUNK_SIZE, totalIterations + 1);
 
-                const commonCount = inputWords.filter(w => windowWords.includes(w)).length;
-                const similarity = commonCount / inputWords.length;
+                // Processa o lote atual
+                for (let j = i; j < end; j++) {
+                    const windowWords = subtitles
+                        .slice(j, j + inputWords.length)
+                        .map(w => normalizeText(w.text));
 
-                if (similarity > bestScore) {
-                    bestScore = similarity;
-                    bestMatch = {
-                        similarity,
-                        startTime: subtitles[i].start,
-                        startIndex: i,
-                        length: inputWords.length
-                    };
+                    const commonCount = inputWords.filter(w => windowWords.includes(w)).length;
+                    const similarity = commonCount / inputWords.length;
+
+                    if (similarity > bestScore) {
+                        bestScore = similarity;
+                        bestMatch = {
+                            similarity,
+                            startTime: subtitles[j].start,
+                            startIndex: j,
+                            length: inputWords.length
+                        };
+                    }
                 }
+
+                // Atualiza a barra de progresso
+                const percent = Math.min(100, Math.round((end / (totalIterations + 1)) * 100));
+                if(progressBar) progressBar.style.width = percent + '%';
+
+                // PAUSA ESTRATÉGICA: Devolve o controle ao navegador
+                await new Promise(resolve => requestAnimationFrame(resolve));
             }
 
+            // Finalização
+            if(progressContainer) progressContainer.style.display = 'none';
+            
             return (bestMatch && bestMatch.similarity >= minSimilarity)
                 ? bestMatch
                 : null;
@@ -1989,7 +2041,7 @@
             document.getElementById("searchSimilarityBtn")
                               
 
-                .addEventListener("click", function () {
+                    .addEventListener("click", async function () {
 
                     const text = document.getElementById("textSimilarityInput").value;
                     const feedback = document.getElementById("similarityFeedback");
@@ -1999,7 +2051,8 @@
                         return;
                     }
 
-                    const result = findBestSubtitleMatch(text, 0.30);
+                    // Chama a versão assíncrona com await
+                    const result = await findBestSubtitleMatchAsync(text, 0.30);
 
                     if (!result) {
                         feedback.textContent =
