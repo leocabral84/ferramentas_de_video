@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Waveform Player Pro - Integrado</title>
+    
+    <!-- Importando Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #121216;
+            --bg-panel: #1e1e24;
+            --accent: #6c5ce7;
+            --accent-hover: #8e7bf5;
+            --text-main: #f0f0f0;
+            --text-muted: #a0a0b0;
+            --border: #333340;
+            --wave-color: #00d2ff;
+            --stat-bg: #2d3436;
+            --nav-height: 56px; /* Altura padrão da navbar do bootstrap */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+            /* Adiciona espaço para a navbar fixa não cobrir o conteúdo */
+            padding-top: var(--nav-height); 
+        }
+
+        /* Ajuste da Navbar Bootstrap para o tema escuro */
+        .navbar {
+            background-color: #0a0a0c !important;
+            border-bottom: 1px solid var(--border);
+            height: var(--nav-height);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--wave-color) !important;
+        }
+
+        .nav-link {
+            color: var(--text-muted) !important;
+            font-size: 0.9rem;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white !important;
+        }
+
+        /* --- Visualizador --- */
+        .visualizer-wrapper {
+            flex: 1;
+            position: relative;
+            background-color: #0a0a0c;
+            border-bottom: 2px solid var(--border);
+            min-height: 40%;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .overlay-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            pointer-events: none;
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 5;
+        }
+
+        .auto-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #00b894;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: none;
+            animation: pulse 2s infinite;
+            z-index: 5;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        /* --- Painel de Estatísticas --- */
+        .stats-bar {
+            background-color: var(--stat-bg);
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--wave-color);
+        }
+
+        .stat-highlight {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        /* --- Barra de Controle --- */
+        .control-bar {
+            background-color: var(--bg-panel);
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        button.stop-btn {
+            background-color: #ff4757;
+        }
+        button.stop-btn:hover {
+            background-color: #ff6b81;
+        }
+
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-main);
+        }
+        button.secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Estilos para Slider de Volume */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #121216;
+            padding: 5px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        
+        input[type=range] {
+            -webkit-appearance: none; /* Para Chrome/Safari/Edge antigos */
+            appearance: none;         /* Padrão moderno (corrige o aviso) */
+            width: 100px;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;         /* Adicionado aqui também por consistência */
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            transition: background .15s ease-in-out;
+        }
+        
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: var(--accent-hover);
+        }
+
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            background: #121216;
+            padding: 5px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        input[type="number"] {
+            background: transparent;
+            border: none;
+            color: var(--wave-color);
+            font-size: 16px;
+            font-weight: bold;
+            width: 50px;
+            text-align: center;
+            margin: 0 10px;
+        }
+        input[type="number"]:focus { outline: none; }
+
+        /* --- Lista de Arquivos --- */
+        .playlist-container {
+            height: 250px;
+            background-color: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .playlist-header {
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #25252e;
+        }
+
+        .file-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .file-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid #2a2a35;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.1s;
+            font-size: 14px;
+        }
+
+        .file-item:hover {
+            background-color: #2a2a35;
+        }
+
+        .file-item.active {
+            background-color: rgba(108, 92, 231, 0.2);
+            border-left: 4px solid var(--accent);
+            color: white;
+        }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; border: 2px solid var(--bg-dark); }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        .icon { width: 18px; height: 18px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+    <!-- Menu Bootstrap Corrigido -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Padrão do Áudio</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
+                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir N. Romanos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Emoções</a></li>
+                    <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="timestamps_legendas.html">TimeStamps com Legendas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="padrao_do_audio.html">Padrão do Audio</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 1. Visualizador Gigante -->
+    <div class="visualizer-wrapper">
+        <canvas id="waveCanvas"></canvas>
+        <div class="overlay-info" id="currentFileInfo">
+            Aguardando arquivos...
+        </div>
+        <div id="autoStatus" class="auto-indicator">MODO AUTOMÁTICO ATIVO</div>
+    </div>
+
+    <!-- 2. Painel de Estatísticas -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Arquivos</span>
+            <span class="stat-value" id="totalFilesStat">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Trecho Atual</span>
+            <span class="stat-value" id="currentTrackStat">-</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Duração por Áudio</span>
+            <span class="stat-value"><span id="durationPerFileStat">7</span>s</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Tempo Total Estimado</span>
+            <span class="stat-value stat-highlight" id="totalTimeStat">00:00:00</span>
+        </div>
+    </div>
+
+    <!-- 3. Barra de Controles -->
+    <div class="control-bar">
+        
+        <!-- Controles de Transporte -->
+        <div class="control-group">
+            <button onclick="playPrevious()" class="secondary" title="Áudio Anterior (Seta Esquerda ←)">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            
+            <button onclick="togglePlay()" id="playBtn" style="min-width: 120px;" title="Play/Pause (Espaço)">
+                <svg class="icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span id="playText">Tocar Trecho</span>
+            </button>
+
+            <button onclick="stopAll()" class="stop-btn" title="Parar Tudo (Esc)">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                STOP
+            </button>
+
+            <button onclick="playNext()" class="secondary" title="Próximo Áudio (Seta Direita →)">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </button>
+        </div>
+
+        <!-- Controle de Volume -->
+        <div class="volume-control" title="Volume">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)">
+        </div>
+
+        <!-- Configuração de Tempo -->
+        <div class="time-input-group">
+            <span style="color:var(--text-muted); font-size:12px; margin-right:5px;">AJUSTAR TEMPO:</span>
+            <input type="number" id="endTimeInput" value="7" min="1" max="120" onchange="updateStats()">
+            <span style="color:var(--text-muted); font-size:12px;">segundos</span>
+        </div>
+
+        <!-- Botão Automático -->
+        <button onclick="startAutoProcess()" style="background-color: #00b894; color: #fff;" title="Iniciar Processo Automático">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+            AUTO PLAY
+        </button>
+    </div>
+
+    <!-- 4. Lista de Arquivos -->
+    <div class="playlist-container">
+        <div class="playlist-header">
+            <strong>Biblioteca de Áudios</strong>
+            <button onclick="document.getElementById('fileInput').click()" class="secondary" style="padding: 5px 15px; font-size: 12px;">
+                + Abrir Pasta / Selecionar Arquivos
+            </button>
+            <input type="file" id="fileInput" multiple accept="audio/*" style="display: none;" onchange="handleFiles(this.files)">
+        </div>
+        <ul class="file-list" id="playlist">
+            <!-- Itens inseridos via JS -->
+        </ul>
+    </div>
+
+    <!-- Script Bootstrap JS (Necessário para o menu responsivo funcionar) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- Variáveis Globais ---
+        let audioContext;
+        let audioBuffer = null;
+        let sourceNode = null;
+        let analyser = null;
+        let gainNode = null; 
+        
+        let playlist = []; 
+        let currentIndex = -1;
+        let isPlaying = false;
+        let isAutoMode = false;
+
+        // Elementos DOM
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+        const playBtn = document.getElementById('playBtn');
+        const playText = document.getElementById('playText');
+        const playIcon = document.getElementById('playIcon');
+        const fileInfoDisplay = document.getElementById('currentFileInfo');
+        const endTimeInput = document.getElementById('endTimeInput');
+        const playlistEl = document.getElementById('playlist');
+        const autoStatus = document.getElementById('autoStatus');
+        const volumeSlider = document.getElementById('volumeSlider');
+
+        // Elementos de Estatística
+        const totalFilesStat = document.getElementById('totalFilesStat');
+        const currentTrackStat = document.getElementById('currentTrackStat');
+        const durationPerFileStat = document.getElementById('durationPerFileStat');
+        const totalTimeStat = document.getElementById('totalTimeStat');
+
+        // Configuração do Canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            if(audioBuffer) drawStaticWaveform();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        // --- Atalhos de Teclado ---
+        document.addEventListener('keydown', function(event) {
+            if (event.target.tagName === 'INPUT') return;
+
+            switch(event.code) {
+                case 'Space':
+                    event.preventDefault(); 
+                    togglePlay();
+                    break;
+                case 'ArrowLeft':
+                    playPrevious();
+                    break;
+                case 'ArrowRight':
+                    playNext();
+                    break;
+                case 'Escape':
+                    stopAll();
+                    break;
+            }
+        });
+
+        // --- Funções de Estatística e Tempo ---
+
+        function updateStats() {
+            const count = playlist.length;
+            const duration = parseInt(endTimeInput.value) || 0;
+            
+            totalFilesStat.innerText = count;
+            durationPerFileStat.innerText = duration;
+            
+            if (currentIndex !== -1 && count > 0) {
+                currentTrackStat.innerText = `${currentIndex + 1} / ${count}`;
+            } else {
+                currentTrackStat.innerText = "-";
+            }
+
+            const totalSeconds = count * duration; 
+            totalTimeStat.innerText = formatTimeDetailed(totalSeconds);
+        }
+
+        function formatTimeDetailed(totalSeconds) {
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+            
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        // --- Gerenciamento de Arquivos ---
+
+        function handleFiles(files) {
+            const newFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name));
+            
+            if(playlist.length === 0) {
+                playlist = newFiles;
+            } else {
+                playlist = [...playlist, ...newFiles];
+            }
+            
+            renderPlaylist();
+            updateStats();
+            
+            if (currentIndex === -1 && playlist.length > 0) {
+                loadTrack(0, false);
+            }
+        }
+
+        function renderPlaylist() {
+            playlistEl.innerHTML = '';
+            playlist.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.className = `file-item ${index === currentIndex ? 'active' : ''}`;
+                li.onclick = () => loadAndPlay(index);
+                
+                li.innerHTML = `
+                    <span>${index + 1}. ${file.name}</span>
+                    <span style="font-size:11px; opacity:0.5;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                `;
+                playlistEl.appendChild(li);
+            });
+        }
+
+        // --- Motor de Áudio ---
+
+        async function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                gainNode = audioContext.createGain();
+                gainNode.gain.value = volumeSlider.value;
+                
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 4096;
+                
+                analyser.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+            }
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+        }
+
+        function setVolume(val) {
+            if (gainNode) {
+                gainNode.gain.value = val;
+            }
+        }
+
+        async function loadTrack(index, autoPlay = true) {
+            if (index < 0 || index >= playlist.length) return;
+
+            if (sourceNode) {
+                try { sourceNode.stop(); } catch(e){}
+                sourceNode.disconnect();
+                sourceNode = null;
+            }
+            
+            currentIndex = index;
+            renderPlaylist();
+            updateStats();
+
+            const file = playlist[index];
+            fileInfoDisplay.textContent = `Carregando: ${file.name}...`;
+
+            try {
+                await initAudioContext();
+                
+                const arrayBuffer = await file.arrayBuffer();
+                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                fileInfoDisplay.innerHTML = `
+                    <div style="font-size:14px; opacity:0.8;">TOCANDO AGORA:</div>
+                    <div>${file.name}</div>
+                    <div style="font-size:14px; opacity:0.8; margin-top:5px;">Duração Total: ${formatTime(audioBuffer.duration)}</div>
+                `;
+                
+                drawStaticWaveform();
+
+                if (autoPlay) {
+                    playAudioSegment();
+                } else {
+                    isPlaying = false;
+                    updatePlayButtonUI();
+                }
+
+            } catch (err) {
+                console.error(err);
+                fileInfoDisplay.textContent = "Erro ao decodificar áudio.";
+                if(isAutoMode) {
+                    setTimeout(() => handleTrackFinish(), 1000);
+                }
+            }
+        }
+
+        function loadAndPlay(index) {
+            isAutoMode = false;
+            updateAutoUI();
+            loadTrack(index, true);
+        }
+
+        function playAudioSegment() {
+            if (!audioBuffer) return;
+
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            sourceNode.connect(analyser);
+
+            const durationToPlay = parseFloat(endTimeInput.value) || 7;
+            const actualDuration = Math.min(durationToPlay, audioBuffer.duration);
+
+            sourceNode.start(0, 0, actualDuration);
+            
+            isPlaying = true;
+            updatePlayButtonUI();
+
+            sourceNode.onended = () => {
+                setTimeout(() => {
+                    if (isPlaying) {
+                        handleTrackFinish();
+                    }
+                }, 150);
+            };
+        }
+
+        function handleTrackFinish() {
+            isPlaying = false;
+            updatePlayButtonUI();
+            
+            if (isAutoMode) {
+                if (currentIndex < playlist.length - 1) {
+                    loadTrack(currentIndex + 1, true);
+                } else {
+                    isAutoMode = false;
+                    updateAutoUI();
+                    alert("Processo automático concluído.");
+                }
+            }
+        }
+
+        // --- Controles ---
+
+        function togglePlay() {
+            if (!audioBuffer) return;
+
+            if (isPlaying) {
+                if (sourceNode) {
+                    try { sourceNode.stop(); } catch(e){}
+                    sourceNode.disconnect();
+                    sourceNode = null;
+                }
+                isPlaying = false;
+                isAutoMode = false;
+                updateAutoUI();
+            } else {
+                playAudioSegment();
+            }
+            updatePlayButtonUI();
+        }
+
+        function stopAll(resetUI = true) {
+            if (sourceNode) {
+                try { sourceNode.stop(); } catch(e){}
+                sourceNode.disconnect();
+                sourceNode = null;
+            }
+            isPlaying = false;
+            isAutoMode = false;
+            updateAutoUI();
+            
+            if(resetUI) {
+                updatePlayButtonUI();
+                if(audioBuffer) drawStaticWaveform();
+            }
+        }
+
+        function playNext() {
+            isAutoMode = false;
+            updateAutoUI();
+            if (currentIndex < playlist.length - 1) loadTrack(currentIndex + 1, true);
+        }
+
+        function playPrevious() {
+            isAutoMode = false;
+            updateAutoUI();
+            if (currentIndex > 0) loadTrack(currentIndex - 1, true);
+        }
+
+        function startAutoProcess() {
+            if (playlist.length === 0) {
+                alert("Selecione arquivos primeiro.");
+                return;
+            }
+            
+            isAutoMode = true;
+            updateAutoUI();
+
+            if (!isPlaying) {
+                let startIndex = currentIndex === -1 ? 0 : currentIndex;
+                loadTrack(startIndex, true);
+            }
+        }
+
+        function updateAutoUI() {
+            if (isAutoMode) {
+                autoStatus.style.display = 'block';
+            } else {
+                autoStatus.style.display = 'none';
+            }
+        }
+
+        function updatePlayButtonUI() {
+            if (isPlaying) {
+                playText.innerText = "Pausar";
+                playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                playBtn.style.backgroundColor = "#e1b12c";
+                playBtn.style.color = "#000";
+            } else {
+                playText.innerText = "Tocar Trecho";
+                playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+                playBtn.style.backgroundColor = "";
+                playBtn.style.color = "";
+            }
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        // --- Visualizador ---
+
+        function drawStaticWaveform() {
+            if (!audioBuffer) return;
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            const data = audioBuffer.getChannelData(0);
+            
+            const step = Math.ceil(data.length / w);
+            const amp = h / 2;
+
+            ctx.fillStyle = '#0a0a0c';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = '#1a1a20';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i=0; i<w; i+=50) { ctx.moveTo(i,0); ctx.lineTo(i,h); }
+            for(let i=0; i<h; i+=50) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#00d2ff';
+            
+            ctx.moveTo(0, amp);
+
+            for (let i = 0; i < w; i++) {
+                let min = 1.0;
+                let max = -1.0;
+                
+                for (let j = 0; j < step; j++) {
+                    const datum = data[(i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                
+                ctx.moveTo(i, (1 + min) * amp);
+                ctx.lineTo(i, (1 + max) * amp);
+            }
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.moveTo(0, h/2);
+            ctx.lineTo(w, h/2);
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>

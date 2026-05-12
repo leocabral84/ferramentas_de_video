@@ -924,6 +924,7 @@
                     <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
                     <li class="nav-item"><a class="nav-link active" href="timestamps_legendas.html">TimeStamps com Legendas</a></li>
                     <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="padrao_do_audio.html">Padrão do Audio</a></li>
                 </ul>
             </div>
         </div>
@@ -1705,7 +1706,9 @@
             
             var html = '';
             subtitles.forEach(function(word, index) {
-                html += '<span class="subtitle-word" data-index="' + index + '" data-start="' + word.start + '" data-end="' + word.end + '">' + word.text + ' </span>';
+                // Arredondamos para 3 casas decimais para evitar erros de ponto flutuante longos
+                var startClean = word.start.toFixed(3);
+                html += '<span class="subtitle-word" data-index="' + index + '" data-start="' + startClean + '" data-end="' + word.end.toFixed(3) + '">' + word.text + ' </span>';
             });
             
             subtitleText.innerHTML = html;
@@ -1714,26 +1717,32 @@
                 word.addEventListener('click', function() {
                     var startTime = parseFloat(this.dataset.start);
                     
-                    // ✅ ADICIONE ISSO: Preenche automaticamente o campo de tempo
+                    // Preenche o campo de tempo
                     timestampTime.value = formatTime(startTime);
                     
-                    // Remove destaque de outras palavras
+                    // Gestão visual imediata (Feedback instantâneo)
                     document.querySelectorAll('.subtitle-word').forEach(function(w) {
                         w.classList.remove('active');
                     });
-                    
-                    // Adiciona destaque nesta palavra
                     this.classList.add('active');
                     
-                    // Pula para o tempo no vídeo
                     if (currentVideoSource === 'pc') {
+                        // Define o tempo
                         videoPlayer.currentTime = startTime;
                         
-                        if (pauseOnSubtitleClick.checked) {
-                            videoPlayer.pause();
-                        } else {
-                            videoPlayer.play();
-                        }
+                        // Usa requestAnimationFrame para esperar o vídeo processar o seek
+                        // Isso garante que o highlight não seja perdido ou sobrescrito erroneamente
+                        requestAnimationFrame(() => {
+                            // Força o destaque novamente após o processamento do frame
+                            this.classList.add('active');
+                            
+                            // Lógica de Play/Pause
+                            if (pauseOnSubtitleClick.checked) {
+                                videoPlayer.pause();
+                            } else {
+                                videoPlayer.play().catch(e => console.log("Play automático bloqueado"));
+                            }
+                        });
                     }
                 });
             });
@@ -1860,18 +1869,52 @@
             }
         }
 
-        // Destacar palavra atual
+            // Destacar palavra atual (Otimizado)
+        var lastActiveWord = null; // Variável para rastrear a última palavra ativa
+
         function highlightCurrentWord(currentTime) {
-            document.querySelectorAll('.subtitle-word').forEach(function(word) {
-                word.classList.remove('active');
-                var start = parseFloat(word.dataset.start);
-                var end = parseFloat(word.dataset.end);
+            // Se o vídeo estiver pausido ou buscando, não faz nada para não atrapalhar o clique manual
+            if (videoPlayer.seeking) return;
+
+            var foundActive = false;
+            
+            // Itera sobre as legendas para encontrar a correta
+            // Nota: Em listas muito longas, idealmente usaríamos binary search, 
+            // mas para manter a simplicidade do seu código, vamos iterar de forma segura.
+            for (var i = 0; i < subtitles.length; i++) {
+                var sub = subtitles[i];
                 
-                if (currentTime >= start && currentTime <= end) {
-                    word.classList.add('active');
-                    word.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Verifica se o tempo atual está dentro desta palavra
+                if (currentTime >= sub.start && currentTime <= sub.end) {
+                    // Só manipula o DOM se mudou de palavra (Performance crítica!)
+                    if (lastActiveWord !== i) {
+                        // Remove o ativo anterior
+                        if (lastActiveWord !== null) {
+                            var prevEl = document.querySelector('.subtitle-word[data-index="' + lastActiveWord + '"]');
+                            if (prevEl) prevEl.classList.remove('active');
+                        }
+                        
+                        // Adiciona o novo ativo
+                        var currEl = document.querySelector('.subtitle-word[data-index="' + i + '"]');
+                        if (currEl) {
+                            currEl.classList.add('active');
+                            // Scroll suave apenas se a palavra não estiver visível
+                            currEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        
+                        lastActiveWord = i;
+                    }
+                    foundActive = true;
+                    break; // Encontrou, pode parar de procurar
                 }
-            });
+            }
+
+            // Se saiu de todas as palavras (ex: silêncio entre frases), limpa o destaque
+            if (!foundActive && lastActiveWord !== null) {
+                var prevEl = document.querySelector('.subtitle-word[data-index="' + lastActiveWord + '"]');
+                if (prevEl) prevEl.classList.remove('active');
+                lastActiveWord = null;
+            }
         }
 
         // Funções de tempo
