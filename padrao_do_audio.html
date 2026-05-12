@@ -523,12 +523,15 @@
         // --- Gerenciamento de Arquivos ---
 
         function handleFiles(files) {
-            const newFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name));
+            // CORREÇÃO AQUI: Uso de localeCompare com numeric: true para ordem natural (1, 2, 10 em vez de 1, 10, 2)
+            const newFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
             
             if(playlist.length === 0) {
                 playlist = newFiles;
             } else {
+                // Ao adicionar novos arquivos, reordenamos a lista inteira para manter a consistência
                 playlist = [...playlist, ...newFiles];
+                playlist.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
             }
             
             renderPlaylist();
