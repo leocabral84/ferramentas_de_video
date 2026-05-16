@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Waveform Player Pro - Integrado</title>
+    <title>Audio Waveform Player Pro - Versão Final Completa</title>
     
     <!-- Importando Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        /* 
+         * =========================================
+         * VARIÁVEIS E CONFIGURAÇÕES GERAIS
+         * =========================================
+         */
         :root {
             --bg-dark: #121216;
             --bg-panel: #1e1e24;
@@ -32,12 +37,16 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            user-select: none;
+            user-select: none; /* Evita seleção de texto ao clicar rápido */
             /* Adiciona espaço para a navbar fixa não cobrir o conteúdo */
             padding-top: var(--nav-height); 
         }
 
-        /* Ajuste da Navbar Bootstrap para o tema escuro */
+        /* 
+         * =========================================
+         * NAVBAR BOOTSTRAP CUSTOMIZADA
+         * =========================================
+         */
         .navbar {
             background-color: #0a0a0c !important;
             border-bottom: 1px solid var(--border);
@@ -58,13 +67,17 @@
             color: white !important;
         }
 
-        /* --- Visualizador --- */
+        /* 
+         * =========================================
+         * VISUALIZADOR DE ONDA (WAVEFORM)
+         * =========================================
+         */
         .visualizer-wrapper {
-            flex: 1;
+            flex: 1; /* Ocupa todo o espaço restante vertical */
             position: relative;
             background-color: #0a0a0c;
             border-bottom: 2px solid var(--border);
-            min-height: 40%;
+            min-height: 40%; /* Garante altura mínima */
         }
 
         canvas {
@@ -109,33 +122,41 @@
             100% { opacity: 0.8; }
         }
 
-        /* --- Painel de Estatísticas --- */
+        /* 
+         * =========================================
+         * PAINEL DE ESTATÍSTICAS
+         * =========================================
+         */
         .stats-bar {
             background-color: var(--stat-bg);
-            padding: 10px 30px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-around;
             align-items: center;
             border-bottom: 1px solid var(--border);
             font-size: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .stat-item {
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-width: 80px;
         }
 
         .stat-label {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 4px;
+            text-align: center;
         }
 
         .stat-value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--wave-color);
         }
@@ -144,8 +165,17 @@
             color: #fff;
             text-shadow: 0 0 10px rgba(255,255,255,0.3);
         }
+        
+        /* Cor específica para o tempo decorrido */
+        .stat-elapsed {
+            color: #ffeaa7;
+        }
 
-        /* --- Barra de Controle --- */
+        /* 
+         * =========================================
+         * BARRA DE CONTROLES
+         * =========================================
+         */
         .control-bar {
             background-color: var(--bg-panel);
             padding: 15px 30px;
@@ -212,8 +242,8 @@
         }
         
         input[type=range] {
-            -webkit-appearance: none; /* Para Chrome/Safari/Edge antigos */
-            appearance: none;         /* Padrão moderno (corrige o aviso) */
+            -webkit-appearance: none;
+            appearance: none;
             width: 100px;
             height: 4px;
             background: #444;
@@ -223,7 +253,7 @@
         
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;         /* Adicionado aqui também por consistência */
+            appearance: none;
             width: 16px;
             height: 16px;
             border-radius: 50%;
@@ -257,7 +287,11 @@
         }
         input[type="number"]:focus { outline: none; }
 
-        /* --- Lista de Arquivos --- */
+        /* 
+         * =========================================
+         * LISTA DE ARQUIVOS (PLAYLIST)
+         * =========================================
+         */
         .playlist-container {
             height: 250px;
             background-color: var(--bg-panel);
@@ -303,6 +337,7 @@
             color: white;
         }
 
+        /* Scrollbar Customizada */
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: var(--bg-dark); }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; border: 2px solid var(--bg-dark); }
@@ -313,7 +348,7 @@
 </head>
 <body>
 
-    <!-- Menu Bootstrap Corrigido -->
+    <!-- Menu Bootstrap -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Padrão do Áudio</a>
@@ -350,7 +385,7 @@
         <div id="autoStatus" class="auto-indicator">MODO AUTOMÁTICO ATIVO</div>
     </div>
 
-    <!-- 2. Painel de Estatísticas -->
+    <!-- 2. Painel de Estatísticas (Com Tempo Decorrido) -->
     <div class="stats-bar">
         <div class="stat-item">
             <span class="stat-label">Arquivos</span>
@@ -361,11 +396,18 @@
             <span class="stat-value" id="currentTrackStat">-</span>
         </div>
         <div class="stat-item">
-            <span class="stat-label">Duração por Áudio</span>
+            <span class="stat-label">Duração/Audio</span>
             <span class="stat-value"><span id="durationPerFileStat">7</span>s</span>
         </div>
+        
+        <!-- NOVO: Tempo Decorrido -->
         <div class="stat-item">
-            <span class="stat-label">Tempo Total Estimado</span>
+            <span class="stat-label">Tempo Decorrido</span>
+            <span class="stat-value stat-elapsed" id="elapsedTimeStat">00:00:00</span>
+        </div>
+
+        <div class="stat-item">
+            <span class="stat-label">Total Estimado</span>
             <span class="stat-value stat-highlight" id="totalTimeStat">00:00:00</span>
         </div>
     </div>
@@ -428,11 +470,13 @@
         </ul>
     </div>
 
-    <!-- Script Bootstrap JS (Necessário para o menu responsivo funcionar) -->
+    <!-- Script Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // --- Variáveis Globais ---
+        // =========================================
+        // VARIÁVEIS GLOBAIS
+        // =========================================
         let audioContext;
         let audioBuffer = null;
         let sourceNode = null;
@@ -443,6 +487,9 @@
         let currentIndex = -1;
         let isPlaying = false;
         let isAutoMode = false;
+        
+        // Variável para controlar o tempo decorrido da sessão
+        let elapsedSeconds = 0;
 
         // Elementos DOM
         const canvas = document.getElementById('waveCanvas');
@@ -461,8 +508,12 @@
         const currentTrackStat = document.getElementById('currentTrackStat');
         const durationPerFileStat = document.getElementById('durationPerFileStat');
         const totalTimeStat = document.getElementById('totalTimeStat');
+        const elapsedTimeStat = document.getElementById('elapsedTimeStat'); // Elemento do tempo decorrido
 
-        // Configuração do Canvas
+        // =========================================
+        // CONFIGURAÇÃO INICIAL E EVENTOS
+        // =========================================
+        
         function resizeCanvas() {
             const container = canvas.parentElement;
             canvas.width = container.clientWidth;
@@ -472,28 +523,29 @@
         window.addEventListener('resize', resizeCanvas);
         setTimeout(resizeCanvas, 100);
 
-        // --- Atalhos de Teclado ---
+        // Atalhos de Teclado
         document.addEventListener('keydown', function(event) {
             if (event.target.tagName === 'INPUT') return;
-
             switch(event.code) {
-                case 'Space':
+                case 'Space': 
                     event.preventDefault(); 
-                    togglePlay();
+                    togglePlay(); 
                     break;
-                case 'ArrowLeft':
-                    playPrevious();
+                case 'ArrowLeft': 
+                    playPrevious(); 
                     break;
-                case 'ArrowRight':
-                    playNext();
+                case 'ArrowRight': 
+                    playNext(); 
                     break;
-                case 'Escape':
-                    stopAll();
+                case 'Escape': 
+                    stopAll(); 
                     break;
             }
         });
 
-        // --- Funções de Estatística e Tempo ---
+        // =========================================
+        // FUNÇÕES DE ESTATÍSTICA E TEMPO
+        // =========================================
 
         function updateStats() {
             const count = playlist.length;
@@ -510,26 +562,29 @@
 
             const totalSeconds = count * duration; 
             totalTimeStat.innerText = formatTimeDetailed(totalSeconds);
+            
+            // Garante que o display do tempo decorrido esteja atualizado
+            elapsedTimeStat.innerText = formatTimeDetailed(elapsedSeconds);
         }
 
         function formatTimeDetailed(totalSeconds) {
             const h = Math.floor(totalSeconds / 3600);
             const m = Math.floor((totalSeconds % 3600) / 60);
             const s = totalSeconds % 60;
-            
             return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // --- Gerenciamento de Arquivos ---
+        // =========================================
+        // GERENCIAMENTO DE ARQUIVOS
+        // =========================================
 
         function handleFiles(files) {
-            // CORREÇÃO AQUI: Uso de localeCompare com numeric: true para ordem natural (1, 2, 10 em vez de 1, 10, 2)
+            // Ordenação Numérica Natural (1, 2, 10 em vez de 1, 10, 2)
             const newFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
             
             if(playlist.length === 0) {
                 playlist = newFiles;
             } else {
-                // Ao adicionar novos arquivos, reordenamos a lista inteira para manter a consistência
                 playlist = [...playlist, ...newFiles];
                 playlist.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
             }
@@ -548,7 +603,6 @@
                 const li = document.createElement('li');
                 li.className = `file-item ${index === currentIndex ? 'active' : ''}`;
                 li.onclick = () => loadAndPlay(index);
-                
                 li.innerHTML = `
                     <span>${index + 1}. ${file.name}</span>
                     <span style="font-size:11px; opacity:0.5;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
@@ -557,18 +611,23 @@
             });
         }
 
-        // --- Motor de Áudio ---
+        // =========================================
+        // MOTOR DE ÁUDIO
+        // =========================================
 
         async function initAudioContext() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
+                // Configuração de Volume
                 gainNode = audioContext.createGain();
                 gainNode.gain.value = volumeSlider.value;
                 
+                // Configuração de Análise (Visualizador)
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 4096;
                 
+                // Conexões: Analyser -> Gain -> Saída
                 analyser.connect(gainNode);
                 gainNode.connect(audioContext.destination);
             }
@@ -578,14 +637,15 @@
         }
 
         function setVolume(val) {
-            if (gainNode) {
-                gainNode.gain.value = val;
+            if (gainNode) { 
+                gainNode.gain.value = val; 
             }
         }
 
         async function loadTrack(index, autoPlay = true) {
             if (index < 0 || index >= playlist.length) return;
 
+            // Para o áudio anterior se houver
             if (sourceNode) {
                 try { sourceNode.stop(); } catch(e){}
                 sourceNode.disconnect();
@@ -602,6 +662,7 @@
             try {
                 await initAudioContext();
                 
+                // Decodifica o arquivo de áudio
                 const arrayBuffer = await file.arrayBuffer();
                 audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
                 
@@ -623,8 +684,8 @@
             } catch (err) {
                 console.error(err);
                 fileInfoDisplay.textContent = "Erro ao decodificar áudio.";
-                if(isAutoMode) {
-                    setTimeout(() => handleTrackFinish(), 1000);
+                if(isAutoMode) { 
+                    setTimeout(() => handleTrackFinish(), 1000); 
                 }
             }
         }
@@ -650,10 +711,11 @@
             isPlaying = true;
             updatePlayButtonUI();
 
+            // Quando o trecho termina
             sourceNode.onended = () => {
                 setTimeout(() => {
-                    if (isPlaying) {
-                        handleTrackFinish();
+                    if (isPlaying) { 
+                        handleTrackFinish(); 
                     }
                 }, 150);
             };
@@ -662,6 +724,12 @@
         function handleTrackFinish() {
             isPlaying = false;
             updatePlayButtonUI();
+            
+            // LÓGICA DE PROGRESSO:
+            // Somamos a duração configurada ao tempo decorrido
+            const durationConfigured = parseFloat(endTimeInput.value) || 7;
+            elapsedSeconds += durationConfigured;
+            elapsedTimeStat.innerText = formatTimeDetailed(elapsedSeconds);
             
             if (isAutoMode) {
                 if (currentIndex < playlist.length - 1) {
@@ -674,16 +742,17 @@
             }
         }
 
-        // --- Controles ---
+        // =========================================
+        // CONTROLES DE INTERFACE
+        // =========================================
 
         function togglePlay() {
             if (!audioBuffer) return;
-
             if (isPlaying) {
-                if (sourceNode) {
-                    try { sourceNode.stop(); } catch(e){}
-                    sourceNode.disconnect();
-                    sourceNode = null;
+                if (sourceNode) { 
+                    try { sourceNode.stop(); } catch(e){} 
+                    sourceNode.disconnect(); 
+                    sourceNode = null; 
                 }
                 isPlaying = false;
                 isAutoMode = false;
@@ -695,15 +764,19 @@
         }
 
         function stopAll(resetUI = true) {
-            if (sourceNode) {
-                try { sourceNode.stop(); } catch(e){}
-                sourceNode.disconnect();
-                sourceNode = null;
+            if (sourceNode) { 
+                try { sourceNode.stop(); } catch(e){} 
+                sourceNode.disconnect(); 
+                sourceNode = null; 
             }
             isPlaying = false;
             isAutoMode = false;
             updateAutoUI();
             
+            // Zera o contador de tempo decorrido ao parar
+            elapsedSeconds = 0; 
+            elapsedTimeStat.innerText = "00:00:00";
+
             if(resetUI) {
                 updatePlayButtonUI();
                 if(audioBuffer) drawStaticWaveform();
@@ -723,11 +796,15 @@
         }
 
         function startAutoProcess() {
-            if (playlist.length === 0) {
-                alert("Selecione arquivos primeiro.");
-                return;
+            if (playlist.length === 0) { 
+                alert("Selecione arquivos primeiro."); 
+                return; 
             }
             
+            // Ao iniciar um novo processo automático, zeramos o contador de progresso
+            elapsedSeconds = 0;
+            elapsedTimeStat.innerText = "00:00:00";
+
             isAutoMode = true;
             updateAutoUI();
 
@@ -738,11 +815,7 @@
         }
 
         function updateAutoUI() {
-            if (isAutoMode) {
-                autoStatus.style.display = 'block';
-            } else {
-                autoStatus.style.display = 'none';
-            }
+            autoStatus.style.display = isAutoMode ? 'block' : 'none';
         }
 
         function updatePlayButtonUI() {
@@ -765,7 +838,9 @@
             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // --- Visualizador ---
+        // =========================================
+        // VISUALIZADOR (WAVEFORM)
+        // =========================================
 
         function drawStaticWaveform() {
             if (!audioBuffer) return;
@@ -780,6 +855,7 @@
             ctx.fillStyle = '#0a0a0c';
             ctx.fillRect(0, 0, w, h);
 
+            // Grade de fundo
             ctx.strokeStyle = '#1a1a20';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -787,10 +863,10 @@
             for(let i=0; i<h; i+=50) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
             ctx.stroke();
 
+            // Desenho da Onda
             ctx.beginPath();
             ctx.lineWidth = 1.5;
             ctx.strokeStyle = '#00d2ff';
-            
             ctx.moveTo(0, amp);
 
             for (let i = 0; i < w; i++) {
@@ -808,6 +884,7 @@
             }
             ctx.stroke();
             
+            // Linha central
             ctx.beginPath();
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
             ctx.lineWidth = 1;
