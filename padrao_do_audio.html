@@ -387,10 +387,18 @@
         <div class="right-panel">
             
             <!-- Lista de Ruídos -->
+            
             <div class="list-section noise-section">
                 <div class="list-header">
                     <span style="color: #ff7f7f;">⚠ Ruídos / Baixo Volume</span>
-                    <small id="noiseCount" style="background:#333; padding:2px 6px; border-radius:4px;">0</small>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <small id="noiseCount" style="background:#333; padding:2px 6px; border-radius:4px;">0</small>
+                        <!-- BOTÃO COPIAR ADICIONADO AQUI -->
+                        <button onclick="copyNoiseList()" title="Copiar nomes dos ruídos" 
+                                style="padding: 2px 8px; font-size: 11px; background-color: #444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            📋 Copiar
+                        </button>
+                    </div>
                 </div>
                 <ul class="file-list" id="noiseList">
                     <!-- Itens de ruído inseridos via JS -->
@@ -996,6 +1004,33 @@
                 }
                 ctx.setLineDash([]);
             }
+        }
+
+        // =========================================
+        // FUNÇÃO PARA COPIAR LISTA DE RUÍDOS
+        // =========================================
+        function copyNoiseList() {
+            if (noiseList.length === 0) {
+                alert("Não há ruídos na lista para copiar.");
+                return;
+            }
+
+            // Cria uma string com os nomes, um por linha
+            const textToCopy = noiseList.map(file => file.name).join('\n');
+
+            // Usa a API de Clipboard do navegador
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Feedback visual opcional
+                const btn = document.querySelector('.noise-section button');
+                const originalText = btn.innerText;
+                btn.innerText = "✅ Copiado!";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Erro ao copiar: ', err);
+                alert("Erro ao copiar para a área de transferência.");
+            });
         }
     </script>
 </body>
