@@ -3,17 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Waveform Player Pro - Versão Final Completa</title>
+    <title>Audio Waveform Player Pro - Inteligente</title>
     
     <!-- Importando Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-        /* 
-         * =========================================
-         * VARIÁVEIS E CONFIGURAÇÕES GERAIS
-         * =========================================
-         */
         :root {
             --bg-dark: #121216;
             --bg-panel: #1e1e24;
@@ -24,7 +19,8 @@
             --border: #333340;
             --wave-color: #00d2ff;
             --stat-bg: #2d3436;
-            --nav-height: 56px; /* Altura padrão da navbar do bootstrap */
+            --nav-height: 56px;
+            --danger: #ff4757;
         }
 
         body {
@@ -37,64 +33,54 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            user-select: none; /* Evita seleção de texto ao clicar rápido */
-            /* Adiciona espaço para a navbar fixa não cobrir o conteúdo */
+            user-select: none;
             padding-top: var(--nav-height); 
         }
 
-        /* 
-         * =========================================
-         * NAVBAR BOOTSTRAP CUSTOMIZADA
-         * =========================================
-         */
         .navbar {
             background-color: #0a0a0c !important;
             border-bottom: 1px solid var(--border);
             height: var(--nav-height);
         }
         
-        .navbar-brand {
-            font-weight: bold;
-            color: var(--wave-color) !important;
+        .navbar-brand { font-weight: bold; color: var(--wave-color) !important; }
+        .nav-link { color: var(--text-muted) !important; font-size: 0.9rem; }
+        .nav-link:hover, .nav-link.active { color: white !important; }
+
+        /* Layout Principal Flexbox */
+        .main-content {
+            display: flex;
+            flex: 1; /* Ocupa o resto da altura */
+            overflow: hidden; /* Evita scroll na página inteira */
         }
 
-        .nav-link {
-            color: var(--text-muted) !important;
-            font-size: 0.9rem;
+        /* Painel Esquerdo: Visualizador e Controles */
+        .left-panel {
+            flex: 1; /* Cresce para ocupar espaço disponível */
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid var(--border);
+            min-width: 0; /* Previne estouro de flex */
         }
 
-        .nav-link:hover, .nav-link.active {
-            color: white !important;
-        }
-
-        /* 
-         * =========================================
-         * VISUALIZADOR DE ONDA (WAVEFORM)
-         * =========================================
-         */
+        /* Visualizador */
         .visualizer-wrapper {
-            flex: 1; /* Ocupa todo o espaço restante vertical */
+            flex: 1; /* Ocupa todo o espaço vertical restante neste painel */
             position: relative;
             background-color: #0a0a0c;
             border-bottom: 2px solid var(--border);
-            min-height: 40%; /* Garante altura mínima */
+            min-height: 200px;
         }
 
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
+        canvas { width: 100%; height: 100%; display: block; }
 
         .overlay-info {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 20px; left: 20px;
             background: rgba(0, 0, 0, 0.8);
             padding: 10px 20px;
             border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 18px; font-weight: bold;
             pointer-events: none;
             border-left: 4px solid var(--accent);
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
@@ -102,375 +88,334 @@
         }
 
         .auto-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #00b894;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            display: none;
-            animation: pulse 2s infinite;
-            z-index: 5;
+            position: absolute; top: 20px; right: 20px;
+            background: #00b894; color: white;
+            padding: 5px 15px; border-radius: 20px;
+            font-size: 12px; font-weight: bold;
+            display: none; animation: pulse 2s infinite; z-index: 5;
         }
+        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
-        @keyframes pulse {
-            0% { opacity: 0.8; }
-            50% { opacity: 1; }
-            100% { opacity: 0.8; }
-        }
-
-        /* 
-         * =========================================
-         * PAINEL DE ESTATÍSTICAS
-         * =========================================
-         */
+        /* Estatísticas */
         .stats-bar {
             background-color: var(--stat-bg);
             padding: 10px 20px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
+            display: flex; justify-content: space-around; align-items: center;
             border-bottom: 1px solid var(--border);
-            font-size: 14px;
-            flex-wrap: wrap;
-            gap: 10px;
+            font-size: 14px; flex-wrap: wrap; gap: 10px;
         }
+        .stat-item { display: flex; flex-direction: column; align-items: center; min-width: 80px; }
+        .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; text-align: center; }
+        .stat-value { font-size: 16px; font-weight: bold; color: var(--wave-color); }
+        .stat-highlight { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .stat-elapsed { color: #ffeaa7; }
 
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 80px;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--wave-color);
-        }
-
-        .stat-highlight {
-            color: #fff;
-            text-shadow: 0 0 10px rgba(255,255,255,0.3);
-        }
-        
-        /* Cor específica para o tempo decorrido */
-        .stat-elapsed {
-            color: #ffeaa7;
-        }
-
-        /* 
-         * =========================================
-         * BARRA DE CONTROLES
-         * =========================================
-         */
+        /* Controles */
         .control-bar {
             background-color: var(--bg-panel);
-            padding: 15px 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 15px 20px;
+            display: flex; align-items: center; justify-content: space-between;
             border-bottom: 1px solid var(--border);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 10;
+            flex-wrap: wrap; gap: 10px;
         }
-
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
+        .control-group { display: flex; align-items: center; gap: 10px; }
+        
         button {
+            background-color: var(--accent); color: white; border: none;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer;
+            font-weight: bold; font-size: 13px; transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        button:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        button.stop-btn { background-color: var(--danger); }
+        button.stop-btn:hover { background-color: #ff6b81; }
+        button.secondary { background-color: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
+        button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+        
+        /* Botão Excluir */
+        button.delete-btn {
+            background-color: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        button.delete-btn:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        /* Toggle Switch para Modo Completo */
+        .mode-toggle {
+            display: flex; align-items: center; gap: 10px;
+            background: #121216; padding: 5px 15px;
+            border-radius: 6px; border: 1px solid var(--border);
+            cursor: pointer; user-select: none;
+        }
+        .toggle-switch {
+            position: relative; width: 40px; height: 20px;
+            background: #444; border-radius: 20px; transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 16px; height: 16px; background: white;
+            border-radius: 50%; transition: 0.3s;
+        }
+        .mode-toggle.active .toggle-switch { background: var(--accent); }
+        .mode-toggle.active .toggle-switch::after { left: 22px; }
+
+        .volume-control {
+            display: flex; align-items: center; gap: 10px;
+            background: #121216; padding: 5px 15px;
+            border-radius: 6px; border: 1px solid var(--border);
+        }
+        input[type=range] {
+            -webkit-appearance: none; appearance: none;
+            width: 80px; height: 4px; background: #444;
+            border-radius: 2px; outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--accent); cursor: pointer;
+        }
+        .time-input-group {
+            display: flex; align-items: center; background: #121216;
+            padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+        }
+        input[type="number"] {
+            background: transparent; border: none; color: var(--wave-color);
+            font-size: 14px; font-weight: bold; width: 40px; text-align: center; margin: 0 5px;
+        }
+
+        /* --- PAINEL DIREITO: LISTAS --- */
+        .right-panel {
+            width: 320px; /* Largura fixa para as listas */
+            background-color: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border);
+        }
+
+        .list-section {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 2px solid var(--border);
+            overflow: hidden;
+        }
+        
+        /* Lista de Ruídos ocupa menos espaço */
+        .noise-section {
+            flex: 0 0 30%; /* Altura fixa relativa */
+            min-height: 150px;
+            background-color: #1a1a1f;
+        }
+
+        /* Playlist ocupa o resto */
+        .playlist-section {
+            flex: 1;
+            background-color: var(--bg-panel);
+        }
+
+        .list-header {
+            padding: 10px 15px;
+            background-color: #25252e;
+            border-bottom: 1px solid var(--border);
+            font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px;
+        }
+
+        .btn-add-files {
             background-color: var(--accent);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-
-        button:hover {
-            background-color: var(--accent-hover);
-            transform: translateY(-1px);
-        }
-
-        button.stop-btn {
-            background-color: #ff4757;
-        }
-        button.stop-btn:hover {
-            background-color: #ff6b81;
-        }
-
-        button.secondary {
-            background-color: transparent;
-            border: 1px solid var(--text-muted);
-            color: var(--text-main);
-        }
-        button.secondary:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        /* Estilos para Slider de Volume */
-        .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #121216;
-            padding: 5px 15px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }
-        
-        input[type=range] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100px;
-            height: 4px;
-            background: #444;
-            border-radius: 2px;
-            outline: none;
-        }
-        
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-            transition: background .15s ease-in-out;
-        }
-        
-        input[type=range]::-webkit-slider-thumb:hover {
-            background: var(--accent-hover);
-        }
-
-        .time-input-group {
-            display: flex;
-            align-items: center;
-            background: #121216;
-            padding: 5px 15px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }
-
-        input[type="number"] {
-            background: transparent;
-            border: none;
-            color: var(--wave-color);
-            font-size: 16px;
-            font-weight: bold;
-            width: 50px;
-            text-align: center;
-            margin: 0 10px;
-        }
-        input[type="number"]:focus { outline: none; }
-
-        /* 
-         * =========================================
-         * LISTA DE ARQUIVOS (PLAYLIST)
-         * =========================================
-         */
-        .playlist-container {
-            height: 250px;
-            background-color: var(--bg-panel);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .playlist-header {
-            padding: 10px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #25252e;
-        }
+        .btn-add-files:hover { background-color: var(--accent-hover); }
 
         .file-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-            flex: 1;
+            list-style: none; padding: 0; margin: 0;
+            overflow-y: auto; flex: 1;
         }
-
         .file-item {
-            padding: 12px 20px;
+            padding: 8px 15px;
             border-bottom: 1px solid #2a2a35;
             cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.1s;
-            font-size: 14px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: background 0.1s; font-size: 13px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
-        .file-item:hover {
-            background-color: #2a2a35;
-        }
-
+        .file-item:hover { background-color: #2a2a35; }
         .file-item.active {
             background-color: rgba(108, 92, 231, 0.2);
-            border-left: 4px solid var(--accent);
-            color: white;
+            border-left: 4px solid var(--accent); color: white;
+        }
+        
+        /* Estilo específico para itens de ruído */
+        .noise-item {
+            color: #ff7f7f;
+            border-left: 4px solid transparent;
+        }
+        .noise-item:hover { 
+            background-color: rgba(255, 71, 87, 0.1); 
+            border-left-color: var(--danger);
         }
 
-        /* Scrollbar Customizada */
-        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-dark); }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; border: 2px solid var(--bg-dark); }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        .icon { width: 18px; height: 18px; fill: currentColor; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        .icon { width: 16px; height: 16px; fill: currentColor; }
     </style>
 </head>
 <body>
 
-    <!-- Menu Bootstrap -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Padrão do Áudio</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <!-- LINK DA CASA ADICIONADO AQUI -->
+            <a class="navbar-brand" href="#">
+                <a href="https://leocabral84.github.io/ferramentas_de_video/index.html" style="color: white; text-decoration: none; margin-right: 10px;" title="Voltar ao Início">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+                    </svg>
+                </a>
+                Padrão do Áudio
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
-                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
-                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
-                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="substituir_caracteres.html">Substituir Caracteres</a></li>
-                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
-                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir N. Romanos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
-                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Emoções</a></li>
-                    <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="timestamps_legendas.html">TimeStamps com Legendas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="padrao_do_audio.html">Padrão do Audio</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="padrao_do_audio.html">Padrão do Audio</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- 1. Visualizador Gigante -->
-    <div class="visualizer-wrapper">
-        <canvas id="waveCanvas"></canvas>
-        <div class="overlay-info" id="currentFileInfo">
-            Aguardando arquivos...
-        </div>
-        <div id="autoStatus" class="auto-indicator">MODO AUTOMÁTICO ATIVO</div>
-    </div>
-
-    <!-- 2. Painel de Estatísticas (Com Tempo Decorrido) -->
-    <div class="stats-bar">
-        <div class="stat-item">
-            <span class="stat-label">Arquivos</span>
-            <span class="stat-value" id="totalFilesStat">0</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">Trecho Atual</span>
-            <span class="stat-value" id="currentTrackStat">-</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">Duração/Audio</span>
-            <span class="stat-value"><span id="durationPerFileStat">7</span>s</span>
-        </div>
-        
-        <!-- NOVO: Tempo Decorrido -->
-        <div class="stat-item">
-            <span class="stat-label">Tempo Decorrido</span>
-            <span class="stat-value stat-elapsed" id="elapsedTimeStat">00:00:00</span>
-        </div>
-
-        <div class="stat-item">
-            <span class="stat-label">Total Estimado</span>
-            <span class="stat-value stat-highlight" id="totalTimeStat">00:00:00</span>
-        </div>
-    </div>
-
-    <!-- 3. Barra de Controles -->
-    <div class="control-bar">
-        
-        <!-- Controles de Transporte -->
-        <div class="control-group">
-            <button onclick="playPrevious()" class="secondary" title="Áudio Anterior (Seta Esquerda ←)">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-            </button>
+    <div class="main-content">
+        <!-- Painel Esquerdo: Visualizador e Controles -->
+        <div class="left-panel">
             
-            <button onclick="togglePlay()" id="playBtn" style="min-width: 120px;" title="Play/Pause (Espaço)">
-                <svg class="icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <span id="playText">Tocar Trecho</span>
-            </button>
+            <div class="visualizer-wrapper">
+                <canvas id="waveCanvas"></canvas>
+                <div class="overlay-info" id="currentFileInfo">Aguardando arquivos...</div>
+                <div id="autoStatus" class="auto-indicator">MODO AUTOMÁTICO ATIVO</div>
+            </div>
 
-            <button onclick="stopAll()" class="stop-btn" title="Parar Tudo (Esc)">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
-                STOP
-            </button>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Arquivos</span>
+                    <span class="stat-value" id="totalFilesStat">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Trecho Atual</span>
+                    <span class="stat-value" id="currentTrackStat">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Duração/Audio</span>
+                    <span class="stat-value"><span id="durationPerFileStat">7</span>s</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Tempo Decorrido</span>
+                    <span class="stat-value stat-elapsed" id="elapsedTimeStat">00:00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Estimado</span>
+                    <span class="stat-value stat-highlight" id="totalTimeStat">00:00:00</span>
+                </div>
+            </div>
 
-            <button onclick="playNext()" class="secondary" title="Próximo Áudio (Seta Direita →)">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-            </button>
+            <div class="control-bar">
+                <div class="control-group">
+                    <button onclick="playPrevious()" class="secondary" title="Anterior (←)">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                    </button>
+                    
+                    <button onclick="togglePlay()" id="playBtn" style="min-width: 100px;" title="Play/Pause (Espaço)">
+                        <svg class="icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <span id="playText">Tocar</span>
+                    </button>
+
+                    <button onclick="stopAll()" class="stop-btn" title="Stop (Esc)">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                    </button>
+
+                    <button onclick="playNext()" class="secondary" title="Próximo (→)">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                    </button>
+
+                    <!-- Botão Excluir -->
+                    <button onclick="deleteCurrentTrack()" class="delete-btn" title="Excluir Arquivo Atual (Delete)">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        Excluir
+                    </button>
+                </div>
+
+                <!-- Controle Modo Completo vs Trecho -->
+                <div class="mode-toggle" id="fullAudioToggle" onclick="toggleFullAudioMode()">
+                    <span style="font-size: 11px; color: var(--text-muted);">COMPLETO</span>
+                    <div class="toggle-switch"></div>
+                </div>
+
+                <div class="volume-control" title="Volume">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)">
+                </div>
+
+                <!-- Configuração de Tempo -->
+                <div class="time-input-group">
+                    <span style="color:var(--text-muted); font-size:12px; margin-right:5px;">TRECHO:</span>
+                    
+                    <!-- SUBSTITUA A LINHA DO INPUT ANTIGO POR ESTA: -->
+                    <input type="number" id="endTimeInput" value="7" min="1" max="300" step="1" onchange="updateStats()">
+                    
+                    <span style="color:var(--text-muted); font-size:12px;">segundos</span>
+                </div>
+
+                <button onclick="startAutoProcess()" style="background-color: #00b894; color: #fff;" title="Auto Play">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                    AUTO
+                </button>
+            </div>
         </div>
 
-        <!-- Controle de Volume -->
-        <div class="volume-control" title="Volume">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)">
-        </div>
+        <!-- Painel Direito: Listas -->
+        <div class="right-panel">
+            
+            <!-- Lista de Ruídos -->
+            <div class="list-section noise-section">
+                <div class="list-header">
+                    <span style="color: #ff7f7f;">⚠ Ruídos / Baixo Volume</span>
+                    <small id="noiseCount" style="background:#333; padding:2px 6px; border-radius:4px;">0</small>
+                </div>
+                <ul class="file-list" id="noiseList">
+                    <!-- Itens de ruído inseridos via JS -->
+                    <li class="file-item" style="justify-content:center; color:#666; font-style:italic;">Nenhum ruído detectado ainda.</li>
+                </ul>
+            </div>
 
-        <!-- Configuração de Tempo -->
-        <div class="time-input-group">
-            <span style="color:var(--text-muted); font-size:12px; margin-right:5px;">AJUSTAR TEMPO:</span>
-            <input type="number" id="endTimeInput" value="7" min="1" max="120" onchange="updateStats()">
-            <span style="color:var(--text-muted); font-size:12px;">segundos</span>
+            <!-- Playlist Principal -->
+            <div class="list-section playlist-section">
+                <div class="list-header">
+                    <strong>Playlist</strong>
+                    <!-- BOTÃO DE INCLUIR ÁUDIOS -->
+                    <button class="btn-add-files" onclick="document.getElementById('fileInput').click()">
+                        + Incluir Áudios
+                    </button>
+                    <input type="file" id="fileInput" multiple accept="audio/*" style="display: none;" onchange="handleFiles(this.files)">
+                </div>
+                <ul class="file-list" id="playlist">
+                    <!-- Itens da playlist inseridos via JS -->
+                    <li class="file-item" style="justify-content:center; color:#666; font-style:italic;">Abra uma pasta para começar.</li>
+                </ul>
+            </div>
         </div>
-
-        <!-- Botão Automático -->
-        <button onclick="startAutoProcess()" style="background-color: #00b894; color: #fff;" title="Iniciar Processo Automático">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-            AUTO PLAY
-        </button>
     </div>
 
-    <!-- 4. Lista de Arquivos -->
-    <div class="playlist-container">
-        <div class="playlist-header">
-            <strong>Biblioteca de Áudios</strong>
-            <button onclick="document.getElementById('fileInput').click()" class="secondary" style="padding: 5px 15px; font-size: 12px;">
-                + Abrir Pasta / Selecionar Arquivos
-            </button>
-            <input type="file" id="fileInput" multiple accept="audio/*" style="display: none;" onchange="handleFiles(this.files)">
-        </div>
-        <ul class="file-list" id="playlist">
-            <!-- Itens inseridos via JS -->
-        </ul>
-    </div>
-
-    <!-- Script Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -484,12 +429,27 @@
         let gainNode = null; 
         
         let playlist = []; 
+        let noiseList = []; 
         let currentIndex = -1;
         let isPlaying = false;
         let isAutoMode = false;
+        let isFullAudioMode = false;
         
-        // Variável para controlar o tempo decorrido da sessão
         let elapsedSeconds = 0;
+        
+        // Variáveis para análise de pico
+        let globalPeakSum = 0;
+        let filesAnalyzed = 0; // Conta apenas arquivos "Bons" para a média
+        
+        // Média real dos picos dos arquivos "Bons"
+        let globalAverage = 0; 
+        
+        // Limiar usado para desenhar a linha vermelha e classificar ruído
+        const THRESHOLD_FACTOR = 0.70; 
+        let classificationThreshold = 0; 
+        
+        // Pico do áudio atual (para a linha amarela)
+        let currentTrackPeak = 0;
 
         // Elementos DOM
         const canvas = document.getElementById('waveCanvas');
@@ -499,21 +459,20 @@
         const playIcon = document.getElementById('playIcon');
         const fileInfoDisplay = document.getElementById('currentFileInfo');
         const endTimeInput = document.getElementById('endTimeInput');
+        const timeInputGroup = document.getElementById('timeInputGroup');
         const playlistEl = document.getElementById('playlist');
+        const noiseListEl = document.getElementById('noiseList');
         const autoStatus = document.getElementById('autoStatus');
         const volumeSlider = document.getElementById('volumeSlider');
+        const fullAudioToggle = document.getElementById('fullAudioToggle');
+        const noiseCountEl = document.getElementById('noiseCount');
 
-        // Elementos de Estatística
         const totalFilesStat = document.getElementById('totalFilesStat');
         const currentTrackStat = document.getElementById('currentTrackStat');
         const durationPerFileStat = document.getElementById('durationPerFileStat');
         const totalTimeStat = document.getElementById('totalTimeStat');
-        const elapsedTimeStat = document.getElementById('elapsedTimeStat'); // Elemento do tempo decorrido
+        const elapsedTimeStat = document.getElementById('elapsedTimeStat');
 
-        // =========================================
-        // CONFIGURAÇÃO INICIAL E EVENTOS
-        // =========================================
-        
         function resizeCanvas() {
             const container = canvas.parentElement;
             canvas.width = container.clientWidth;
@@ -523,31 +482,109 @@
         window.addEventListener('resize', resizeCanvas);
         setTimeout(resizeCanvas, 100);
 
-        // Atalhos de Teclado
         document.addEventListener('keydown', function(event) {
             if (event.target.tagName === 'INPUT') return;
             switch(event.code) {
-                case 'Space': 
-                    event.preventDefault(); 
-                    togglePlay(); 
-                    break;
-                case 'ArrowLeft': 
-                    playPrevious(); 
-                    break;
-                case 'ArrowRight': 
-                    playNext(); 
-                    break;
-                case 'Escape': 
-                    stopAll(); 
-                    break;
+                case 'Space': event.preventDefault(); togglePlay(); break;
+                case 'ArrowLeft': playPrevious(); break;
+                case 'ArrowRight': playNext(); break;
+                case 'Escape': stopAll(); break;
+                case 'Delete': deleteCurrentTrack(); break;
             }
         });
 
         // =========================================
-        // FUNÇÕES DE ESTATÍSTICA E TEMPO
+        // LÓGICA DE ANÁLISE INTELIGENTE
+        // =========================================
+
+        function analyzeSustainedPeak(buffer) {
+            const data = buffer.getChannelData(0);
+            const blockSize = Math.floor(buffer.sampleRate * 0.1); // Blocos de 0.1 segundos
+            const numBlocks = Math.floor(data.length / blockSize);
+            
+            let blockPeaks = [];
+
+            for (let b = 0; b < numBlocks; b++) {
+                let maxInBlock = 0;
+                let start = b * blockSize;
+                let end = start + blockSize;
+                
+                for (let i = start; i < end; i++) {
+                    const abs = Math.abs(data[i]);
+                    if (abs > maxInBlock) maxInBlock = abs;
+                }
+                blockPeaks.push(maxInBlock);
+            }
+
+            blockPeaks.sort((a, b) => a - b);
+
+            // Pega a média dos 90% superiores para ignorar silêncios iniciais/finais
+            const startIndex = Math.floor(numBlocks * 0.1); 
+            let sum = 0;
+            let count = 0;
+            
+            for (let i = startIndex; i < numBlocks; i++) {
+                sum += blockPeaks[i];
+                count++;
+            }
+
+            return count > 0 ? (sum / count) : 0;
+        }
+
+        function updateNoiseClassification(file, peak) {
+            // 1. ATUALIZA A LINHA AMARELA COM O PICO SUSTENTADO
+            currentTrackPeak = peak;
+
+            if (peak < 0.01) peak = 0.01;
+
+            // --- CRITÉRIO DE RUÍDO ---
+            let isNoise = false;
+
+            // Só classifica se já tivermos uma referência (pelo menos 1 arquivo bom analisado)
+            // Ou usa um limiar absoluto muito baixo nos primeiros arquivos
+            if (filesAnalyzed >= 1 && classificationThreshold > 0) {
+                if (peak < classificationThreshold) {
+                    isNoise = true;
+                }
+            } else {
+                // Nos primeiros arquivos, se for muito baixo (< 20%), considera ruído inicial
+                if (peak < 0.20) isNoise = true;
+            }
+
+            // --- ATUALIZAÇÃO DA MÉDIA (LINHAS VERMELHAS) ---
+            // IMPORTANTE: Só atualizamos a média e as linhas vermelhas se o arquivo NÃO for ruído.
+            // Isso garante que o padrão seja definido pelos áudios bons.
+            if (!isNoise) {
+                filesAnalyzed++;
+                globalPeakSum += peak;
+                globalAverage = globalPeakSum / filesAnalyzed;
+                classificationThreshold = globalAverage * THRESHOLD_FACTOR;
+            }
+            // Se for ruído, não fazemos nada com a média global. As linhas vermelhas permanecem onde estavam.
+
+            // --- LISTAGEM ---
+            if (isNoise) {
+                // Apenas adiciona à lista de ruídos. NÃO remove da playlist principal.
+                if (!noiseList.includes(file)) {
+                    noiseList.push(file);
+                    renderNoiseList();
+                }
+            }
+            
+            // Não há necessidade de else aqui para remover da lista de ruídos, 
+            // pois se um arquivo já foi classificado como ruído, ele permanece lá para histórico,
+            // a menos que você queira limpar a lista toda vez que recarregar.
+            
+            renderPlaylist(); // Atualiza o destaque do item atual
+            updateStats();
+        }
+
+        // =========================================
+        // FUNÇÕES DE ESTATÍSTICA E GERENCIAMENTO
         // =========================================
 
         function updateStats() {
+            // Total de arquivos na playlist principal
             const count = playlist.length;
             const duration = parseInt(endTimeInput.value) || 0;
             
@@ -560,33 +597,26 @@
                 currentTrackStat.innerText = "-";
             }
 
-            const totalSeconds = count * duration; 
-            totalTimeStat.innerText = formatTimeDetailed(totalSeconds);
-            
-            // Garante que o display do tempo decorrido esteja atualizado
+            let totalSec = isFullAudioMode ? count * 60 : count * duration; 
+            totalTimeStat.innerText = formatTimeDetailed(totalSec);
             elapsedTimeStat.innerText = formatTimeDetailed(elapsedSeconds);
         }
 
         function formatTimeDetailed(totalSeconds) {
             const h = Math.floor(totalSeconds / 3600);
             const m = Math.floor((totalSeconds % 3600) / 60);
-            const s = totalSeconds % 60;
+            const s = Math.floor(totalSeconds % 60);
             return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // =========================================
-        // GERENCIAMENTO DE ARQUIVOS
-        // =========================================
-
         function handleFiles(files) {
-            // Ordenação Numérica Natural (1, 2, 10 em vez de 1, 10, 2)
-            const newFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+            const newFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
             
             if(playlist.length === 0) {
                 playlist = newFiles;
             } else {
                 playlist = [...playlist, ...newFiles];
-                playlist.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+                playlist.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
             }
             
             renderPlaylist();
@@ -599,16 +629,56 @@
 
         function renderPlaylist() {
             playlistEl.innerHTML = '';
+            if (playlist.length === 0) {
+                playlistEl.innerHTML = '<li class="file-item" style="justify-content:center; color:#666; font-style:italic;">Lista vazia.</li>';
+                return;
+            }
             playlist.forEach((file, index) => {
                 const li = document.createElement('li');
+                // Destaca o item atual mesmo que ele seja ruído
                 li.className = `file-item ${index === currentIndex ? 'active' : ''}`;
                 li.onclick = () => loadAndPlay(index);
-                li.innerHTML = `
-                    <span>${index + 1}. ${file.name}</span>
-                    <span style="font-size:11px; opacity:0.5;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                `;
+                li.innerHTML = `<span>${index + 1}. ${file.name}</span>`;
                 playlistEl.appendChild(li);
             });
+        }
+
+        function renderNoiseList() {
+            noiseListEl.innerHTML = '';
+            noiseCountEl.innerText = noiseList.length;
+            
+            if (noiseList.length === 0) {
+                noiseListEl.innerHTML = '<li class="file-item" style="justify-content:center; color:#666; font-style:italic;">Nenhum ruído detectado.</li>';
+                return;
+            }
+
+            noiseList.forEach((file) => {
+                const li = document.createElement('li');
+                li.className = 'file-item noise-item';
+                li.title = "Clique para ouvir e verificar";
+                li.onclick = () => loadFileDirectly(file);
+                li.innerHTML = `<span>⚠ ${file.name}</span>`;
+                noiseListEl.appendChild(li);
+            });
+        }
+
+        async function loadFileDirectly(file) {
+            if (sourceNode) { try { sourceNode.stop(); } catch(e){} sourceNode.disconnect(); sourceNode = null; }
+            
+            fileInfoDisplay.textContent = `Verificando Ruído: ${file.name}...`;
+            try {
+                await initAudioContext();
+                const arrayBuffer = await file.arrayBuffer();
+                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                fileInfoDisplay.innerHTML = `
+                    <div style="font-size:14px; opacity:0.8;">VERIFICANDO:</div>
+                    <div style="color:#ff7f7f">${file.name}</div>
+                `;
+                
+                drawStaticWaveform();
+                playAudioSegment();
+            } catch (err) { console.error(err); }
         }
 
         // =========================================
@@ -618,39 +688,22 @@
         async function initAudioContext() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Configuração de Volume
                 gainNode = audioContext.createGain();
                 gainNode.gain.value = volumeSlider.value;
-                
-                // Configuração de Análise (Visualizador)
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 4096;
-                
-                // Conexões: Analyser -> Gain -> Saída
                 analyser.connect(gainNode);
                 gainNode.connect(audioContext.destination);
             }
-            if (audioContext.state === 'suspended') {
-                await audioContext.resume();
-            }
+            if (audioContext.state === 'suspended') { await audioContext.resume(); }
         }
 
-        function setVolume(val) {
-            if (gainNode) { 
-                gainNode.gain.value = val; 
-            }
-        }
+        function setVolume(val) { if (gainNode) { gainNode.gain.value = val; } }
 
         async function loadTrack(index, autoPlay = true) {
             if (index < 0 || index >= playlist.length) return;
 
-            // Para o áudio anterior se houver
-            if (sourceNode) {
-                try { sourceNode.stop(); } catch(e){}
-                sourceNode.disconnect();
-                sourceNode = null;
-            }
+            if (sourceNode) { try { sourceNode.stop(); } catch(e){} sourceNode.disconnect(); sourceNode = null; }
             
             currentIndex = index;
             renderPlaylist();
@@ -661,39 +714,47 @@
 
             try {
                 await initAudioContext();
-                
-                // Decodifica o arquivo de áudio
                 const arrayBuffer = await file.arrayBuffer();
                 audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
                 
+                // Analisa o Pico Sustentado
+                const peak = analyzeSustainedPeak(audioBuffer);
+                
+                // Classifica (apenas lista se for ruído, não remove da playlist)
+                updateNoiseClassification(file, peak);
+
+                // Sempre desenha e prepara para tocar, independente de ser ruído ou não
                 fileInfoDisplay.innerHTML = `
                     <div style="font-size:14px; opacity:0.8;">TOCANDO AGORA:</div>
                     <div>${file.name}</div>
-                    <div style="font-size:14px; opacity:0.8; margin-top:5px;">Duração Total: ${formatTime(audioBuffer.duration)}</div>
+                    <div style="font-size:12px; opacity:0.6; margin-top:5px;">
+                        Pico Sust.: ${(peak*100).toFixed(1)}% | Limiar: ${(classificationThreshold*100).toFixed(1)}%
+                    </div>
                 `;
                 
                 drawStaticWaveform();
 
-                if (autoPlay) {
-                    playAudioSegment();
-                } else {
-                    isPlaying = false;
-                    updatePlayButtonUI();
+                if (autoPlay) { 
+                    playAudioSegment(); 
+                } else { 
+                    isPlaying = false; 
+                    updatePlayButtonUI(); 
                 }
 
             } catch (err) {
                 console.error(err);
-                fileInfoDisplay.textContent = "Erro ao decodificar áudio.";
+                fileInfoDisplay.textContent = "Erro ao decodificar.";
+                // Se der erro, pula para o próximo no modo auto
                 if(isAutoMode) { 
                     setTimeout(() => handleTrackFinish(), 1000); 
                 }
             }
         }
 
-        function loadAndPlay(index) {
-            isAutoMode = false;
-            updateAutoUI();
-            loadTrack(index, true);
+        function loadAndPlay(index) { 
+            isAutoMode = false; 
+            updateAutoUI(); 
+            loadTrack(index, true); 
         }
 
         function playAudioSegment() {
@@ -703,15 +764,20 @@
             sourceNode.buffer = audioBuffer;
             sourceNode.connect(analyser);
 
-            const durationToPlay = parseFloat(endTimeInput.value) || 7;
+            let durationToPlay;
+            
+            if (isFullAudioMode) {
+                durationToPlay = audioBuffer.duration;
+            } else {
+                durationToPlay = parseFloat(endTimeInput.value) || 7;
+            }
+            
             const actualDuration = Math.min(durationToPlay, audioBuffer.duration);
 
             sourceNode.start(0, 0, actualDuration);
-            
             isPlaying = true;
             updatePlayButtonUI();
 
-            // Quando o trecho termina
             sourceNode.onended = () => {
                 setTimeout(() => {
                     if (isPlaying) { 
@@ -725,37 +791,28 @@
             isPlaying = false;
             updatePlayButtonUI();
             
-            // LÓGICA DE PROGRESSO:
-            // Somamos a duração configurada ao tempo decorrido
-            const durationConfigured = parseFloat(endTimeInput.value) || 7;
-            elapsedSeconds += durationConfigured;
+            let durationAdded = isFullAudioMode ? audioBuffer.duration : (parseFloat(endTimeInput.value) || 7);
+            elapsedSeconds += durationAdded;
             elapsedTimeStat.innerText = formatTimeDetailed(elapsedSeconds);
             
             if (isAutoMode) {
+                // Avança sempre para o próximo índice da playlist principal
                 if (currentIndex < playlist.length - 1) {
                     loadTrack(currentIndex + 1, true);
                 } else {
-                    isAutoMode = false;
+                    isAutoMode = false; 
                     updateAutoUI();
                     alert("Processo automático concluído.");
                 }
             }
         }
 
-        // =========================================
-        // CONTROLES DE INTERFACE
-        // =========================================
-
         function togglePlay() {
             if (!audioBuffer) return;
             if (isPlaying) {
-                if (sourceNode) { 
-                    try { sourceNode.stop(); } catch(e){} 
-                    sourceNode.disconnect(); 
-                    sourceNode = null; 
-                }
-                isPlaying = false;
-                isAutoMode = false;
+                if (sourceNode) { try { sourceNode.stop(); } catch(e){} sourceNode.disconnect(); sourceNode = null; }
+                isPlaying = false; 
+                isAutoMode = false; 
                 updateAutoUI();
             } else {
                 playAudioSegment();
@@ -764,72 +821,106 @@
         }
 
         function stopAll(resetUI = true) {
-            if (sourceNode) { 
-                try { sourceNode.stop(); } catch(e){} 
-                sourceNode.disconnect(); 
-                sourceNode = null; 
-            }
-            isPlaying = false;
-            isAutoMode = false;
+            if (sourceNode) { try { sourceNode.stop(); } catch(e){} sourceNode.disconnect(); sourceNode = null; }
+            isPlaying = false; 
+            isAutoMode = false; 
             updateAutoUI();
             
-            // Zera o contador de tempo decorrido ao parar
-            elapsedSeconds = 0; 
-            elapsedTimeStat.innerText = "00:00:00";
-
             if(resetUI) {
                 updatePlayButtonUI();
                 if(audioBuffer) drawStaticWaveform();
             }
         }
 
-        function playNext() {
-            isAutoMode = false;
-            updateAutoUI();
-            if (currentIndex < playlist.length - 1) loadTrack(currentIndex + 1, true);
+        function playNext() { 
+            isAutoMode = false; 
+            updateAutoUI(); 
+            if (currentIndex < playlist.length - 1) loadTrack(currentIndex + 1, true); 
         }
 
-        function playPrevious() {
-            isAutoMode = false;
-            updateAutoUI();
-            if (currentIndex > 0) loadTrack(currentIndex - 1, true);
+        function playPrevious() { 
+            isAutoMode = false; 
+            updateAutoUI(); 
+            if (currentIndex > 0) loadTrack(currentIndex - 1, true); 
+        }
+
+        function deleteCurrentTrack() {
+            if (currentIndex === -1 || playlist.length === 0) return;
+            
+            const fileToRemove = playlist[currentIndex];
+            
+            // Adiciona manualmente à lista de ruídos se quiser
+            if (!noiseList.includes(fileToRemove)) {
+                noiseList.push(fileToRemove);
+                renderNoiseList();
+            }
+            
+            // Remove da playlist principal
+            playlist.splice(currentIndex, 1);
+            
+            if (playlist.length === 0) {
+                currentIndex = -1;
+                audioBuffer = null;
+                currentTrackPeak = 0;
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                fileInfoDisplay.innerText = "Lista vazia.";
+                renderPlaylist();
+            } else {
+                // Ajusta índice
+                if (currentIndex >= playlist.length) {
+                    currentIndex = playlist.length - 1;
+                }
+                loadTrack(currentIndex, false);
+            }
+            
+            updateStats();
         }
 
         function startAutoProcess() {
-            if (playlist.length === 0) { 
-                alert("Selecione arquivos primeiro."); 
-                return; 
-            }
+            if (playlist.length === 0) { alert("Selecione arquivos primeiro."); return; }
             
-            // Ao iniciar um novo processo automático, zeramos o contador de progresso
-            elapsedSeconds = 0;
+            elapsedSeconds = 0; 
             elapsedTimeStat.innerText = "00:00:00";
-
-            isAutoMode = true;
+            
+            // Opcional: Resetar estatísticas de ruído ao iniciar novo processo?
+            // noiseList = []; renderNoiseList();
+            
+            isAutoMode = true; 
             updateAutoUI();
-
+            
             if (!isPlaying) {
                 let startIndex = currentIndex === -1 ? 0 : currentIndex;
                 loadTrack(startIndex, true);
             }
         }
 
-        function updateAutoUI() {
-            autoStatus.style.display = isAutoMode ? 'block' : 'none';
+        function updateAutoUI() { 
+            autoStatus.style.display = isAutoMode ? 'block' : 'none'; 
         }
 
         function updatePlayButtonUI() {
             if (isPlaying) {
                 playText.innerText = "Pausar";
                 playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-                playBtn.style.backgroundColor = "#e1b12c";
+                playBtn.style.backgroundColor = "#e1b12c"; 
                 playBtn.style.color = "#000";
             } else {
-                playText.innerText = "Tocar Trecho";
+                playText.innerText = isFullAudioMode ? "Tocar Completo" : "Tocar Trecho";
                 playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-                playBtn.style.backgroundColor = "";
+                playBtn.style.backgroundColor = ""; 
                 playBtn.style.color = "";
             }
+        }
+
+        function toggleFullAudioMode() {
+            isFullAudioMode = !isFullAudioMode;
+            fullAudioToggle.classList.toggle('active', isFullAudioMode);
+            
+            timeInputGroup.style.opacity = isFullAudioMode ? "0.5" : "1";
+            timeInputGroup.style.pointerEvents = isFullAudioMode ? "none" : "auto";
+            
+            updatePlayButtonUI();
+            updateStats();
         }
 
         function formatTime(seconds) {
@@ -839,7 +930,7 @@
         }
 
         // =========================================
-        // VISUALIZADOR (WAVEFORM)
+        // VISUALIZADOR
         // =========================================
 
         function drawStaticWaveform() {
@@ -848,49 +939,63 @@
             const w = canvas.width;
             const h = canvas.height;
             const data = audioBuffer.getChannelData(0);
-            
             const step = Math.ceil(data.length / w);
             const amp = h / 2;
 
             ctx.fillStyle = '#0a0a0c';
             ctx.fillRect(0, 0, w, h);
 
-            // Grade de fundo
-            ctx.strokeStyle = '#1a1a20';
-            ctx.lineWidth = 1;
+            // Grade
+            ctx.strokeStyle = '#1a1a20'; ctx.lineWidth = 1;
             ctx.beginPath();
             for(let i=0; i<w; i+=50) { ctx.moveTo(i,0); ctx.lineTo(i,h); }
             for(let i=0; i<h; i+=50) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
             ctx.stroke();
 
-            // Desenho da Onda
-            ctx.beginPath();
-            ctx.lineWidth = 1.5;
-            ctx.strokeStyle = '#00d2ff';
+            // Onda
+            ctx.beginPath(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#00d2ff';
             ctx.moveTo(0, amp);
-
             for (let i = 0; i < w; i++) {
-                let min = 1.0;
-                let max = -1.0;
-                
+                let min = 1.0; let max = -1.0;
                 for (let j = 0; j < step; j++) {
                     const datum = data[(i * step) + j];
                     if (datum < min) min = datum;
                     if (datum > max) max = datum;
                 }
-                
                 ctx.moveTo(i, (1 + min) * amp);
                 ctx.lineTo(i, (1 + max) * amp);
             }
             ctx.stroke();
             
             // Linha central
-            ctx.beginPath();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1;
-            ctx.moveTo(0, h/2);
-            ctx.lineTo(w, h/2);
-            ctx.stroke();
+            ctx.beginPath(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'; ctx.lineWidth = 1;
+            ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+
+            // Linhas Vermelhas (Limiar)
+            if (filesAnalyzed > 0 && classificationThreshold > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#ff4757'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
+                const thresholdY = classificationThreshold * amp;
+                if (thresholdY > 5) {
+                    ctx.moveTo(0, amp - thresholdY); ctx.lineTo(w, amp - thresholdY);
+                    ctx.moveTo(0, amp + thresholdY); ctx.lineTo(w, amp + thresholdY);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+            }
+
+            // Linha Amarela (Pico Atual)
+            if (currentTrackPeak > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2; ctx.setLineDash([2, 2]);
+                const peakY = currentTrackPeak * amp;
+                if (peakY > 5) {
+                    ctx.moveTo(0, amp - peakY); ctx.lineTo(w, amp - peakY);
+                    ctx.moveTo(0, amp + peakY); ctx.lineTo(w, amp + peakY);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+            }
         }
     </script>
 </body>
