@@ -2140,11 +2140,66 @@
             timeElement.style.display = 'none';
             descElement.style.display = 'none';
             
+            // Wrapper do input + controle fino
+            var timeWrapper = document.createElement('div');
+            timeWrapper.style.display = 'flex';
+            timeWrapper.style.alignItems = 'center';
+            timeWrapper.style.gap = '4px';
+
+            // Input de tempo
             var timeInput = document.createElement('input');
             timeInput.type = 'text';
             timeInput.className = 'timestamp-edit-input';
             timeInput.value = timestamp.time;
             timeInput.placeholder = 'Tempo (00:00:00)';
+            timeInput.style.flex = '1';
+
+            // Controle lateral (setas)
+            var controls = document.createElement('div');
+            controls.style.display = 'flex';
+            controls.style.flexDirection = 'column';
+
+            // Botão ▲
+            var btnUp = document.createElement('button');
+            btnUp.textContent = '▲';
+            btnUp.type = 'button';
+            btnUp.style.padding = '2px 6px';
+            btnUp.style.cursor = 'pointer';
+
+            // Botão ▼
+            var btnDown = document.createElement('button');
+            btnDown.textContent = '▼';
+            btnDown.type = 'button';
+            btnDown.style.padding = '2px 6px';
+            btnDown.style.cursor = 'pointer';
+
+            // Função ajustar segundos
+            function adjustSeconds(delta) {
+                try {
+                    let seconds = parseTime(timeInput.value);
+                    seconds += delta;
+                    if (seconds < 0) seconds = 0;
+                    timeInput.value = formatTime(seconds);
+                } catch(e) {}
+            }
+
+            // Eventos
+            btnUp.addEventListener('mousedown', function(e) {
+                e.preventDefault(); // 🔥 impede perder foco
+                adjustSeconds(1);
+            });
+
+            btnDown.addEventListener('mousedown', function(e) {
+                e.preventDefault(); // 🔥 impede perder foco
+                adjustSeconds(-1);
+            });
+
+
+            controls.appendChild(btnUp);
+            controls.appendChild(btnDown);
+
+            timeWrapper.appendChild(timeInput);
+            timeWrapper.appendChild(controls);
             
             var descInput = document.createElement('input');
             descInput.type = 'text';
@@ -2153,7 +2208,7 @@
             descInput.placeholder = 'Descrição';
             
             infoDiv.innerHTML = '';
-            infoDiv.appendChild(timeInput);
+            infoDiv.appendChild(timeWrapper);
             infoDiv.appendChild(descInput);
             
             timeInput.focus();
