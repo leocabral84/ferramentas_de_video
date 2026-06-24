@@ -899,6 +899,46 @@
             position: sticky;
             bottom: 10px;
         }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
@@ -1103,6 +1143,7 @@
 
                 </div>
 
+                <div id="searchContainer">
                 <!-- 🔍 BUSCA POR SIMILARIDADE NAS LEGENDAS -->
                 <div class="similarity-search-wrapper" style="margin-top: 16px; margin-bottom: 16px;">
 
@@ -1155,6 +1196,43 @@
                         style="font-size: 12px; color:#94a3b8; line-height: 1.2; margin-top: 4px;">
                     </div>
 
+                </div>
+             </div>
+
+
+                <!-- MÓDULO DE BUSCA AUTOMÁTICA -->
+                 
+                <div id="moduloBuscaAutomatica" style="display: none; margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="tituloBusca" placeholder="Título" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 200px;">
+                            <span id="contadorBusca" style="background: #007bff; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold;">00 de --</span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="iniciarBuscaAutomatica()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Iniciar Busca</button>
+                        </div>
+                    </div>
+                    
+                    <textarea id="textoBusca" placeholder="Texto da Busca" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+                    
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button onclick="salvarNaFila()" style="padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Salvar</button>
+                        <button onclick="limparFilaBuscas()" style="padding: 8px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpar Textos</button>
+                    </div>
+                    
+                    <div id="filaBuscasDisplay" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: white; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+                        <p style="color: #666; margin: 0; text-align: center;">Nenhum item na fila de busca</p>
+                    </div>
+                </div>
+
+                <!-- Toggle Manual/Automático -->
+                <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 12px; font-weight: bold;">Manual</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggleModoBusca" onchange="alternarModoBusca()">
+                        <span class="slider"></span>
+                    </label>
+                    <span style="font-size: 12px; font-weight: bold;">Automático</span>
                 </div>
 
                 <div class="subtitle-container">
@@ -1534,14 +1612,57 @@
                 var marker = document.createElement('div');
                 marker.className = 'timeline-marker';
                 marker.style.left = position + '%';
+                marker.style.position = 'absolute';
+                marker.style.top = '0';
+                marker.style.width = '3px';
+                marker.style.height = '100%';
+                marker.style.background = '#ef4444';
+                marker.style.opacity = '0.9';
+                marker.style.cursor = 'pointer';
+                marker.style.zIndex = '10';
+                marker.style.transition = 'all 0.2s';
                 
+                // Tooltip
                 var tooltip = document.createElement('div');
                 tooltip.className = 'timeline-marker-tooltip';
                 tooltip.innerHTML = ts.time + '<br>' + (ts.description || 'Sem descrição');
+                tooltip.style.position = 'absolute';
+                tooltip.style.bottom = '35px';
+                tooltip.style.left = '50%';
+                tooltip.style.transform = 'translateX(-50%)';
+                tooltip.style.background = '#0f172a';
+                tooltip.style.color = '#e2e8f0';
+                tooltip.style.padding = '6px 10px';
+                tooltip.style.borderRadius = '4px';
+                tooltip.style.fontSize = '11px';
+                tooltip.style.fontWeight = '600';
+                tooltip.style.whiteSpace = 'nowrap';
+                tooltip.style.opacity = '0';
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.transition = 'all 0.2s';
+                tooltip.style.border = '1px solid #334155';
+                tooltip.style.zIndex = '20';
                 
                 marker.appendChild(tooltip);
                 
-                marker.style.pointerEvents = 'auto';
+                // Hover effect
+                marker.addEventListener('mouseenter', function() {
+                    this.style.width = '4px';
+                    this.style.opacity = '1';
+                    this.style.background = '#f59e0b';
+                    tooltip.style.opacity = '1';
+                    tooltip.style.visibility = 'visible';
+                    tooltip.style.bottom = '40px';
+                });
+                
+                marker.addEventListener('mouseleave', function() {
+                    this.style.width = '3px';
+                    this.style.opacity = '0.9';
+                    this.style.background = '#ef4444';
+                    tooltip.style.opacity = '0';
+                    tooltip.style.visibility = 'hidden';
+                });
+                
                 marker.addEventListener('click', function(e) {
                     e.stopPropagation();
                     jumpToTimestamp(ts.seconds);
@@ -2635,6 +2756,239 @@
 
         // ✅ Restaurar marcações salvas ao abrir a página
         loadTimestamps();
+
+        // ==================== VARIÁVEIS DA BUSCA AUTOMÁTICA ====================
+        let filaBuscasAutomaticas = [];
+        let indiceBuscaAtual = 0;
+        let emBuscaAutomatica = false;
+
+        // ==================== FUNÇÕES DA BUSCA AUTOMÁTICA ====================
+
+        function alternarModoBusca() {
+            const toggle = document.getElementById('toggleModoBusca');
+            const moduloAutomatico = document.getElementById('moduloBuscaAutomatica');
+            
+            if (toggle.checked) {
+                moduloAutomatico.style.display = 'block';
+                const buscaManual = document.querySelector('#searchContainer');
+                if (buscaManual) buscaManual.style.display = 'none';
+            } else {
+                moduloAutomatico.style.display = 'none';
+                const buscaManual = document.querySelector('#searchContainer');
+                if (buscaManual) buscaManual.style.display = 'block';
+            }
+        }
+
+        function salvarNaFila() {
+            const titulo = document.getElementById('tituloBusca').value.trim();
+            const textoBusca = document.getElementById('textoBusca').value.trim();
+            
+            if (!titulo || !textoBusca) {
+                alert('Por favor, preencha o título e o texto da busca.');
+                return;
+            }
+            
+            filaBuscasAutomaticas.push({
+                titulo: titulo,
+                texto: textoBusca
+            });
+            
+            document.getElementById('tituloBusca').value = '';
+            document.getElementById('textoBusca').value = '';
+            
+            atualizarDisplayFila();
+        }
+
+        function atualizarDisplayFila() {
+            const display = document.getElementById('filaBuscasDisplay');
+            const contador = document.getElementById('contadorBusca');
+            
+            if (filaBuscasAutomaticas.length === 0) {
+                display.innerHTML = '<p style="color: #666; margin: 0; text-align: center;">Nenhum item na fila de busca</p>';
+                contador.textContent = '00 de --';
+                return;
+            }
+            
+            const atual = emBuscaAutomatica ? indiceBuscaAtual + 1 : 0;
+            contador.textContent = `${String(atual).padStart(2, '0')} de ${filaBuscasAutomaticas.length}`;
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            filaBuscasAutomaticas.forEach((item, index) => {
+                const isAtual = emBuscaAutomatica && index === indiceBuscaAtual;
+                html += `
+                    <div style="padding: 8px; background: ${isAtual ? '#e3f2fd' : '#f8f9fa'}; 
+                                border-left: 3px solid ${isAtual ? '#007bff' : '#ddd'}; 
+                                border-radius: 4px;">
+                        <div style="font-weight: bold; color: #333;">${index + 1}. ${item.titulo}</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 4px; word-break: break-word;">
+                            ${item.texto.substring(0, 100)}${item.texto.length > 100 ? '...' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            display.innerHTML = html;
+        }
+
+        async function iniciarBuscaAutomatica() {
+            if (filaBuscasAutomaticas.length === 0) {
+                alert('Adicione pelo menos uma busca na fila.');
+                return;
+            }
+            
+            if (!subtitles || subtitles.length === 0) {
+                alert('Carregue uma legenda primeiro.');
+                return;
+            }
+            
+            indiceBuscaAtual = 0;
+            emBuscaAutomatica = true;
+            atualizarDisplayFila();
+            
+            await processarProximaBusca();
+        }
+
+        async function processarProximaBusca() {
+            if (indiceBuscaAtual >= filaBuscasAutomaticas.length) {
+                alert('Busca automática concluída!');
+                emBuscaAutomatica = false;
+                indiceBuscaAtual = 0;
+                atualizarDisplayFila();
+                return;
+            }
+            
+            const buscaAtual = filaBuscasAutomaticas[indiceBuscaAtual];
+            
+            // Pequeno delay para não travar a interface
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await executarBuscaAutomaticaItem(buscaAtual);
+        }
+
+        async function executarBuscaAutomaticaItem(busca) {
+            console.log(`🔍 Buscando: ${busca.titulo}`);
+            
+            // Converter texto da busca em array de palavras normalizadas
+            const textoBuscaNormalizado = normalizeText(busca.texto);
+            const palavrasBusca = textoBuscaNormalizado.split(' ').filter(p => p.length > 0);
+            
+            if (palavrasBusca.length < 3) {
+                console.warn(`Texto muito curto para busca: ${busca.titulo}`);
+                indiceBuscaAtual++;
+                atualizarDisplayFila();
+                processarProximaBusca();
+                return;
+            }
+            
+            // Buscar o trecho nas legendas usando sliding window
+            let melhorMatch = null;
+            let melhorScore = 0;
+            
+            for (let i = 0; i <= subtitles.length - palavrasBusca.length; i++) {
+                const windowWords = subtitles.slice(i, i + palavrasBusca.length);
+                const windowText = windowWords.map(w => normalizeText(w.text)).join(' ');
+                
+                // Contar palavras em comum
+                let commonCount = 0;
+                palavrasBusca.forEach(palavra => {
+                    if (windowText.includes(palavra)) {
+                        commonCount++;
+                    }
+                });
+                
+                const score = commonCount / palavrasBusca.length;
+                
+                if (score > melhorScore && score >= 0.50) {
+                    melhorScore = score;
+                    melhorMatch = {
+                        startIndex: i,
+                        score: score
+                    };
+                }
+            }
+            
+            if (!melhorMatch) {
+                console.warn(`❌ Texto não encontrado para: ${busca.titulo}`);
+                indiceBuscaAtual++;
+                atualizarDisplayFila();
+                processarProximaBusca();
+                return;
+            }
+            
+            console.log(`✅ Trecho encontrado com ${(melhorMatch.score * 100).toFixed(1)}% de similaridade`);
+            
+            // Agora voltar para encontrar o título
+            const tituloNormalizado = normalizeText(busca.titulo);
+            const tituloPalavras = tituloNormalizado.split(' ').filter(p => p.length > 0);
+            
+            let timestampEncontrado = null;
+            const limiteVoltar = Math.max(0, melhorMatch.startIndex - 30);
+            
+            for (let i = melhorMatch.startIndex; i >= limiteVoltar; i--) {
+                // Verificar se as próximas N palavras formam o título
+                const proximasPalavras = subtitles.slice(i, i + tituloPalavras.length);
+                
+                if (proximasPalavras.length < tituloPalavras.length) continue;
+                
+                const textoJunto = proximasPalavras.map(p => normalizeText(p.text)).join(' ');
+                
+                // Verificar se contém o título completo
+                if (textoJunto.includes(tituloNormalizado)) {
+                    timestampEncontrado = subtitles[i].start;
+                    console.log(`✅ Título encontrado no índice ${i}`);
+                    break;
+                }
+            }
+            
+            if (timestampEncontrado !== null) {
+                const tempoFormatado = formatTime(timestampEncontrado);
+                adicionarMarcacaoAutomatica(busca.titulo, tempoFormatado, timestampEncontrado);
+                console.log(`✅ Adicionado: ${busca.titulo} - ${tempoFormatado}`);
+            } else {
+                console.warn(`❌ Título não encontrado ao voltar: ${busca.titulo}`);
+                // Se não encontrou o título, usa o tempo do trecho encontrado
+                const tempoFormatado = formatTime(subtitles[melhorMatch.startIndex].start);
+                adicionarMarcacaoAutomatica(busca.titulo, tempoFormatado, subtitles[melhorMatch.startIndex].start);
+                console.log(`⚠️ Usando tempo do trecho: ${busca.titulo} - ${tempoFormatado}`);
+            }
+            
+            // Próxima busca
+            indiceBuscaAtual++;
+            atualizarDisplayFila();
+            processarProximaBusca();
+        }
+
+        function adicionarMarcacaoAutomatica(titulo, tempo, seconds) {
+            // Adicionar diretamente ao array de timestamps
+            const timestamp = {
+                id: Date.now() + Math.random(),
+                time: tempo,
+                description: titulo,
+                seconds: seconds
+            };
+            
+            timestamps.push(timestamp);
+            timestamps.sort(function(a, b) {
+                return a.seconds - b.seconds;
+            });
+            
+            renderTimestamps();
+            renderTimelineMarkers();
+            saveTimestamps();
+            
+            // Scroll para a última marcação
+            setTimeout(scrollTimestampsToBottom, 0);
+        }
+
+        function limparFilaBuscas() {
+            if (confirm('Deseja limpar toda a fila de buscas?')) {
+                filaBuscasAutomaticas = [];
+                indiceBuscaAtual = 0;
+                emBuscaAutomatica = false;
+                atualizarDisplayFila();
+            }
+        }
 
         
     </script>
