@@ -202,7 +202,7 @@
             background: #1e293b;
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            overflow: hidden;
+            overflow: visible;
             padding: 0;
         }
 
@@ -565,6 +565,54 @@
             margin-top: 530px;
         }
 
+        .timestamps-section.timestamps-floating-enabled {
+            position: sticky;
+            top: 76px;
+            align-self: flex-start;
+            max-height: calc(100vh - 90px);
+            z-index: 50;
+        }
+
+        .timestamps-section.timestamps-floating-disabled {
+            position: static;
+        }
+
+        .timestamps-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #334155;
+        }
+
+        .timestamps-header-row .section-title {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .float-toggle-area {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .float-toggle-area input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+
+        .timestamp-info {
+            cursor: default;
+        }
+
 
         .similarity-search-wrapper {
             margin-top: 16px;
@@ -662,7 +710,7 @@
 
         .timestamp-info {
             flex: 1;
-            cursor: pointer;
+            cursor: default;
         }
 
         .timestamp-time {
@@ -1215,9 +1263,33 @@
                     
                     <textarea id="textoBusca" placeholder="Texto da Busca" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
                     
-                    <div style="margin-top: 10px; display: flex; gap: 10px;">
-                        <button onclick="salvarNaFila()" style="padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Salvar</button>
-                        <button onclick="limparFilaBuscas()" style="padding: 8px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpar Textos</button>
+                    <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button   
+                            onclick="salvarNaFila()"   
+                            style="padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">  
+                            Salvar  
+                        </button>  
+
+                        <button   
+                            onclick="exportarBuscaAutomaticaTxt()"   
+                            style="padding: 8px 20px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">  
+                            Exportar TXT  
+                        </button>
+
+                        <label 
+                            style="padding: 8px 20px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500;">
+                            Importar TXT
+                            <input 
+                                type="file" 
+                                id="importarBuscaAutomaticaInput" 
+                                accept=".txt">
+                        </label>
+
+                        <button   
+                            onclick="limparInformacoesBuscaAutomatica()"   
+                            style="padding: 8px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">  
+                            Limpar Informações  
+                        </button>  
                     </div>
                     
                     <div id="filaBuscasDisplay" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: white; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
@@ -1264,13 +1336,18 @@
                 </div>
             </div>
 
-            <div class="timestamps-section">
-                <h2 class="section-title">
-                    <span>📌</span>
-                    MARCAÇÕES
-                </h2>
+            <div class="timestamps-section timestamps-floating-disabled" id="timestampsSection">
+                <div class="timestamps-header-row">
+                    <h2 class="section-title">
+                        <span>📌</span>
+                        MARCAÇÕES
+                    </h2>
 
-                
+                    <label class="float-toggle-area" title="Ativar ou desativar modo flutuante das marcações">
+                        <input type="checkbox" id="toggleTimestampsFloat">
+                        Flutuar
+                    </label>
+                </div>
 
                 <button class="btn-danger" id="clearAllTimestampsBtn" style="width: 100%; margin-bottom: 20px;">
                     🗑️ Limpar Todas
@@ -2156,79 +2233,58 @@
             list.scrollTop = list.scrollHeight;
         }
 
+        
         // Renderizar timestamps
         function renderTimestamps() {
             if (timestamps.length === 0) {
                 timestampList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>Nenhuma marcação adicionada</p><p>Adicione timestamps para testar</p></div>';
                 return;
             }
-            
+
             var html = '';
+
             timestamps.forEach(function(ts) {
                 html += '<div class="timestamp-item" data-id="' + ts.id + '" data-seconds="' + ts.seconds + '">' +
-                    '<div class="timestamp-info" data-action="jump" data-seconds="' + ts.seconds + '">' +
-                    '<div class="timestamp-time" id="time-' + ts.id + '">' + ts.time + '</div>' +
-                    '<div class="timestamp-desc" id="desc-' + ts.id + '">' + (ts.description || 'Sem descrição') + '</div>' +
+                    '<div class="timestamp-info">' +
+                        '<div class="timestamp-time" id="time-' + ts.id + '">' + ts.time + '</div>' +
+                        '<div class="timestamp-desc" id="desc-' + ts.id + '">' + (ts.description || 'Sem descrição') + '</div>' +
                     '</div>' +
                     '<div class="timestamp-actions">' +
-                    '<button class="timestamp-btn timestamp-btn-play" data-action="jump" data-seconds="' + ts.seconds + '" title="Reproduzir">▶</button>' +
-                    '<button class="timestamp-btn timestamp-btn-edit" data-action="edit" data-id="' + ts.id + '" title="Editar">✏️</button>' +
-                    '<button class="timestamp-btn timestamp-btn-delete" data-action="delete" data-id="' + ts.id + '" title="Excluir">🗑️</button>' +
+                        '<button type="button" class="timestamp-btn timestamp-btn-play" data-action="play-timestamp" data-seconds="' + ts.seconds + '" title="Ir para timestamp">▶</button>' +
+                        '<button type="button" class="timestamp-btn timestamp-btn-edit" data-action="edit" data-id="' + ts.id + '" title="Editar timestamp">✏️</button>' +
+                        '<button type="button" class="timestamp-btn timestamp-btn-delete" data-action="delete" data-id="' + ts.id + '" title="Excluir timestamp">🗑️</button>' +
                     '</div>' +
-                    '</div>';
+                '</div>';
             });
-            
+
             timestampList.innerHTML = html;
-            
-            // Adicionar event listeners
-            document.querySelectorAll('[data-action="jump"]').forEach(function(el) {
+
+            document.querySelectorAll('[data-action="play-timestamp"]').forEach(function(el) {
                 el.addEventListener('click', function(e) {
+                    e.preventDefault();
                     e.stopPropagation();
+
                     jumpToTimestamp(parseFloat(this.dataset.seconds));
                 });
             });
-            
+
             document.querySelectorAll('[data-action="edit"]').forEach(function(el) {
                 el.addEventListener('click', function(e) {
+                    e.preventDefault();
                     e.stopPropagation();
-                    editTimestamp(parseFloat(this.dataset.id));
+
+                    editTimestamp(this.dataset.id);
                 });
             });
-            
+
             document.querySelectorAll('[data-action="delete"]').forEach(function(el) {
                 el.addEventListener('click', function(e) {
+                    e.preventDefault();
                     e.stopPropagation();
-                    deleteTimestamp(parseFloat(this.dataset.id));
+
+                    deleteTimestamp(this.dataset.id);
                 });
             });
-
-            document.getElementById("searchSimilarityBtn")
-                              
-
-                    .addEventListener("click", async function () {
-
-                    const text = document.getElementById("textSimilarityInput").value;
-                    const feedback = document.getElementById("similarityFeedback");
-
-                    if (!text.trim()) {
-                        feedback.textContent = "⚠️ Cole um texto para buscar.";
-                        return;
-                    }
-
-                    // Chama a versão assíncrona com await
-                    const result = await findBestSubtitleMatchAsync(text, 0.30);
-
-                    if (!result) {
-                        feedback.textContent =
-                            "❌ Nenhum trecho com similaridade ≥ 30% encontrado.";
-                        return;
-                    }
-
-                    goToSubtitleMatch(result);
-
-                    feedback.textContent =
-                        `✅ Trecho encontrado — Similaridade: ${(result.similarity * 100).toFixed(1)}%`;
-                });
         }
 
         // Funções de timestamp
@@ -2240,7 +2296,10 @@
         }
 
         function deleteTimestamp(id) {
-            timestamps = timestamps.filter(function(ts) { return ts.id !== id; });
+            timestamps = timestamps.filter(function(ts) {
+                return String(ts.id) !== String(id);
+            });
+
             renderTimestamps();
             renderTimelineMarkers();
             saveTimestamps();
@@ -2248,10 +2307,14 @@
 
         // Editar timestamp (tempo e descrição)
         function editTimestamp(id) {
-            var timestamp = timestamps.find(function(ts) { return ts.id === id; });
+            var timestamp = timestamps.find(function(ts) {
+                return String(ts.id) === String(id);
+            });
+
             if (!timestamp) return;
-            
+
             var item = document.querySelector('.timestamp-item[data-id="' + id + '"]');
+
             if (!item) return;
             
             var timeElement = document.getElementById('time-' + id);
@@ -2331,6 +2394,18 @@
             infoDiv.innerHTML = '';
             infoDiv.appendChild(timeWrapper);
             infoDiv.appendChild(descInput);
+
+            infoDiv.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            timeInput.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            descInput.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
             
             timeInput.focus();
             timeInput.select();
@@ -2380,9 +2455,17 @@
                     renderTimelineMarkers();
                 }
             });
+
+            function scheduleSaveEditOnBlur() {
+                setTimeout(function() {
+                    if (!item.contains(document.activeElement)) {
+                        saveEdit();
+                    }
+                }, 100);
+            }
             
-            timeInput.addEventListener('blur', saveEdit);
-            descInput.addEventListener('blur', saveEdit);
+            timeInput.addEventListener('blur', scheduleSaveEditOnBlur);
+            descInput.addEventListener('blur', scheduleSaveEditOnBlur);
         }
 
         // Limpar todos os timestamps
@@ -2757,10 +2840,294 @@
         // ✅ Restaurar marcações salvas ao abrir a página
         loadTimestamps();
 
+        const STORAGE_KEY_TIMESTAMPS_FLOAT = "timestamps_float_enabled";
+
+        function aplicarModoFlutuanteTimestamps(ativo) {
+            const timestampsSection = document.getElementById("timestampsSection");
+            const toggle = document.getElementById("toggleTimestampsFloat");
+
+            if (!timestampsSection) {
+                return;
+            }
+
+            if (ativo) {
+                timestampsSection.classList.add("timestamps-floating-enabled");
+                timestampsSection.classList.remove("timestamps-floating-disabled");
+            } else {
+                timestampsSection.classList.remove("timestamps-floating-enabled");
+                timestampsSection.classList.add("timestamps-floating-disabled");
+            }
+
+            if (toggle) {
+                toggle.checked = ativo;
+            }
+
+            localStorage.setItem(STORAGE_KEY_TIMESTAMPS_FLOAT, ativo ? "1" : "0");
+        }
+
+        const toggleTimestampsFloat = document.getElementById("toggleTimestampsFloat");
+
+        if (toggleTimestampsFloat) {
+            const flutuacaoSalva = localStorage.getItem(STORAGE_KEY_TIMESTAMPS_FLOAT) === "1";
+
+            aplicarModoFlutuanteTimestamps(flutuacaoSalva);
+
+            toggleTimestampsFloat.addEventListener("change", function() {
+                aplicarModoFlutuanteTimestamps(this.checked);
+            });
+        }
+
         // ==================== VARIÁVEIS DA BUSCA AUTOMÁTICA ====================
         let filaBuscasAutomaticas = [];
         let indiceBuscaAtual = 0;
         let emBuscaAutomatica = false;
+
+        const STORAGE_KEY_BUSCA_AUTOMATICA = "busca_automatica_fila_salva";
+        const STORAGE_KEY_BUSCA_AUTOMATICA_RASCUNHO = "busca_automatica_rascunho_salvo";
+
+        function salvarEstadoBuscaAutomatica() {
+            localStorage.setItem(
+                STORAGE_KEY_BUSCA_AUTOMATICA,
+                JSON.stringify({
+                    fila: filaBuscasAutomaticas,
+                    indiceBuscaAtual: indiceBuscaAtual,
+                    emBuscaAutomatica: emBuscaAutomatica
+                })
+            );
+        }
+
+        function salvarRascunhoBuscaAutomatica() {
+            const titulo = document.getElementById('tituloBusca')?.value || '';
+            const texto = document.getElementById('textoBusca')?.value || '';
+
+            localStorage.setItem(
+                STORAGE_KEY_BUSCA_AUTOMATICA_RASCUNHO,
+                JSON.stringify({
+                    titulo: titulo,
+                    texto: texto
+                })
+            );
+        }
+
+        function carregarEstadoBuscaAutomatica() {
+            const salvo = localStorage.getItem(STORAGE_KEY_BUSCA_AUTOMATICA);
+
+            if (salvo) {
+                try {
+                    const dados = JSON.parse(salvo);
+
+                    if (Array.isArray(dados.fila)) {
+                        filaBuscasAutomaticas = dados.fila;
+                    }
+
+                    indiceBuscaAtual = dados.indiceBuscaAtual || 0;
+                    emBuscaAutomatica = false;
+
+                    atualizarDisplayFila();
+                } catch (e) {
+                    console.error("Erro ao carregar fila da busca automática:", e);
+                }
+            }
+
+            const rascunho = localStorage.getItem(STORAGE_KEY_BUSCA_AUTOMATICA_RASCUNHO);
+
+            if (rascunho) {
+                try {
+                    const dadosRascunho = JSON.parse(rascunho);
+
+                    document.getElementById('tituloBusca').value = dadosRascunho.titulo || '';
+                    document.getElementById('textoBusca').value = dadosRascunho.texto || '';
+                } catch (e) {
+                    console.error("Erro ao carregar rascunho da busca automática:", e);
+                }
+            }
+        }
+
+        function exportarBuscaAutomaticaTxt() {
+            const tituloAtual = document.getElementById('tituloBusca').value.trim();
+            const textoAtual = document.getElementById('textoBusca').value.trim();
+
+            const linhas = [];
+
+            linhas.push("BUSCA AUTOMÁTICA");
+            linhas.push("================");
+            linhas.push("");
+
+            if (tituloAtual || textoAtual) {
+                linhas.push("ITEM EM DIGITAÇÃO");
+                linhas.push("-----------------");
+                linhas.push("Título: " + (tituloAtual || "Sem título"));
+                linhas.push("Texto:");
+                linhas.push(textoAtual || "Sem texto");
+                linhas.push("");
+            }
+
+            if (filaBuscasAutomaticas.length > 0) {
+                linhas.push("FILA DE BUSCAS");
+                linhas.push("--------------");
+
+                filaBuscasAutomaticas.forEach(function(item, index) {
+                    linhas.push((index + 1) + ". " + item.titulo);
+                    linhas.push(item.texto);
+                    linhas.push("");
+                });
+            }
+
+            if (!tituloAtual && !textoAtual && filaBuscasAutomaticas.length === 0) {
+                alert("Não há informações para exportar.");
+                return;
+            }
+
+            const conteudo = linhas.join("\r\n");
+            const data = new Date();
+            const dataFormatada = data.toISOString().slice(0, 10);
+
+            downloadFile(
+                conteudo,
+                "busca_automatica_" + dataFormatada + ".txt",
+                "text/plain"
+            );
+        }
+
+        function importarBuscaAutomaticaTxt(conteudo) {
+            const linhas = conteudo.replace(/\r/g, '').split('\n');
+
+            const itensImportados = [];
+            let modo = null;
+            let tituloAtual = null;
+            let textoAtual = [];
+
+            function finalizarItemAtual() {
+                if (!tituloAtual) return;
+
+                const textoFinal = textoAtual.join('\n').trim();
+
+                if (tituloAtual.trim() && textoFinal) {
+                    itensImportados.push({
+                        titulo: tituloAtual.trim(),
+                        texto: textoFinal,
+                        criadoEm: new Date().toISOString()
+                    });
+                }
+
+                tituloAtual = null;
+                textoAtual = [];
+            }
+
+            for (let i = 0; i < linhas.length; i++) {
+                const linhaOriginal = linhas[i];
+                const linha = linhaOriginal.trim();
+
+                if (
+                    linha === "" ||
+                    linha === "BUSCA AUTOMÁTICA" ||
+                    linha === "================" ||
+                    linha === "-----------------"
+                ) {
+                    continue;
+                }
+
+                if (linha === "ITEM EM DIGITAÇÃO") {
+                    finalizarItemAtual();
+                    modo = "itemDigitacao";
+                    continue;
+                }
+
+                if (linha === "FILA DE BUSCAS") {
+                    finalizarItemAtual();
+                    modo = "fila";
+                    continue;
+                }
+
+                if (linha === "--------------") {
+                    continue;
+                }
+
+                // Formato:
+                // Título: Nome do título
+                if (modo === "itemDigitacao" && linha.startsWith("Título:")) {
+                    finalizarItemAtual();
+
+                    tituloAtual = linha.replace(/^Título:\s*/i, '').trim();
+
+                    if (
+                        tituloAtual === "" ||
+                        tituloAtual.toLowerCase() === "sem título"
+                    ) {
+                        tituloAtual = null;
+                    }
+
+                    continue;
+                }
+
+                // Linha "Texto:" do item em digitação
+                if (modo === "itemDigitacao" && linha === "Texto:") {
+                    continue;
+                }
+
+                // Formato da fila:
+                // 1. Título
+                // Texto da busca
+                const matchTituloFila = linha.match(/^\d+\.\s+(.+)$/);
+
+                if (modo === "fila" && matchTituloFila) {
+                    finalizarItemAtual();
+                    tituloAtual = matchTituloFila[1].trim();
+                    continue;
+                }
+
+                // Demais linhas são descrição/texto da busca
+                if (tituloAtual) {
+                    textoAtual.push(linhaOriginal);
+                }
+            }
+
+            finalizarItemAtual();
+
+            if (itensImportados.length === 0) {
+                alert("Nenhum item válido foi encontrado no arquivo TXT.");
+                return;
+            }
+
+            const deveSubstituir = confirm(
+                "Foram encontrados " + itensImportados.length + " itens.\n\n" +
+                "Clique em OK para SUBSTITUIR a fila atual.\n" +
+                "Clique em Cancelar para ACRESCENTAR à fila atual."
+            );
+
+            if (deveSubstituir) {
+                filaBuscasAutomaticas = itensImportados;
+            } else {
+                filaBuscasAutomaticas = filaBuscasAutomaticas.concat(itensImportados);
+            }
+
+            indiceBuscaAtual = 0;
+            emBuscaAutomatica = false;
+
+            atualizarDisplayFila();
+            salvarEstadoBuscaAutomatica();
+
+            alert("✅ Importação concluída! " + itensImportados.length + " itens importados.");
+        }
+
+        function limparInformacoesBuscaAutomatica() {
+            if (!confirm("Deseja limpar todas as informações da busca automática?")) {
+                return;
+            }
+
+            filaBuscasAutomaticas = [];
+            indiceBuscaAtual = 0;
+            emBuscaAutomatica = false;
+
+            document.getElementById('tituloBusca').value = '';
+            document.getElementById('textoBusca').value = '';
+
+            localStorage.removeItem(STORAGE_KEY_BUSCA_AUTOMATICA);
+            localStorage.removeItem(STORAGE_KEY_BUSCA_AUTOMATICA_RASCUNHO);
+
+            atualizarDisplayFila();
+        }
+
 
         // ==================== FUNÇÕES DA BUSCA AUTOMÁTICA ====================
 
@@ -2790,13 +3157,17 @@
             
             filaBuscasAutomaticas.push({
                 titulo: titulo,
-                texto: textoBusca
+                texto: textoBusca,
+                criadoEm: new Date().toISOString()
             });
             
             document.getElementById('tituloBusca').value = '';
             document.getElementById('textoBusca').value = '';
+
+            localStorage.removeItem(STORAGE_KEY_BUSCA_AUTOMATICA_RASCUNHO);
             
             atualizarDisplayFila();
+            salvarEstadoBuscaAutomatica();
         }
 
         function atualizarDisplayFila() {
@@ -2845,6 +3216,7 @@
             indiceBuscaAtual = 0;
             emBuscaAutomatica = true;
             atualizarDisplayFila();
+            salvarEstadoBuscaAutomatica();
             
             await processarProximaBusca();
         }
@@ -2855,6 +3227,7 @@
                 emBuscaAutomatica = false;
                 indiceBuscaAtual = 0;
                 atualizarDisplayFila();
+                salvarEstadoBuscaAutomatica();
                 return;
             }
             
@@ -2877,6 +3250,7 @@
                 console.warn(`Texto muito curto para busca: ${busca.titulo}`);
                 indiceBuscaAtual++;
                 atualizarDisplayFila();
+                salvarEstadoBuscaAutomatica();
                 processarProximaBusca();
                 return;
             }
@@ -2912,6 +3286,7 @@
                 console.warn(`❌ Texto não encontrado para: ${busca.titulo}`);
                 indiceBuscaAtual++;
                 atualizarDisplayFila();
+                salvarEstadoBuscaAutomatica();
                 processarProximaBusca();
                 return;
             }
@@ -2956,6 +3331,7 @@
             // Próxima busca
             indiceBuscaAtual++;
             atualizarDisplayFila();
+            salvarEstadoBuscaAutomatica();
             processarProximaBusca();
         }
 
@@ -2982,15 +3358,46 @@
         }
 
         function limparFilaBuscas() {
-            if (confirm('Deseja limpar toda a fila de buscas?')) {
-                filaBuscasAutomaticas = [];
-                indiceBuscaAtual = 0;
-                emBuscaAutomatica = false;
-                atualizarDisplayFila();
-            }
+            limparInformacoesBuscaAutomatica();
         }
 
-        
+        document.getElementById('tituloBusca').addEventListener('input', salvarRascunhoBuscaAutomatica);
+        document.getElementById('textoBusca').addEventListener('input', salvarRascunhoBuscaAutomatica);
+
+        const importarBuscaAutomaticaInput = document.getElementById('importarBuscaAutomaticaInput');
+
+        if (importarBuscaAutomaticaInput) {
+            importarBuscaAutomaticaInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+
+                if (!file) return;
+
+                if (!file.name.toLowerCase().endsWith('.txt')) {
+                    alert("Por favor, selecione um arquivo .txt.");
+                    this.value = "";
+                    return;
+                }
+
+                const reader = new FileReader();
+
+                reader.onload = function(event) {
+                    try {
+                        importarBuscaAutomaticaTxt(event.target.result);
+                    } catch (erro) {
+                        console.error("Erro ao importar busca automática:", erro);
+                        alert("❌ Erro ao importar o arquivo. Verifique se o TXT está no formato correto.");
+                    }
+                };
+
+                reader.readAsText(file, 'UTF-8');
+
+                this.value = "";
+            });
+        }
+
+        carregarEstadoBuscaAutomatica();
+
+
     </script>
 </body>
 </html>
