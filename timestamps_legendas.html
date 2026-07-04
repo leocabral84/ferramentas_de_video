@@ -1191,7 +1191,7 @@
 
                 </div>
 
-                <div id="searchContainer">
+                <div id="similaritySearchSection">
                 <!-- 🔍 BUSCA POR SIMILARIDADE NAS LEGENDAS -->
                 <div class="similarity-search-wrapper" style="margin-top: 16px; margin-bottom: 16px;">
 
@@ -1960,21 +1960,114 @@
                 .trim();
         }
 
+        function romanToArabic(roman) {
+            const values = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+            let total = 0;
+            let previous = 0;
+
+            for (let i = roman.length - 1; i >= 0; i--) {
+                const current = values[roman[i].toUpperCase()];
+                if (!current) return null;
+                if (current < previous) {
+                    total -= current;
+                } else {
+                    total += current;
+                    previous = current;
+                }
+            }
+
+            return total;
+        }
+
+        function expandTitleForSearch(title) {
+            let expanded = title || '';
+
+            expanded = expanded.replace(/\b(cap(?:itulo)?|chap(?:ter)?)\.?\b/gi, 'capitulo');
+            expanded = expanded.replace(/\b([ivxlcdm]+)\b/gi, function(_, roman) {
+                const value = romanToArabic(roman);
+                return value !== null ? String(value) : roman;
+            });
+            expanded = expanded.replace(/\b(\d+)(º|ª|°)\b/g, function(_, number) {
+                const value = parseInt(number, 10);
+                if (isNaN(value)) return number;
+                const ordinais = {
+                    1: 'primeiro',
+                    2: 'segundo',
+                    3: 'terceiro',
+                    4: 'quarto',
+                    5: 'quinto',
+                    6: 'sexto',
+                    7: 'sétimo',
+                    8: 'oitavo',
+                    9: 'nono',
+                    10: 'décimo',
+                    11: 'décimo primeiro',
+                    12: 'décimo segundo',
+                    13: 'décimo terceiro',
+                    14: 'décimo quarto',
+                    15: 'décimo quinto',
+                    16: 'décimo sexto',
+                    17: 'décimo sétimo',
+                    18: 'décimo oitavo',
+                    19: 'décimo nono',
+                    20: 'vigésimo',
+                    30: 'trigésimo',
+                    40: 'quadragésimo',
+                    50: 'quinquagésimo',
+                    60: 'sexagésimo',
+                    70: 'septuagésimo',
+                    80: 'octogésimo',
+                    90: 'nonagésimo',
+                    100: 'centésimo',
+                    200: 'ducentésimo'
+                };
+                return ordinais[value] || numberToPortugueseWords(value);
+            });
+
+            return expanded.replace(/\b(\d+)\b/g, function(_, number) {
+                var value = parseInt(number, 10);
+                if (isNaN(value)) return number;
+                if (value === 1) return 'um';
+                return numberToPortugueseWords(value);
+            });
+        }
+
+        function numberToPortugueseWords(number) {
+            const unidades = ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
+            const especiais = ["dez", "onze", "doze", "treze", "catorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
+            const dezenas = ["", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
+            const centenas = ["", "cem", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
+
+            if (number < 0) return String(number);
+            if (number < 10) return unidades[number];
+            if (number < 20) return especiais[number - 10];
+            if (number < 100) {
+                var dezena = Math.floor(number / 10);
+                var unidade = number % 10;
+                return unidade === 0 ? dezenas[dezena] : dezenas[dezena] + " e " + unidades[unidade];
+            }
+            if (number === 100) return "cem";
+            if (number < 1000) {
+                var centena = Math.floor(number / 100);
+                var resto = number % 100;
+                var palavra = centenas[centena];
+                if (resto === 0) return palavra;
+                return palavra + " e " + numberToPortugueseWords(resto);
+            }
+            if (number < 1000000) {
+                var milhares = Math.floor(number / 1000);
+                var restoMilhares = number % 1000;
+                var textoMilhares = milhares === 1 ? "mil" : numberToPortugueseWords(milhares) + " mil";
+                if (restoMilhares === 0) return textoMilhares;
+                return textoMilhares + (restoMilhares < 100 ? " e " : " ") + numberToPortugueseWords(restoMilhares);
+            }
+            return String(number);
+        }
+
         // ========================================
         // ✅ BUSCA POR SIMILARIDADE OTIMIZADA (NON-BLOCKING)
         // ========================================
 
-        function normalizeText(text) {
-            return text
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .replace(/[^a-z0-9\s]/g, "")
-                .replace(/\s+/g, " ")
-                .trim();
-        }
-
-        // Nova versão assíncrona que não trava o navegador
         async function findBestSubtitleMatchAsync(inputText, minSimilarity = 0.30) {
             if (!subtitles || subtitles.length === 0) return null;
 
@@ -2647,6 +2740,8 @@
         const searchInput = document.getElementById("searchInput");
         const searchPrevBtn = document.getElementById("searchPrevBtn");
         const searchNextBtn = document.getElementById("searchNextBtn");
+        const searchSimilarityBtn = document.getElementById("searchSimilarityBtn");
+        const textSimilarityInput = document.getElementById("textSimilarityInput");
 
         let searchResults = [];
         let currentSearchIndex = -1;
@@ -2712,6 +2807,29 @@
 
             scrollToCurrentSearch();
         });
+
+        if (searchSimilarityBtn && textSimilarityInput) {
+            searchSimilarityBtn.addEventListener("click", async () => {
+                const query = textSimilarityInput.value.trim();
+                if (!query) {
+                    alert("Digite um trecho para buscar.");
+                    return;
+                }
+
+                if (!subtitles || subtitles.length === 0) {
+                    alert("Carregue uma legenda primeiro.");
+                    return;
+                }
+
+                const match = await findBestSubtitleMatchAsync(query);
+                if (!match) {
+                    alert("Nenhum trecho encontrado.");
+                    return;
+                }
+
+                goToSubtitleMatch(match);
+            });
+        }
 
         // ✅ Atalhos do teclado (↑ e ↓) para navegar na busca
         document.addEventListener("keydown", function (e) {
@@ -3296,33 +3414,51 @@
             // Agora voltar para encontrar o título
             const tituloNormalizado = normalizeText(busca.titulo);
             const tituloPalavras = tituloNormalizado.split(' ').filter(p => p.length > 0);
+
+            let tituloAlternativo = null;
+            let tituloAlternativoPalavras = null;
+            const tituloExtenso = normalizeText(expandTitleForSearch(busca.titulo));
+            if (tituloExtenso !== tituloNormalizado) {
+                tituloAlternativo = tituloExtenso;
+                tituloAlternativoPalavras = tituloAlternativo.split(' ').filter(p => p.length > 0);
+            }
             
             let timestampEncontrado = null;
+            let tituloUsado = 'original';
             const limiteVoltar = Math.max(0, melhorMatch.startIndex - 30);
             
             for (let i = melhorMatch.startIndex; i >= limiteVoltar; i--) {
-                // Verificar se as próximas N palavras formam o título
                 const proximasPalavras = subtitles.slice(i, i + tituloPalavras.length);
-                
-                if (proximasPalavras.length < tituloPalavras.length) continue;
-                
-                const textoJunto = proximasPalavras.map(p => normalizeText(p.text)).join(' ');
-                
-                // Verificar se contém o título completo
-                if (textoJunto.includes(tituloNormalizado)) {
-                    timestampEncontrado = subtitles[i].start;
-                    console.log(`✅ Título encontrado no índice ${i}`);
-                    break;
+                if (proximasPalavras.length >= tituloPalavras.length) {
+                    const textoJunto = proximasPalavras.map(p => normalizeText(p.text)).join(' ');
+                    if (textoJunto.includes(tituloNormalizado)) {
+                        timestampEncontrado = subtitles[i].start;
+                        tituloUsado = 'original';
+                        console.log(`✅ Título original encontrado no índice ${i}`);
+                        break;
+                    }
+                }
+
+                if (tituloAlternativo) {
+                    const alternativas = subtitles.slice(i, i + tituloAlternativoPalavras.length);
+                    if (alternativas.length < tituloAlternativoPalavras.length) continue;
+                    const textoAlternativo = alternativas.map(p => normalizeText(p.text)).join(' ');
+                    if (textoAlternativo.includes(tituloAlternativo)) {
+                        timestampEncontrado = subtitles[i].start;
+                        tituloUsado = 'extenso';
+                        console.log(`✅ Título alternativo (extenso) encontrado no índice ${i}`);
+                        break;
+                    }
                 }
             }
             
             if (timestampEncontrado !== null) {
                 const tempoFormatado = formatTime(timestampEncontrado);
-                adicionarMarcacaoAutomatica(busca.titulo, tempoFormatado, timestampEncontrado);
-                console.log(`✅ Adicionado: ${busca.titulo} - ${tempoFormatado}`);
+                const descricao = tituloUsado === 'extenso' ? `${busca.titulo} (busca extenso)` : busca.titulo;
+                adicionarMarcacaoAutomatica(descricao, tempoFormatado, timestampEncontrado);
+                console.log(`✅ Adicionado: ${descricao} - ${tempoFormatado}`);
             } else {
                 console.warn(`❌ Título não encontrado ao voltar: ${busca.titulo}`);
-                // Se não encontrou o título, usa o tempo do trecho encontrado
                 const tempoFormatado = formatTime(subtitles[melhorMatch.startIndex].start);
                 adicionarMarcacaoAutomatica(busca.titulo, tempoFormatado, subtitles[melhorMatch.startIndex].start);
                 console.log(`⚠️ Usando tempo do trecho: ${busca.titulo} - ${tempoFormatado}`);
