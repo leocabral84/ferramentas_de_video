@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ Corretor de Legendas - Web</title>
+    <title> Corretor de Legendas - Web</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Ícones Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
     <style>
         :root {
@@ -28,7 +30,7 @@
             background-color: var(--bg-primary);
             color: var(--text-primary);
             margin: 0;
-            padding: 0; /* Removido padding global para a navbar ficar certa */
+            padding: 0;
             height: 100vh;
             box-sizing: border-box;
             display: flex;
@@ -36,9 +38,9 @@
             overflow: hidden;
         }
 
-        /* ============ ESTILOS DA NAVBAR (Adaptados para Dark Theme) ============ */
+        /* ============ ESTILOS DA NAVBAR ============ */
         .navbar {
-            background: #1a202c !important; /* Fundo escuro da navbar */
+            background: #1a202c !important;
             padding: 0.75rem 1rem;
             border-bottom: 1px solid #333;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
@@ -101,25 +103,21 @@
             box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
         }
 
-        /* Responsivo Menu */
         @media (max-width: 991px) {
             .navbar-nav { flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 10px; }
             .nav-link { width: 100%; padding: 10px 14px; }
             .navbar-collapse.show { display: block; max-height: 400px; overflow-y: auto; }
         }
-        /* ============ FIM ESTILOS NAVBAR ============ */
 
-        /* Container Principal ajustado para não ficar atrás da navbar */
         .app-container {
             padding: 20px;
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            margin-top: 70px; /* Espaço para a navbar fixa */
+            margin-top: 70px;
         }
 
-        /* Header & Inputs Internos */
         header {
             background-color: var(--bg-secondary);
             padding: 15px;
@@ -153,6 +151,9 @@
             font-weight: bold;
             transition: 0.2s;
             font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .btn:hover { background-color: var(--accent-purple); }
@@ -160,8 +161,13 @@
         .btn-primary:hover { background-color: #69F0AE; }
         .btn-danger { background-color: var(--accent-pink); border: none; }
         .btn-danger:hover { background-color: #ff80ab; }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
 
-        /* Main Layout - Nova estrutura com Timeline */
         .main-container {
             display: flex;
             flex: 1;
@@ -169,7 +175,6 @@
             overflow: hidden;
         }
 
-        /* Left Sidebar: Edição de Legendas */
         .left-panel {
             width: 300px;
             background-color: var(--bg-card);
@@ -204,10 +209,7 @@
             border-left: 3px solid transparent;
         }
 
-        .subtitle-item:hover {
-            background-color: rgba(255,255,255,0.1);
-        }
-
+        .subtitle-item:hover { background-color: rgba(255,255,255,0.1); }
         .subtitle-item.active {
             background-color: rgba(0, 229, 255, 0.15);
             border-left-color: var(--accent-blue);
@@ -239,7 +241,6 @@
             min-height: 60px;
         }
 
-        /* Center & Right: Video + Timeline */
         .video-timeline-container {
             flex: 1;
             display: flex;
@@ -259,7 +260,6 @@
 
         video { width: 100%; height: 100%; object-fit: contain; }
 
-        /* Timeline Section */
         .timeline-container {
             background-color: var(--bg-card);
             border-radius: 10px;
@@ -309,9 +309,7 @@
             transition: 0.2s;
         }
 
-        .zoom-btn:hover {
-            background-color: var(--accent-purple);
-        }
+        .zoom-btn:hover { background-color: var(--accent-purple); }
 
         .zoom-level {
             font-size: 0.75rem;
@@ -334,7 +332,6 @@
         .timeline-blocks {
             position: relative;
             height: 100%;
-            min-width: 100%;
         }
 
         .timeline-block {
@@ -359,6 +356,25 @@
             top: 25%;
         }
 
+        /* Handles para redimensionamento */
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            cursor: ew-resize;
+            z-index: 2;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.2s;
+        }
+
+        .resize-handle:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .resize-handle.left { left: 0; border-radius: 4px 0 0 4px; }
+        .resize-handle.right { right: 0; border-radius: 0 4px 4px 0; }
+
         .timeline-block:hover {
             filter: brightness(1.2);
             box-shadow: 0 2px 12px rgba(0, 229, 255, 0.6);
@@ -369,6 +385,12 @@
             opacity: 0.8;
             transform: scale(1.05);
             box-shadow: 0 4px 16px rgba(0, 229, 255, 0.8);
+            z-index: 5;
+        }
+
+        .timeline-block.resizing {
+            opacity: 0.9;
+            z-index: 5;
         }
 
         .timeline-block.active {
@@ -398,14 +420,20 @@
             height: 20px;
             background-color: rgba(255,255,255,0.02);
             border-bottom: 1px solid #333;
+            cursor: pointer; 
         }
 
         .timeline-mark {
             text-align: center;
             flex: 1;
+            transition: background 0.2s;
+        }
+        
+        .timeline-mark:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: var(--accent-blue);
         }
 
-        /* Status Bar */
         .status-bar {
             margin-top: 10px;
             font-size: 0.8rem;
@@ -413,7 +441,6 @@
             text-align: right;
         }
 
-        /* Modal for New Project */
         .modal {
             display: none;
             position: fixed;
@@ -434,7 +461,6 @@
 </head>
 <body>
 
-<!-- Menu Bootstrap Integrado -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">⚡ Corretor SRT</a>
@@ -476,21 +502,29 @@
             <label class="btn">📝 Carregar Roteiro (.txt)
                 <input type="file" id="scriptInput" accept=".txt">
             </label>
-            <label class="btn">🎵 Carregar Vídeo/Áudio
+            <label class="btn"> Carregar Vídeo/Áudio
                 <input type="file" id="videoInput" accept="video/*,audio/*">
             </label>
         </div>
 
         <div class="input-group">
             <button class="btn btn-primary" onclick="processSubtitles()">⚡ GERAR CORREÇÃO</button>
+            
+            <!-- Botões de Undo/Redo -->
+            <button class="btn" onclick="undo()" id="btnUndo" title="Desfazer (Ctrl+Z)" disabled>
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
+            <button class="btn" onclick="redo()" id="btnRedo" title="Refazer (Ctrl+Y)" disabled>
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+
             <button class="btn" onclick="toggleEditMode()" id="editBtn">✏️ Editar Texto</button>
-            <button class="btn btn-danger" onclick="showNewModal()">🗑️ NOVO</button>
+            <button class="btn btn-danger" onclick="showNewModal()">️ NOVO</button>
             <button class="btn btn-primary" onclick="exportSRT()">💾 Exportar SRT</button>
         </div>
     </header>
 
     <div class="main-container">
-        <!-- Left Panel: Legendas Editáveis -->
         <div class="left-panel">
             <div class="panel-header">✏️ LEGENDAS</div>
             <div class="subtitle-list" id="subtitleList">
@@ -498,7 +532,6 @@
             </div>
         </div>
 
-        <!-- Center & Right: Video + Timeline -->
         <div class="video-timeline-container">
             <div class="video-wrapper">
                 <video id="mainVideo" controls>
@@ -506,13 +539,12 @@
                 </video>
             </div>
 
-            <!-- Timeline -->
             <div class="timeline-container">
                 <div class="timeline-header">
                     <div class="timeline-title">⏱️ TIMELINE</div>
                     <div style="flex: 1;"></div>
                     <div class="zoom-controls">
-                        <button class="zoom-btn" onclick="zoomOut()">🔍 -</button>
+                        <button class="zoom-btn" onclick="zoomOut()"> -</button>
                         <div class="zoom-level" id="zoomLevel">100%</div>
                         <button class="zoom-btn" onclick="zoomIn()">🔍 +</button>
                     </div>
@@ -532,7 +564,6 @@
     <div class="status-bar" id="statusBar">Pronto.</div>
 </div>
 
-<!-- Modal Novo Projeto -->
 <div id="newModal" class="modal">
     <div class="modal-content">
         <h2>Começar novo projeto?</h2>
@@ -548,6 +579,11 @@
     let correctedData = []; 
     let rawScript = "";
 
+    // Sistema de Histórico (Undo/Redo)
+    let historyStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 50;
+
     // Elementos DOM
     const videoPlayer = document.getElementById('mainVideo');
     const subtitleList = document.getElementById('subtitleList');
@@ -558,6 +594,8 @@
     const timelineRuler = document.getElementById('timelineRuler');
     const editBtn = document.getElementById('editBtn');
     const statusBar = document.getElementById('statusBar');
+    const btnUndo = document.getElementById('btnUndo');
+    const btnRedo = document.getElementById('btnRedo');
 
     let maxDuration = 0;
     let draggedBlock = null;
@@ -566,8 +604,15 @@
     const minZoom = 0.5;
     const maxZoom = 5;
 
+    // Variáveis para redimensionamento
+    let resizingBlock = null;
+    let resizeType = null; // 'start' ou 'end'
+    let resizeInitialX = 0;
+    let resizeInitialStartSec = 0;
+    let resizeInitialEndSec = 0;
 
-    // --- Funções Utilitárias (Definidas Primeiro para evitar erros) ---
+
+    // --- Funções Utilitárias ---
     function timeToSec(timeStr) {
         if(!timeStr) return 0;
         try {
@@ -584,56 +629,119 @@
         return iso.replace('.', ',');
     }
 
-    // --- Inicialização e Auto-Save ---
+    // --- Gerenciamento de Histórico ---
+    function saveState() {
+        // Clona profundamente os dados atuais
+        const currentState = JSON.parse(JSON.stringify(correctedData));
+        historyStack.push(currentState);
+        if (historyStack.length > MAX_HISTORY) historyStack.shift();
+        
+        // Limpa o stack de redo ao fazer nova ação
+        redoStack = [];
+        updateHistoryButtons();
+    }
+
+    function undo() {
+        if (historyStack.length === 0) return;
+        
+        // Salva estado atual no redo
+        redoStack.push(JSON.parse(JSON.stringify(correctedData)));
+        
+        // Restaura último estado do history
+        correctedData = historyStack.pop();
+        
+        renderCorrectedSubtitles();
+        updateHistoryButtons();
+        statusBar.innerText = "↩️ Ação desfeita.";
+    }
+
+    function redo() {
+        if (redoStack.length === 0) return;
+        
+        // Salva estado atual no history
+        historyStack.push(JSON.parse(JSON.stringify(correctedData)));
+        
+        // Restaura último estado do redo
+        correctedData = redoStack.pop();
+        
+        renderCorrectedSubtitles();
+        updateHistoryButtons();
+        statusBar.innerText = "↪️ Ação refeita.";
+    }
+
+    function updateHistoryButtons() {
+        btnUndo.disabled = historyStack.length === 0;
+        btnRedo.disabled = redoStack.length === 0;
+    }
+
+    // --- Inicialização ---
     window.onload = function() {
         loadFromStorage();
         
-        // Event Listener para Sync
         videoPlayer.addEventListener('timeupdate', updateTimeline);
-        videoPlayer.addEventListener('play', () => {
-            timelineTrack.style.cursor = 'default';
-        });
-        videoPlayer.addEventListener('pause', () => {
-            timelineTrack.style.cursor = 'crosshair';
-        });
+        videoPlayer.addEventListener('play', () => { timelineTrack.style.cursor = 'default'; });
+        videoPlayer.addEventListener('pause', () => { timelineTrack.style.cursor = 'crosshair'; });
         
-        // Clique na timeline para ir para um tempo específico
+        // Clique na área vazia da track ou nos blocos para mover o vídeo
         timelineTrack.addEventListener('click', (e) => {
             if (e.target === timelineTrack || e.target.id === 'timelineBlocks') {
-                const trackRect = timelineTrack.getBoundingClientRect();
-                const x = e.clientX - trackRect.left;
-                const pixelPerSecond = timelineTrack.offsetWidth / maxDuration / zoomLevel;
-                const newTime = x / pixelPerSecond;
-                videoPlayer.currentTime = Math.max(0, Math.min(newTime, maxDuration));
-                videoPlayer.play();
+                seekVideoByClick(e.clientX);
             }
         });
 
-        // Zoom com mouse wheel
         timelineTrack.addEventListener('wheel', (e) => {
             e.preventDefault();
-            if (e.deltaY < 0) {
-                zoomIn();
-            } else {
-                zoomOut();
-            }
+            if (e.deltaY < 0) zoomIn();
+            else zoomOut();
         }, { passive: false });
         
-        // Auto-save a cada 5 segundos se houver dados
+        // Atalhos de Teclado Globais
+        document.addEventListener('keydown', (e) => {
+            // Ignora se estiver digitando em inputs ou textareas
+            const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
+            
+            // Espaço para Play/Pause (apenas se não estiver digitando)
+            if (e.code === 'Space' && !isTyping) {
+                e.preventDefault(); // Evita scroll da página
+                if (videoPlayer.paused) videoPlayer.play();
+                else videoPlayer.pause();
+            }
+            
+            // Ctrl+Z para Desfazer
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undo();
+            }
+            
+            // Ctrl+Y ou Ctrl+Shift+Z para Refazer
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                redo();
+            }
+        });
+        
         setInterval(() => {
             if(correctedData.length > 0) saveToStorage();
         }, 5000);
     };
+
+    function seekVideoByClick(clientX) {
+        const trackRect = timelineTrack.getBoundingClientRect();
+        const xRelative = (clientX - trackRect.left) + timelineTrack.scrollLeft;
+        const pps = getPixelPerSecond();
+        const newTime = xRelative / pps;
+        videoPlayer.currentTime = Math.max(0, Math.min(newTime, maxDuration));
+        videoPlayer.play();
+    }
 
     // --- Leitura de Arquivos ---
     document.getElementById('srtInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
         const reader = new FileReader();
-        reader.onload = function(e) {
-            originalBox.innerText = e.target.result;
-            parseOriginalSRT(e.target.result);
-            statusBar.innerText = "SRT Original carregado.";
+        reader.onload = function(evt) {
+            parseOriginalSRT(evt.target.result);
+            statusBar.innerText = "✅ SRT Original carregado (" + originalBlocks.length + " blocos).";
         };
         reader.readAsText(file);
     });
@@ -642,9 +750,9 @@
         const file = e.target.files[0];
         if(!file) return;
         const reader = new FileReader();
-        reader.onload = function(e) {
-            rawScript = e.target.result;
-            statusBar.innerText = "Roteiro carregado (" + rawScript.length + " chars).";
+        reader.onload = function(evt) {
+            rawScript = evt.target.result;
+            statusBar.innerText = "✅ Roteiro carregado (" + rawScript.length + " chars).";
         };
         reader.readAsText(file);
     });
@@ -654,7 +762,7 @@
         if(!file) return;
         const url = URL.createObjectURL(file);
         videoPlayer.src = url;
-        statusBar.innerText = "Vídeo carregado: " + file.name;
+        statusBar.innerText = "✅ Vídeo carregado: " + file.name;
     });
 
     // --- Lógica de Processamento ---
@@ -665,23 +773,13 @@
 
         while (i < lines.length) {
             const indexLine = lines[i].trim();
-            if (!indexLine) {
-                i++;
-                continue;
-            }
-
-            if (!/^\d+$/.test(indexLine)) {
-                i++;
-                continue;
-            }
+            if (!indexLine) { i++; continue; }
+            if (!/^\d+$/.test(indexLine)) { i++; continue; }
 
             const timeLine = lines[i + 1] ? lines[i + 1].trim() : '';
             const parts = timeLine.split('-->');
             
-            if (parts.length !== 2) {
-                i += 2;
-                continue;
-            }
+            if (parts.length !== 2) { i += 2; continue; }
 
             const startStr = parts[0].trim();
             const endStr = parts[1].trim();
@@ -708,7 +806,6 @@
         }
 
         originalBlocks = blocks;
-        console.log("Blocos parseados:", originalBlocks.length);
     }
 
     function processSubtitles() {
@@ -717,7 +814,6 @@
             return;
         }
 
-        // Limpa o roteiro e divide em palavras
         const cleanScript = rawScript.replace(/\s+/g, ' ').trim();
         const words = cleanScript.split(' ');
         
@@ -730,7 +826,6 @@
             let blockWords = [];
             let charCount = 0;
 
-            // Distribui palavras até encher o bloco ou acabar o texto
             while(wordIdx < words.length) {
                 const w = words[wordIdx];
                 const neededSpace = charCount > 0 ? 1 : 0;
@@ -741,12 +836,9 @@
                     blockWords.push(w);
                     charCount += w.length + neededSpace;
                     wordIdx++;
-                } else {
-                    break;
-                }
+                } else { break; }
             }
 
-            // Calcula tempo por palavra (distribuição linear dentro do bloco)
             const duration = block.endSec - block.startSec;
             const step = blockWords.length > 0 ? duration / blockWords.length : 0;
             
@@ -771,7 +863,7 @@
         });
 
         renderCorrectedSubtitles();
-        statusBar.innerText = "Correção gerada com sucesso!";
+        statusBar.innerText = "✅ Correção gerada com sucesso!";
     }
 
     // --- Renderização ---
@@ -836,6 +928,12 @@
         });
     }
 
+    function getPixelPerSecond() {
+        const trackWidth = timelineTrack.offsetWidth;
+        if (maxDuration === 0) return 100;
+        return (trackWidth / maxDuration) * zoomLevel;
+    }
+
     function renderTimeline() {
         timelineBlocks.innerHTML = "";
         
@@ -844,50 +942,67 @@
         maxDuration = Math.max(...correctedData.map(b => b.endSec), 0);
         if (maxDuration === 0) maxDuration = 10;
         
-        const trackWidth = timelineTrack.offsetWidth;
-        const pixelPerSecond = (trackWidth / maxDuration) * zoomLevel;
+        const pps = getPixelPerSecond();
+        const totalContentWidth = maxDuration * pps;
+        timelineBlocks.style.width = totalContentWidth + 'px';
         
-        // Renderizar régua
-        renderRuler(maxDuration);
+        renderRuler(maxDuration, pps);
         
         correctedData.forEach((block, idx) => {
             const blockDiv = document.createElement('div');
             blockDiv.className = 'timeline-block';
             blockDiv.id = `block-${idx}`;
             blockDiv.dataset.index = idx;
-            blockDiv.dataset.originalStart = block.startSec;
-            blockDiv.dataset.originalEnd = block.endSec;
             
-            const left = block.startSec * pixelPerSecond;
-            const width = (block.endSec - block.startSec) * pixelPerSecond;
+            const left = block.startSec * pps;
+            const width = (block.endSec - block.startSec) * pps;
             
             blockDiv.style.left = left + 'px';
             blockDiv.style.width = Math.max(width, 30) + 'px';
             blockDiv.innerText = `${block.index}`;
             
-            // Drag e Drop
-            blockDiv.addEventListener('mousedown', startDrag);
-            blockDiv.addEventListener('dblclick', () => selectSubtitle(idx));
+            // Adicionar handles de redimensionamento
+            const handleLeft = document.createElement('div');
+            handleLeft.className = 'resize-handle left';
+            handleLeft.addEventListener('mousedown', (e) => startResize(e, idx, 'start'));
             
-            blockDiv.addEventListener('mouseenter', () => {
-                selectSubtitle(idx);
+            const handleRight = document.createElement('div');
+            handleRight.className = 'resize-handle right';
+            handleRight.addEventListener('mousedown', (e) => startResize(e, idx, 'end'));
+            
+            blockDiv.appendChild(handleLeft);
+            blockDiv.appendChild(handleRight);
+            
+            // Eventos originais do bloco
+            blockDiv.addEventListener('mousedown', (e) => {
+                // Só inicia drag se não clicou nos handles
+                if (!e.target.classList.contains('resize-handle')) {
+                    startDrag(e);
+                }
             });
+            blockDiv.addEventListener('dblclick', () => selectSubtitle(idx));
+            blockDiv.addEventListener('mouseenter', () => selectSubtitle(idx));
             
             timelineBlocks.appendChild(blockDiv);
         });
     }
 
-    function renderRuler(duration) {
+    function renderRuler(duration, pps) {
         timelineRuler.innerHTML = "";
         const step = Math.ceil(duration / (10 * zoomLevel));
-        const trackWidth = timelineTrack.offsetWidth;
-        const pixelPerSecond = (trackWidth / duration) * zoomLevel;
         
         for (let i = 0; i <= duration; i += step) {
             const mark = document.createElement('div');
             mark.className = 'timeline-mark';
             mark.innerText = secToTime(i).substring(0, 8);
-            mark.style.flex = `0 0 ${step * pixelPerSecond}px`;
+            mark.style.flex = `0 0 ${step * pps}px`;
+            
+            mark.onclick = (e) => {
+                e.stopPropagation();
+                videoPlayer.currentTime = i;
+                videoPlayer.play();
+            };
+            
             timelineRuler.appendChild(mark);
         }
     }
@@ -904,13 +1019,12 @@
             subItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
         
-        if (blockItem) {
-            blockItem.classList.add('active');
-        }
+        if (blockItem) blockItem.classList.add('active');
     }
 
+    // --- Drag and Drop (Mover Bloco) ---
     function startDrag(e) {
-        if (e.button !== 0) return;
+        if (e.button !== 0 || resizingBlock) return;
         
         draggedBlock = e.target.closest('.timeline-block');
         if (!draggedBlock) return;
@@ -930,8 +1044,8 @@
         
         const trackRect = timelineTrack.getBoundingClientRect();
         const x = e.clientX - trackRect.left - dragOffset;
-        const pixelPerSecond = (timelineTrack.offsetWidth / maxDuration) * zoomLevel;
-        const newStartSec = Math.max(0, x / pixelPerSecond);
+        const pps = getPixelPerSecond();
+        const newStartSec = Math.max(0, x / pps);
         
         draggedBlock.style.left = Math.max(0, x) + 'px';
     }
@@ -943,8 +1057,8 @@
         const trackRect = timelineTrack.getBoundingClientRect();
         const blockRect = draggedBlock.getBoundingClientRect();
         const x = blockRect.left - trackRect.left;
-        const pixelPerSecond = (timelineTrack.offsetWidth / maxDuration) * zoomLevel;
-        const newStartSec = Math.max(0, x / pixelPerSecond);
+        const pps = getPixelPerSecond();
+        const newStartSec = Math.max(0, x / pps);
         
         const originalDuration = correctedData[idx].endSec - correctedData[idx].startSec;
         correctedData[idx].startSec = newStartSec;
@@ -952,7 +1066,6 @@
         correctedData[idx].startStr = secToTime(newStartSec);
         correctedData[idx].endStr = secToTime(correctedData[idx].endSec);
         
-        // Recalcular tempos das palavras
         reCalculateWordsTime(idx);
         
         draggedBlock.classList.remove('dragging');
@@ -961,6 +1074,107 @@
         document.removeEventListener('mousemove', moveDrag);
         document.removeEventListener('mouseup', stopDrag);
         
+        // Salva estado no histórico após mover
+        saveState();
+        renderTimeline();
+        renderSubtitleList();
+    }
+
+    // --- Redimensionamento (Resize) ---
+    function startResize(e, idx, type) {
+        e.stopPropagation(); // Evita iniciar drag
+        e.preventDefault();
+        
+        resizingBlock = idx;
+        resizeType = type;
+        resizeInitialX = e.clientX;
+        resizeInitialStartSec = correctedData[idx].startSec;
+        resizeInitialEndSec = correctedData[idx].endSec;
+        
+        const blockDiv = document.getElementById(`block-${idx}`);
+        blockDiv.classList.add('resizing');
+        
+        document.addEventListener('mousemove', moveResize);
+        document.addEventListener('mouseup', stopResize);
+    }
+
+    function moveResize(e) {
+        if (resizingBlock === null) return;
+        
+        const pps = getPixelPerSecond();
+        const deltaX = e.clientX - resizeInitialX;
+        const deltaSec = deltaX / pps;
+        
+        const blockDiv = document.getElementById(`block-${resizingBlock}`);
+        
+        if (resizeType === 'start') {
+            // Ajustar início
+            let newStart = resizeInitialStartSec + deltaSec;
+            // Não pode passar do fim
+            if (newStart >= correctedData[resizingBlock].endSec - 0.1) {
+                newStart = correctedData[resizingBlock].endSec - 0.1;
+            }
+            if (newStart < 0) newStart = 0;
+            
+            const left = newStart * pps;
+            const width = (correctedData[resizingBlock].endSec - newStart) * pps;
+            
+            blockDiv.style.left = left + 'px';
+            blockDiv.style.width = Math.max(width, 10) + 'px';
+        } else if (resizeType === 'end') {
+            // Ajustar fim
+            let newEnd = resizeInitialEndSec + deltaSec;
+            // Não pode passar do início
+            if (newEnd <= correctedData[resizingBlock].startSec + 0.1) {
+                newEnd = correctedData[resizingBlock].startSec + 0.1;
+            }
+            
+            const left = correctedData[resizingBlock].startSec * pps;
+            const width = (newEnd - correctedData[resizingBlock].startSec) * pps;
+            
+            blockDiv.style.left = left + 'px';
+            blockDiv.style.width = Math.max(width, 10) + 'px';
+        }
+    }
+
+    function stopResize(e) {
+        if (resizingBlock === null) return;
+        
+        const pps = getPixelPerSecond();
+        const deltaX = e.clientX - resizeInitialX;
+        const deltaSec = deltaX / pps;
+        
+        const idx = resizingBlock;
+        
+        if (resizeType === 'start') {
+            let newStart = resizeInitialStartSec + deltaSec;
+            if (newStart >= correctedData[idx].endSec - 0.1) newStart = correctedData[idx].endSec - 0.1;
+            if (newStart < 0) newStart = 0;
+            
+            correctedData[idx].startSec = newStart;
+            correctedData[idx].startStr = secToTime(newStart);
+        } else if (resizeType === 'end') {
+            let newEnd = resizeInitialEndSec + deltaSec;
+            if (newEnd <= correctedData[idx].startSec + 0.1) newEnd = correctedData[idx].startSec + 0.1;
+            
+            correctedData[idx].endSec = newEnd;
+            correctedData[idx].endStr = secToTime(newEnd);
+        }
+        
+        // Recalcular palavras e atualizar lista lateral
+        reCalculateWordsTime(idx);
+        
+        const blockDiv = document.getElementById(`block-${idx}`);
+        if (blockDiv) blockDiv.classList.remove('resizing');
+        
+        resizingBlock = null;
+        resizeType = null;
+        
+        document.removeEventListener('mousemove', moveResize);
+        document.removeEventListener('mouseup', stopResize);
+        
+        // Salva estado no histórico após redimensionar
+        saveState();
         renderTimeline();
         renderSubtitleList();
     }
@@ -978,19 +1192,15 @@
 
     function updateTimeline() {
         const currentTime = videoPlayer.currentTime;
-        const trackWidth = timelineTrack.offsetWidth;
-        const pixelPerSecond = (trackWidth / maxDuration) * zoomLevel;
+        const pps = getPixelPerSecond();
         
-        const playheadPos = currentTime * pixelPerSecond;
+        const playheadPos = currentTime * pps;
         timelinePlayhead.style.left = playheadPos + 'px';
         
         timelineTime.innerText = secToTime(currentTime);
         
-        // Encontra bloco ativo
         const activeIdx = correctedData.findIndex(b => currentTime >= b.startSec && currentTime <= b.endSec);
-        if (activeIdx !== -1) {
-            selectSubtitle(activeIdx);
-        }
+        if (activeIdx !== -1) selectSubtitle(activeIdx);
     }
 
     function zoomIn() {
@@ -1017,13 +1227,15 @@
     // --- Edição ---
     function toggleEditMode() {
         videoPlayer.pause();
-        statusBar.innerText = "Modo edição ativo - clique em uma legenda para editar";
+        statusBar.innerText = "Modo edição ativo - clique duplo em uma legenda para editar";
     }
 
     function updateBlockText(index, newText) {
+        // Salva estado ANTES de alterar para permitir undo
+        saveState();
+        
         correctedData[index].text = newText;
         
-        // Recalcular palavras
         const words = newText.trim().split(/\s+/).filter(w => w.length > 0);
         const block = correctedData[index];
         const duration = block.endSec - block.startSec;
@@ -1060,10 +1272,7 @@
     }
 
     function saveToStorage() {
-        const data = {
-            correctedData: correctedData
-        };
-        localStorage.setItem('subtitleProject', JSON.stringify(data));
+        localStorage.setItem('subtitleProject', JSON.stringify({ correctedData }));
     }
 
     function loadFromStorage() {
@@ -1074,13 +1283,13 @@
                 correctedData = data.correctedData;
                 if(correctedData.length > 0) {
                     renderCorrectedSubtitles();
-                    statusBar.innerText = "Projeto anterior recuperado automaticamente.";
+                    statusBar.innerText = "Projeto anterior recuperado.";
                 }
             } catch(e) { console.error("Erro ao carregar save", e); }
         }
+        updateHistoryButtons();
     }
 
-    // --- Modal Novo ---
     function showNewModal() { document.getElementById('newModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('newModal').style.display = 'none'; }
     function resetApp() {
@@ -1088,8 +1297,6 @@
         location.reload();
     }
 
-    // Toggle do menu mobile (Bootstrap JS logic manual se necessário, mas o data-bs-toggle cuida disso)
-    // Adicionando script extra apenas para garantir comportamento suave
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', () => {
             const collapse = document.getElementById('navbarNav');
