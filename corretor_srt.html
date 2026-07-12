@@ -161,7 +161,7 @@
         .btn-danger { background-color: var(--accent-pink); border: none; }
         .btn-danger:hover { background-color: #ff80ab; }
 
-        /* Main Layout */
+        /* Main Layout - Nova estrutura com Timeline */
         .main-container {
             display: flex;
             flex: 1;
@@ -169,13 +169,83 @@
             overflow: hidden;
         }
 
-        /* Left Column: Video & Original */
-        .left-col {
+        /* Left Sidebar: Edição de Legendas */
+        .left-panel {
+            width: 300px;
+            background-color: var(--bg-card);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 10px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid #333;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        .subtitle-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .subtitle-item {
+            background-color: rgba(255,255,255,0.05);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .subtitle-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .subtitle-item.active {
+            background-color: rgba(0, 229, 255, 0.15);
+            border-left-color: var(--accent-blue);
+        }
+
+        .subtitle-item-time {
+            font-size: 0.7rem;
+            color: var(--accent-purple);
+            margin-bottom: 5px;
+        }
+
+        .subtitle-item-text {
+            font-size: 0.85rem;
+            line-height: 1.3;
+            color: var(--text-primary);
+        }
+
+        .subtitle-item-edit {
+            width: 100%;
+            background-color: #2a2a40;
+            border: 1px solid var(--accent-blue);
+            color: var(--text-primary);
+            padding: 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Center & Right: Video + Timeline */
+        .video-timeline-container {
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            min-width: 300px;
+            overflow: hidden;
         }
 
         .video-wrapper {
@@ -184,102 +254,155 @@
             overflow: hidden;
             position: relative;
             aspect-ratio: 16/9;
+            border: 1px solid #333;
         }
 
         video { width: 100%; height: 100%; object-fit: contain; }
 
-        .original-srt-box {
-            flex: 1;
+        /* Timeline Section */
+        .timeline-container {
             background-color: var(--bg-card);
             border-radius: 10px;
-            padding: 10px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
             border: 1px solid #333;
-        }
-
-        /* Right Column: Corrected Subtitles */
-        .right-col {
-            flex: 2;
-            background-color: var(--bg-card);
-            border-radius: 10px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            border: 1px solid var(--accent-blue);
-            position: relative;
+            gap: 10px;
+            min-height: 200px;
         }
 
-        .toolbar {
-            padding: 10px;
-            background-color: var(--bg-secondary);
+        .timeline-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #333;
+            padding: 0 5px;
+            gap: 10px;
         }
 
-        .subtitle-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            scroll-behavior: smooth;
-            position: relative;
+        .timeline-title {
+            font-weight: bold;
+            color: var(--accent-green);
+            font-size: 0.9rem;
         }
 
-        /* Subtitle Blocks */
-        .sub-block {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: rgba(255,255,255,0.05);
+        .timeline-time {
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            font-family: monospace;
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .zoom-btn {
+            background-color: rgba(255,255,255,0.1);
+            border: 1px solid var(--accent-purple);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
             transition: 0.2s;
         }
 
-        .sub-block.active {
-            background-color: rgba(0, 229, 255, 0.1);
-            border-left: 3px solid var(--accent-blue);
+        .zoom-btn:hover {
+            background-color: var(--accent-purple);
         }
 
-        .sub-time {
+        .zoom-level {
             font-size: 0.75rem;
-            color: var(--accent-purple);
-            margin-bottom: 5px;
-            cursor: pointer;
+            color: var(--text-secondary);
+            min-width: 40px;
+            text-align: center;
         }
 
-        .sub-text {
-            font-size: 1rem;
-            line-height: 1.5;
-            outline: none;
+        .timeline-track {
+            background-color: rgba(255,255,255,0.02);
+            border: 1px solid #333;
+            border-radius: 5px;
+            position: relative;
+            height: 150px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            cursor: crosshair;
         }
 
-        /* Edit Mode Styles */
-        .editing .sub-text {
-            background-color: #2a2a40;
+        .timeline-blocks {
+            position: relative;
+            height: 100%;
+            min-width: 100%;
+        }
+
+        .timeline-block {
+            position: absolute;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: 2px solid var(--accent-blue);
+            border-radius: 4px;
             padding: 5px;
-            border-radius: 3px;
-            border: 1px dashed #555;
-        }
-
-        /* Word Highlighting */
-        .word {
-            display: inline-block;
-            padding: 0 2px;
-            border-radius: 3px;
-            cursor: pointer;
+            cursor: grab;
             transition: 0.1s;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            user-select: none;
+            box-shadow: 0 2px 8px rgba(0, 229, 255, 0.3);
+            height: 60px;
+            top: 25%;
         }
 
-        .word:hover { background-color: rgba(255,255,255,0.1); }
+        .timeline-block:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 2px 12px rgba(0, 229, 255, 0.6);
+        }
 
-        .word.highlighted {
-            background-color: var(--highlight-bg);
-            color: var(--highlight-text);
-            transform: scale(1.1);
-            font-weight: bold;
-            box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+        .timeline-block.dragging {
+            cursor: grabbing;
+            opacity: 0.8;
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0, 229, 255, 0.8);
+        }
+
+        .timeline-block.active {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            border-color: var(--accent-green);
+        }
+
+        .timeline-playhead {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background-color: var(--accent-pink);
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(255, 64, 129, 0.8);
+        }
+
+        .timeline-ruler {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            height: 20px;
+            background-color: rgba(255,255,255,0.02);
+            border-bottom: 1px solid #333;
+        }
+
+        .timeline-mark {
+            text-align: center;
+            flex: 1;
         }
 
         /* Status Bar */
@@ -367,26 +490,41 @@
     </header>
 
     <div class="main-container">
-        <!-- Coluna Esquerda -->
-        <div class="left-col">
+        <!-- Left Panel: Legendas Editáveis -->
+        <div class="left-panel">
+            <div class="panel-header">✏️ LEGENDAS</div>
+            <div class="subtitle-list" id="subtitleList">
+                <p style="text-align:center; opacity:0.5; padding: 20px 0;">Carregue o SRT para editar</p>
+            </div>
+        </div>
+
+        <!-- Center & Right: Video + Timeline -->
+        <div class="video-timeline-container">
             <div class="video-wrapper">
                 <video id="mainVideo" controls>
                     Seu navegador não suporta vídeo.
                 </video>
             </div>
-            <div class="original-srt-box" id="originalBox">
-                <p style="text-align:center; opacity:0.5;">A legenda original aparecerá aqui...</p>
-            </div>
-        </div>
 
-        <!-- Coluna Direita (Editor) -->
-        <div class="right-col">
-            <div class="toolbar">
-                <span style="color:var(--accent-blue); font-weight:bold;">✅ LEGENDA CORRIGIDA</span>
-                <span id="modeIndicator" style="font-size:0.8rem; color:var(--accent-pink);">Modo: Leitura/Sync</span>
-            </div>
-            <div class="subtitle-area" id="correctedBox">
-                <p style="text-align:center; opacity:0.5;">Carregue os arquivos e clique em Gerar Correção.</p>
+            <!-- Timeline -->
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <div class="timeline-title">⏱️ TIMELINE</div>
+                    <div style="flex: 1;"></div>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" onclick="zoomOut()">🔍 -</button>
+                        <div class="zoom-level" id="zoomLevel">100%</div>
+                        <button class="zoom-btn" onclick="zoomIn()">🔍 +</button>
+                    </div>
+                    <div class="timeline-time" id="timelineTime">00:00:00</div>
+                </div>
+
+                <div class="timeline-ruler" id="timelineRuler"></div>
+
+                <div class="timeline-track" id="timelineTrack">
+                    <div class="timeline-playhead" id="timelinePlayhead"></div>
+                    <div class="timeline-blocks" id="timelineBlocks"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -408,16 +546,26 @@
     // --- Variáveis Globais ---
     let originalBlocks = [];
     let correctedData = []; 
-    let isEditing = false;
     let rawScript = "";
 
     // Elementos DOM
     const videoPlayer = document.getElementById('mainVideo');
-    const correctedBox = document.getElementById('correctedBox');
-    const originalBox = document.getElementById('originalBox');
+    const subtitleList = document.getElementById('subtitleList');
+    const timelineBlocks = document.getElementById('timelineBlocks');
+    const timelineTrack = document.getElementById('timelineTrack');
+    const timelinePlayhead = document.getElementById('timelinePlayhead');
+    const timelineTime = document.getElementById('timelineTime');
+    const timelineRuler = document.getElementById('timelineRuler');
     const editBtn = document.getElementById('editBtn');
-    const modeIndicator = document.getElementById('modeIndicator');
     const statusBar = document.getElementById('statusBar');
+
+    let maxDuration = 0;
+    let draggedBlock = null;
+    let dragOffset = 0;
+    let zoomLevel = 1;
+    const minZoom = 0.5;
+    const maxZoom = 5;
+
 
     // --- Funções Utilitárias (Definidas Primeiro para evitar erros) ---
     function timeToSec(timeStr) {
@@ -441,7 +589,35 @@
         loadFromStorage();
         
         // Event Listener para Sync
-        videoPlayer.addEventListener('timeupdate', syncHighlight);
+        videoPlayer.addEventListener('timeupdate', updateTimeline);
+        videoPlayer.addEventListener('play', () => {
+            timelineTrack.style.cursor = 'default';
+        });
+        videoPlayer.addEventListener('pause', () => {
+            timelineTrack.style.cursor = 'crosshair';
+        });
+        
+        // Clique na timeline para ir para um tempo específico
+        timelineTrack.addEventListener('click', (e) => {
+            if (e.target === timelineTrack || e.target.id === 'timelineBlocks') {
+                const trackRect = timelineTrack.getBoundingClientRect();
+                const x = e.clientX - trackRect.left;
+                const pixelPerSecond = timelineTrack.offsetWidth / maxDuration / zoomLevel;
+                const newTime = x / pixelPerSecond;
+                videoPlayer.currentTime = Math.max(0, Math.min(newTime, maxDuration));
+                videoPlayer.play();
+            }
+        });
+
+        // Zoom com mouse wheel
+        timelineTrack.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                zoomIn();
+            } else {
+                zoomOut();
+            }
+        }, { passive: false });
         
         // Auto-save a cada 5 segundos se houver dados
         setInterval(() => {
@@ -600,129 +776,267 @@
 
     // --- Renderização ---
     function renderCorrectedSubtitles() {
-        correctedBox.innerHTML = "";
-        
-        correctedData.forEach((block, blockIdx) => {
-            const div = document.createElement('div');
-            div.className = 'sub-block';
-            div.id = `block-${blockIdx}`;
-            
-            // Tempo clicável
-            const timeDiv = document.createElement('div');
-            timeDiv.className = 'sub-time';
-            timeDiv.innerText = `${block.index} | ${block.startStr} --> ${block.endStr}`;
-            timeDiv.onclick = () => { videoPlayer.currentTime = block.startSec; videoPlayer.play(); };
-            
-            // Container do texto
-            const textDiv = document.createElement('div');
-            textDiv.className = 'sub-text';
-            textDiv.contentEditable = isEditing;
-            
-            // Se estivermos editando, mostra texto puro. Se não, mostra spans de palavras.
-            if(isEditing) {
-                textDiv.innerText = block.text;
-                // Salva alterações ao sair do foco
-                textDiv.onblur = function() { updateBlockText(blockIdx, this.innerText); };
-            } else {
-                block.words.forEach(w => {
-                    const span = document.createElement('span');
-                    span.className = 'word';
-                    span.innerText = w.text + " ";
-                    span.dataset.start = w.start;
-                    span.dataset.end = w.end;
-                    span.onclick = function() { 
-                        videoPlayer.currentTime = w.start; 
-                        videoPlayer.play();
-                    };
-                    textDiv.appendChild(span);
-                });
-            }
+        renderSubtitleList();
+        renderTimeline();
+    }
 
-            div.appendChild(timeDiv);
-            div.appendChild(textDiv);
-            correctedBox.appendChild(div);
+    function renderSubtitleList() {
+        subtitleList.innerHTML = "";
+        
+        correctedData.forEach((block, idx) => {
+            const item = document.createElement('div');
+            item.className = 'subtitle-item';
+            item.id = `sub-item-${idx}`;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'subtitle-item-time';
+            timeDiv.innerText = `${block.startStr} → ${block.endStr}`;
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = 'subtitle-item-text';
+            textDiv.innerText = block.text;
+            
+            const editArea = document.createElement('textarea');
+            editArea.className = 'subtitle-item-edit';
+            editArea.value = block.text;
+            editArea.style.display = 'none';
+            editArea.placeholder = 'Edite o texto aqui...';
+            
+            editArea.addEventListener('blur', () => {
+                updateBlockText(idx, editArea.value);
+                editArea.style.display = 'none';
+                textDiv.style.display = 'block';
+            });
+            
+            editArea.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    editArea.style.display = 'none';
+                    textDiv.style.display = 'block';
+                }
+            });
+            
+            textDiv.addEventListener('dblclick', () => {
+                textDiv.style.display = 'none';
+                editArea.style.display = 'block';
+                editArea.focus();
+            });
+            
+            item.appendChild(timeDiv);
+            item.appendChild(textDiv);
+            item.appendChild(editArea);
+            
+            item.onclick = (e) => {
+                if (e.target !== editArea && e.target !== textDiv) {
+                    selectSubtitle(idx);
+                    videoPlayer.currentTime = block.startSec;
+                }
+            };
+            
+            subtitleList.appendChild(item);
         });
+    }
+
+    function renderTimeline() {
+        timelineBlocks.innerHTML = "";
+        
+        if (correctedData.length === 0) return;
+        
+        maxDuration = Math.max(...correctedData.map(b => b.endSec), 0);
+        if (maxDuration === 0) maxDuration = 10;
+        
+        const trackWidth = timelineTrack.offsetWidth;
+        const pixelPerSecond = (trackWidth / maxDuration) * zoomLevel;
+        
+        // Renderizar régua
+        renderRuler(maxDuration);
+        
+        correctedData.forEach((block, idx) => {
+            const blockDiv = document.createElement('div');
+            blockDiv.className = 'timeline-block';
+            blockDiv.id = `block-${idx}`;
+            blockDiv.dataset.index = idx;
+            blockDiv.dataset.originalStart = block.startSec;
+            blockDiv.dataset.originalEnd = block.endSec;
+            
+            const left = block.startSec * pixelPerSecond;
+            const width = (block.endSec - block.startSec) * pixelPerSecond;
+            
+            blockDiv.style.left = left + 'px';
+            blockDiv.style.width = Math.max(width, 30) + 'px';
+            blockDiv.innerText = `${block.index}`;
+            
+            // Drag e Drop
+            blockDiv.addEventListener('mousedown', startDrag);
+            blockDiv.addEventListener('dblclick', () => selectSubtitle(idx));
+            
+            blockDiv.addEventListener('mouseenter', () => {
+                selectSubtitle(idx);
+            });
+            
+            timelineBlocks.appendChild(blockDiv);
+        });
+    }
+
+    function renderRuler(duration) {
+        timelineRuler.innerHTML = "";
+        const step = Math.ceil(duration / (10 * zoomLevel));
+        const trackWidth = timelineTrack.offsetWidth;
+        const pixelPerSecond = (trackWidth / duration) * zoomLevel;
+        
+        for (let i = 0; i <= duration; i += step) {
+            const mark = document.createElement('div');
+            mark.className = 'timeline-mark';
+            mark.innerText = secToTime(i).substring(0, 8);
+            mark.style.flex = `0 0 ${step * pixelPerSecond}px`;
+            timelineRuler.appendChild(mark);
+        }
+    }
+
+    function selectSubtitle(idx) {
+        document.querySelectorAll('.subtitle-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.timeline-block').forEach(el => el.classList.remove('active'));
+        
+        const subItem = document.getElementById(`sub-item-${idx}`);
+        const blockItem = document.getElementById(`block-${idx}`);
+        
+        if (subItem) {
+            subItem.classList.add('active');
+            subItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        if (blockItem) {
+            blockItem.classList.add('active');
+        }
+    }
+
+    function startDrag(e) {
+        if (e.button !== 0) return;
+        
+        draggedBlock = e.target.closest('.timeline-block');
+        if (!draggedBlock) return;
+        
+        const trackRect = timelineTrack.getBoundingClientRect();
+        const blockRect = draggedBlock.getBoundingClientRect();
+        
+        dragOffset = e.clientX - blockRect.left;
+        draggedBlock.classList.add('dragging');
+        
+        document.addEventListener('mousemove', moveDrag);
+        document.addEventListener('mouseup', stopDrag);
+    }
+
+    function moveDrag(e) {
+        if (!draggedBlock) return;
+        
+        const trackRect = timelineTrack.getBoundingClientRect();
+        const x = e.clientX - trackRect.left - dragOffset;
+        const pixelPerSecond = (timelineTrack.offsetWidth / maxDuration) * zoomLevel;
+        const newStartSec = Math.max(0, x / pixelPerSecond);
+        
+        draggedBlock.style.left = Math.max(0, x) + 'px';
+    }
+
+    function stopDrag(e) {
+        if (!draggedBlock) return;
+        
+        const idx = parseInt(draggedBlock.dataset.index);
+        const trackRect = timelineTrack.getBoundingClientRect();
+        const blockRect = draggedBlock.getBoundingClientRect();
+        const x = blockRect.left - trackRect.left;
+        const pixelPerSecond = (timelineTrack.offsetWidth / maxDuration) * zoomLevel;
+        const newStartSec = Math.max(0, x / pixelPerSecond);
+        
+        const originalDuration = correctedData[idx].endSec - correctedData[idx].startSec;
+        correctedData[idx].startSec = newStartSec;
+        correctedData[idx].endSec = newStartSec + originalDuration;
+        correctedData[idx].startStr = secToTime(newStartSec);
+        correctedData[idx].endStr = secToTime(correctedData[idx].endSec);
+        
+        // Recalcular tempos das palavras
+        reCalculateWordsTime(idx);
+        
+        draggedBlock.classList.remove('dragging');
+        draggedBlock = null;
+        
+        document.removeEventListener('mousemove', moveDrag);
+        document.removeEventListener('mouseup', stopDrag);
+        
+        renderTimeline();
+        renderSubtitleList();
+    }
+
+    function reCalculateWordsTime(blockIdx) {
+        const block = correctedData[blockIdx];
+        const duration = block.endSec - block.startSec;
+        const step = block.words.length > 0 ? duration / block.words.length : 0;
+        
+        block.words.forEach((w, i) => {
+            w.start = block.startSec + (i * step);
+            w.end = block.startSec + ((i + 1) * step);
+        });
+    }
+
+    function updateTimeline() {
+        const currentTime = videoPlayer.currentTime;
+        const trackWidth = timelineTrack.offsetWidth;
+        const pixelPerSecond = (trackWidth / maxDuration) * zoomLevel;
+        
+        const playheadPos = currentTime * pixelPerSecond;
+        timelinePlayhead.style.left = playheadPos + 'px';
+        
+        timelineTime.innerText = secToTime(currentTime);
+        
+        // Encontra bloco ativo
+        const activeIdx = correctedData.findIndex(b => currentTime >= b.startSec && currentTime <= b.endSec);
+        if (activeIdx !== -1) {
+            selectSubtitle(activeIdx);
+        }
+    }
+
+    function zoomIn() {
+        if (zoomLevel < maxZoom) {
+            zoomLevel = Math.min(zoomLevel + 0.2, maxZoom);
+            updateZoomDisplay();
+            renderTimeline();
+        }
+    }
+
+    function zoomOut() {
+        if (zoomLevel > minZoom) {
+            zoomLevel = Math.max(zoomLevel - 0.2, minZoom);
+            updateZoomDisplay();
+            renderTimeline();
+        }
+    }
+
+    function updateZoomDisplay() {
+        const zoomPercent = Math.round(zoomLevel * 100);
+        document.getElementById('zoomLevel').innerText = zoomPercent + '%';
     }
 
     // --- Edição ---
     function toggleEditMode() {
-        isEditing = !isEditing;
-        
-        if(isEditing) {
-            videoPlayer.pause(); // Para o áudio ao editar
-            editBtn.innerText = "💾 Salvar Edição";
-            editBtn.style.backgroundColor = "var(--accent-green)";
-            modeIndicator.innerText = "Modo: Edição (Áudio Pausado)";
-            correctedBox.classList.add('editing');
-        } else {
-            editBtn.innerText = "✏️ Editar Texto";
-            editBtn.style.backgroundColor = "";
-            modeIndicator.innerText = "Modo: Leitura/Sync";
-            correctedBox.classList.remove('editing');
-            // Re-processa as palavras baseadas no texto editado
-            reCalculateTimes();
-        }
-        renderCorrectedSubtitles();
+        videoPlayer.pause();
+        statusBar.innerText = "Modo edição ativo - clique em uma legenda para editar";
     }
 
     function updateBlockText(index, newText) {
         correctedData[index].text = newText;
-    }
-
-    function reCalculateTimes() {
-        // Reconstrói a estrutura de palavras baseada no texto editado manualmente
-        correctedData.forEach(block => {
-            const words = block.text.trim().split(/\s+/).filter(w => w.length > 0);
-            const duration = block.endSec - block.startSec;
-            const step = words.length > 0 ? duration / words.length : 0;
-            
-            block.words = words.map((w, i) => ({
-                text: w,
-                start: block.startSec + (i * step),
-                end: block.startSec + ((i + 1) * step)
-            }));
-        });
-        renderCorrectedSubtitles();
-    }
-
-    // --- Sync e Highlight ---
-    function syncHighlight() {
-        if(isEditing) return; // Não destaca enquanto edita
-
-        const currentTime = videoPlayer.currentTime;
         
-        // Remove highlights antigos
-        document.querySelectorAll('.word.highlighted').forEach(el => el.classList.remove('highlighted'));
-        document.querySelectorAll('.sub-block.active').forEach(el => el.classList.remove('active'));
-
-        // Encontra bloco atual
-        const currentBlockIndex = correctedData.findIndex(b => currentTime >= b.startSec && currentTime <= b.endSec);
+        // Recalcular palavras
+        const words = newText.trim().split(/\s+/).filter(w => w.length > 0);
+        const block = correctedData[index];
+        const duration = block.endSec - block.startSec;
+        const step = words.length > 0 ? duration / words.length : 0;
         
-        if(currentBlockIndex !== -1) {
-            const blockData = correctedData[currentBlockIndex];
-            const blockEl = document.getElementById(`block-${currentBlockIndex}`);
-            
-            if(blockEl) {
-                blockEl.classList.add('active');
-                // Scroll suave para manter o bloco visível
-                blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                // Encontra palavra atual
-                const currentWord = blockData.words.find(w => currentTime >= w.start && currentTime <= w.end);
-                if(currentWord) {
-                    // Busca o span correspondente no DOM
-                    const textDiv = blockEl.querySelector('.sub-text');
-                    const spans = textDiv.querySelectorAll('span');
-                    
-                    // Encontrar o span que tem o dataset.start correto
-                    spans.forEach(span => {
-                        if(Math.abs(parseFloat(span.dataset.start) - currentWord.start) < 0.01) {
-                            span.classList.add('highlighted');
-                        }
-                    });
-                }
-            }
-        }
+        block.words = words.map((w, i) => ({
+            text: w,
+            start: block.startSec + (i * step),
+            end: block.startSec + ((i + 1) * step)
+        }));
+        
+        renderSubtitleList();
+        saveToStorage();
     }
 
     // --- Exportar e Persistência ---
@@ -747,8 +1061,7 @@
 
     function saveToStorage() {
         const data = {
-            correctedData: correctedData,
-            isEditing: isEditing
+            correctedData: correctedData
         };
         localStorage.setItem('subtitleProject', JSON.stringify(data));
     }
