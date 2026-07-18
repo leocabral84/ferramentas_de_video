@@ -702,10 +702,17 @@
             justify-content: space-between;
             align-items: center;
             gap: 10px;
+            cursor: pointer;
         }
 
         .timestamp-item:hover {
             background: #334155;
+        }
+
+        .timestamp-item.active {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+            background: #262f44;
         }
 
         .timestamp-info {
@@ -1467,6 +1474,7 @@
         
         var subtitles = [];
         var timestamps = [];
+        var activeTimestampId = null;
         var currentStartTime = 0;
         var isPlaying = false;
         var currentVideoSource = 'pc';
@@ -2353,6 +2361,12 @@
 
             timestampList.innerHTML = html;
 
+            document.querySelectorAll('.timestamp-item').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    setActiveTimestamp(this.dataset.id);
+                });
+            });
+
             document.querySelectorAll('[data-action="play-timestamp"]').forEach(function(el) {
                 el.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -2367,6 +2381,7 @@
                     e.preventDefault();
                     e.stopPropagation();
 
+                    setActiveTimestamp(this.dataset.id);
                     editTimestamp(this.dataset.id);
                 });
             });
@@ -2378,6 +2393,23 @@
 
                     deleteTimestamp(this.dataset.id);
                 });
+            });
+
+            updateActiveTimestampClasses();
+        }
+
+        function setActiveTimestamp(id) {
+            activeTimestampId = String(id);
+            updateActiveTimestampClasses();
+        }
+
+        function updateActiveTimestampClasses() {
+            document.querySelectorAll('.timestamp-item').forEach(function(item) {
+                if (String(item.dataset.id) === String(activeTimestampId)) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
             });
         }
 
@@ -2526,6 +2558,7 @@
                 
                 timestamps.sort(function(a, b) { return a.seconds - b.seconds; });
                 
+                setActiveTimestamp(id);
                 renderTimestamps();
                 renderTimelineMarkers();
                 saveTimestamps();
