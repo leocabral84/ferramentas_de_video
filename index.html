@@ -10,6 +10,7 @@
         body {
             font-family: Arial, sans-serif;
             margin-top: 20px;
+            padding-top: 70px;
         }
         .container {
             width: 80%;
@@ -144,7 +145,7 @@
 <!-- Menu Bootstrap Corrigido -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Video Timestamp Editor</a>
+            <a class="navbar-brand" href="#">Timestamp Editor</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -165,6 +166,7 @@
                     <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
                     <li class="nav-item"><a class="nav-link" href="padrao_do_audio.html">Padrão do Audio</a></li>
                     <li class="nav-item"><a class="nav-link" href="corretor_srt.html">Corretor SRT</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="formatador-youtube.html">Formatador YouTube</a></li>
                 </ul>
             </div>
         </div>
@@ -474,6 +476,16 @@ if (synth.onvoiceschanged !== undefined) {
     synth.onvoiceschanged = loadVoices;
 }
 
+// Ajusta o espaço do topo da página para o menu fixo nunca sobrepor o conteúdo
+function ajustarEspacoMenu() {
+    const nav = document.querySelector('.navbar.fixed-top');
+    if (nav) {
+        document.body.style.paddingTop = nav.offsetHeight + 'px';
+    }
+}
+window.addEventListener('load', ajustarEspacoMenu);
+window.addEventListener('resize', ajustarEspacoMenu);
+
 // Toggle do menu mobile
 document.querySelector('.navbar-toggler')?.addEventListener('click', function() {
     const collapse = document.getElementById('navbarNav');
@@ -486,6 +498,7 @@ document.querySelector('.navbar-toggler')?.addEventListener('click', function() 
         collapse.classList.remove('show');
         collapse.style.maxHeight = null;
     }
+    setTimeout(ajustarEspacoMenu, 310);
 });
 
 // Fechar menu ao clicar em um link (mobile)
@@ -498,6 +511,7 @@ document.querySelectorAll('.nav-link').forEach(link => {
             collapse.style.maxHeight = null;
             toggler.setAttribute('aria-expanded', 'false');
         }
+        setTimeout(ajustarEspacoMenu, 310);
     });
 });
 

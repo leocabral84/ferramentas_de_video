@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sons do Saber - Formatador YouTube</title>
+    <style>
+        :root {
+            --bg-body: #121214;
+            --bg-card: #1e1e24;
+            --bg-input: #2a2a35;
+            --primary: #8257e6; /* Roxo Neon */
+            --primary-hover: #9466ff;
+            --text-main: #e1e1e6;
+            --text-secondary: #a8a8b3;
+            --border: #323238;
+            --success: #04d361;
+            --danger: #f75a68;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        html, body { overflow-x: hidden; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        /* --- MENU DE NAVEGAÇÃO --- */
+        .navbar {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 20;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            overflow: hidden;
+        }
+
+        .menu-toggle {
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 32px;
+            height: 22px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .menu-toggle span {
+            display: block;
+            height: 3px;
+            border-radius: 999px;
+            background: var(--text-secondary);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .menu-toggle.open span:nth-child(1) {
+            transform: translateY(9px) rotate(45deg);
+        }
+
+        .menu-toggle.open span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.open span:nth-child(3) {
+            transform: translateY(-9px) rotate(-45deg);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 18;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(320px, 85vw);
+            max-width: 320px;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+            padding: 20px;
+            z-index: 19;
+            overflow-y: auto;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar h2 {
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .nav-list {
+            display: grid;
+            gap: 8px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .nav-item { margin: 0; }
+
+        .nav-link {
+            display: block;
+            padding: 10px 14px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+        }
+
+        .nav-link.active {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+
+        @media(min-width: 1024px) {
+            .nav-container {
+                justify-content: flex-start;
+            }
+
+            .menu-toggle {
+                display: none;
+            }
+
+            .sidebar {
+                position: static;
+                transform: none;
+                width: auto;
+                border: none;
+                padding: 0;
+                background: transparent;
+                max-width: none;
+                overflow: visible;
+            }
+
+            .nav-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .nav-link {
+                padding: 8px 16px;
+                border-radius: 4px;
+            }
+
+            .sidebar-overlay {
+                display: none;
+            }
+        }
+
+        /* --- LAYOUT PRINCIPAL --- */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-clear {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-clear:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* --- ABAS (TABS) --- */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-bottom: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--bg-input);
+            color: var(--primary);
+            border-top: 3px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--bg-input);
+            padding: 25px;
+            border: 1px solid var(--border);
+            border-radius: 0 0 8px 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- FORMULÁRIOS --- */
+        .form-group { margin-bottom: 20px; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-action:hover { background: var(--primary-hover); }
+
+        /* --- GRID DE RESULTADOS --- */
+        .output-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 25px;
+            display: none; /* Hidden by default */
+        }
+
+        @media(min-width: 768px) {
+            .output-grid { grid-template-columns: 2fr 1fr; }
+            .full-width { grid-column: span 2; }
+        }
+
+        .output-card {
+            background: var(--bg-card);
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .output-card h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .copy-area {
+            width: 100%;
+            height: 350px;
+            background: #121214;
+            border: 1px solid var(--border);
+            color: #a8a8b3;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .tag-area { height: 120px; }
+        .comment-area { height: 100px; }
+        
+        /* Estilo específico para títulos */
+        .title-input {
+            height: auto !important;
+            min-height: 50px;
+            font-weight: bold;
+            color: var(--primary) !important;
+        }
+
+        .btn-copy {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--border);
+            color: var(--text-main);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            z-index: 10;
+        }
+
+        .btn-copy:hover { background: var(--primary); color: white; }
+
+        .instruction {
+            background: rgba(130, 87, 230, 0.1);
+            border-left: 3px solid var(--primary);
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Grid para Títulos */
+        .titles-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+        }
+        @media(min-width: 768px) {
+            .titles-grid { grid-template-columns: 1fr 1fr 1fr; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- MENU -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Abrir menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="sidebar" id="sidebarMenu" aria-hidden="true">
+                <h2>Menu de Ferramentas</h2>
+                <ul class="nav-list">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
+                    <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                    <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                    <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir N. Romanos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Emoções</a></li>
+                    <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
+                    <li class="nav-item"><a class="nav-link" href="timestamps_legendas.html">TimeStamps com Legendas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="padrao_do_audio.html">Padrão do Audio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="corretor_srt.html">Corretor SRT</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="formatador-youtube.html">Formatador YouTube</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMenu()"></div>
+
+    <div class="container">
+        <header>
+            <h1>🎧 Formatador YouTube SEO</h1>
+            <button class="btn-clear" onclick="clearAllData()">🗑️ LIMPAR TUDO</button>
+        </header>
+
+        <!-- ABAS -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'step1')">1. Gerar Prompt IA</button>
+            <button class="tab-btn" onclick="openTab(event, 'step2')">2. Formatador Final</button>
+        </div>
+
+        <!-- ABA 1 -->
+        <div id="step1" class="tab-content active">
+            <div class="instruction">
+                Insira os links para gerar o comando mestre. Os dados ficam salvos automaticamente neste navegador.
+            </div>
+            
+            <div class="form-group">
+                <label>🔗 Link do Vídeo (YouTube)</label>
+                <input type="text" id="videoLink" placeholder="https://youtu.be/..." oninput="saveAndGenerate()">
+            </div>
+
+            <div class="form-group">
+                <label>📚 Link da Playlist</label>
+                <input type="text" id="playlistLinkInput" placeholder="https://youtube.com/playlist?list=..." oninput="saveAndGenerate()">
+            </div>
+
+            <div class="form-group">
+                <label>🤖 Prompt Gerado</label>
+                <textarea id="promptOutput" readonly style="height: 450px; color: #a8a8b3;"></textarea>
+                <button class="btn-action" onclick="copyToClipboard('promptOutput', this)"> COPIAR PROMPT</button>
+            </div>
+        </div>
+
+        <!-- ABA 2 -->
+        <div id="step2" class="tab-content">
+            <div class="instruction">
+                Cole a resposta da IA abaixo. O sistema extrai e formata automaticamente.
+            </div>
+
+            <div class="form-group">
+                <textarea id="rawInput" placeholder="Cole aqui todo o texto gerado pela IA..." oninput="saveData('rawInput', this.value)" style="height: 200px;"></textarea>
+                <button class="btn-action" onclick="processMetadata()">✨ PROCESSAR DADOS</button>
+            </div>
+
+            <div class="output-grid" id="outputSection">
+                
+                <!-- SEÇÃO DE TÍTULOS (NOVO) -->
+                <div class="full-width titles-grid">
+                    <div class="output-card">
+                        <h3>🏆 Título Opção 1</h3>
+                        <button class="btn-copy" onclick="copyToClipboard('title1', this)">Copiar</button>
+                        <textarea id="title1" class="copy-area title-input" readonly oninput="saveData('title1', this.value)"></textarea>
+                    </div>
+                    <div class="output-card">
+                        <h3>🏆 Título Opção 2</h3>
+                        <button class="btn-copy" onclick="copyToClipboard('title2', this)">Copiar</button>
+                        <textarea id="title2" class="copy-area title-input" readonly oninput="saveData('title2', this.value)"></textarea>
+                    </div>
+                    <div class="output-card">
+                        <h3>🏆 Título Opção 3</h3>
+                        <button class="btn-copy" onclick="copyToClipboard('title3', this)">Copiar</button>
+                        <textarea id="title3" class="copy-area title-input" readonly oninput="saveData('title3', this.value)"></textarea>
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                <div class="output-card">
+                    <h3>📝 Descrição Pronta</h3>
+                    <button class="btn-copy" onclick="copyToClipboard('descOutput', this)">Copiar</button>
+                    <textarea id="descOutput" class="copy-area" readonly oninput="saveData('descOutput', this.value)"></textarea>
+                </div>
+
+                <!-- Tags -->
+                <div class="output-card">
+                    <h3>🏷️ Tags (Vírgula)</h3>
+                    <button class="btn-copy" onclick="copyToClipboard('tagsOutput', this)">Copiar</button>
+                    <textarea id="tagsOutput" class="copy-area tag-area" readonly oninput="saveData('tagsOutput', this.value)"></textarea>
+                </div>
+
+                <!-- Comentário -->
+                <div class="output-card full-width">
+                    <h3>💬 Comentário Fixado</h3>
+                    <button class="btn-copy" onclick="copyToClipboard('commentOutput', this)">Copiar</button>
+                    <textarea id="commentOutput" class="copy-area comment-area" readonly oninput="saveData('commentOutput', this.value)"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- SISTEMA DE MEMÓRIA (LOCALSTORAGE) ---
+    const STORAGE_KEY = 'sons_do_saber_yt_tool_v2';
+
+    function saveData(key, value) {
+        let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        data[key] = value;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadData() {
+        let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        
+        // Preencher campos
+        const fields = ['videoLink', 'playlistLinkInput', 'rawInput', 'descOutput', 'tagsOutput', 'commentOutput', 'title1', 'title2', 'title3'];
+        
+        fields.forEach(field => {
+            if(data[field]) document.getElementById(field).value = data[field];
+        });
+
+        // Se houver dados de saída, mostrar a grid
+        if(data.descOutput || data.title1) {
+            document.getElementById('outputSection').style.display = 'grid';
+        }
+
+        generatePromptLogic();
+    }
+
+    function clearAllData() {
+        if(confirm("Tem certeza que deseja apagar todos os dados salvos e começar do zero?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+    }
+
+    // --- LÓGICA DE INTERFACE ---
+    function openTab(evt, tabName) {
+        document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+        document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    function saveAndGenerate() {
+        saveData('videoLink', document.getElementById('videoLink').value);
+        saveData('playlistLinkInput', document.getElementById('playlistLinkInput').value);
+        generatePromptLogic();
+    }
+
+    // --- LÓGICA DE NEGÓCIO ---
+    function generatePromptLogic() {
+        const videoUrl = document.getElementById('videoLink').value.trim() || "[LINK_DO_VIDEO]";
+        const playlistUrl = document.getElementById('playlistLinkInput').value.trim() || "https://youtube.com/playlist?list=PLVlpF84gZ5TA";
+
+        const promptTemplate = `Atue como um Especialista em SEO de Elite e Growth para o YouTube neste vídeo ${videoUrl}
+
+Com base na transcrição completa e no tema abordado neste vídeo, gere os metadados de publicação perfeitos, otimizados para busca e para recomendação do algoritmo. 
+
+Entregue o resultado estruturado exatamente assim:
+
+1. 3 OPÇÕES DE TÍTULOS: Focados em alto CTR, sem clichês, usando gatilhos de curiosidade ou benefício direto.
+2. DESCRIÇÃO OTIMIZADA:
+   - Parágrafo 1 (2 a 3 linhas): Gancho atraente sobre o tema para aparecer antes do "mostrar mais".
+Após o 1º parágrafo acrescente: 📚 Assista à playlist completa: ${playlistUrl}
+
+   - Parágrafo 2 (~100 palavras): Resumo do vídeo em linguagem natural integrando as principais palavras-chave pesquisadas sobre este assunto.
+Concentre as melhores palavras-chave nas duas primeiras linhas.
+3. CAPÍTULOS DO VÍDEO (TIMESTAMPS):
+   - Mapeie os momentos de mudança de assunto no formato "00:00 Título do Capítulo".
+   - Use títulos atrativos com palavras-chave (Proibido usar "Parte 1", "Dica 2" ou "Introdução").
+Após os capítulos acrescente: 💬 Conte nos comentários como você se sentiu depois desta leitura e inscreva-se no canal para não perder as próximas histórias inspiradoras. 
+Acrescente também # Hashtags que façam sentido para o vídeo.
+  
+4. BLOCO DE TAGS: Um bloco único com termos relevantes separados por vírgula (máximo 450 caracteres).
+5. COMENTÁRIO FIXADO: Uma pergunta instigante baseada no vídeo para eu fixar no topo e gerar engajamento.
+
+Entregue tudo formatado e pronto para copiar e colar em Português do Brasil. Use alguns Emojis na descrição para deixar mais amigável, mas não muitos, para que não fique enjoativo. Não use emojis nos capítulos`;
+
+        const promptArea = document.getElementById('promptOutput');
+        promptArea.value = promptTemplate;
+        saveData('promptOutput', promptTemplate);
+    }
+
+    function processMetadata() {
+        let rawText = document.getElementById('rawInput').value;
+        if (!rawText.trim()) return alert("Cole os dados primeiro!");
+
+        // Sanitização
+        let cleanText = rawText.replace(/\\([.#!*])/g, '$1'); 
+        cleanText = cleanText.replace(/^#{1,6}\s+/gm, '');
+        cleanText = cleanText.replace(/\r\n/g, '\n');
+
+        const getSection = (number) => {
+            const regex = new RegExp(`(?:^|\\n)${number}[\\.\\s].*?\\n([\\s\\S]*?)(?=\\n${number + 1}[\\.\\s]|\\n-----|$)`, 'i');
+            const match = cleanText.match(regex);
+            return match ? match[1].trim() : "";
+        };
+
+        // --- 0. PROCESSAR TÍTULOS (NOVO) ---
+        let titlesRaw = getSection(1);
+        // Extrair linhas que começam com * ou -
+        let titlesLines = titlesRaw.split('\n').filter(line => line.trim().startsWith('*') || line.trim().startsWith('-'));
+        
+        let extractedTitles = [];
+        titlesLines.forEach(line => {
+            // Remove o marcador de lista (* ou -)
+            let cleanLine = line.replace(/^[\s\*\-]+/, '');
+            // Remove negrito markdown
+            cleanLine = cleanLine.replace(/\*\*/g, '');
+            // Remove texto entre parênteses (explicações da IA) ex: (Focado em...)
+            cleanLine = cleanLine.replace(/\(.*?\)/g, '');
+            // Trim final
+            cleanLine = cleanLine.trim();
+            if(cleanLine) extractedTitles.push(cleanLine);
+        });
+
+        // Preencher campos de título
+        document.getElementById('title1').value = extractedTitles[0] || "";
+        document.getElementById('title2').value = extractedTitles[1] || "";
+        document.getElementById('title3').value = extractedTitles[2] || "";
+        
+        saveData('title1', extractedTitles[0] || "");
+        saveData('title2', extractedTitles[1] || "");
+        saveData('title3', extractedTitles[2] || "");
+
+
+        // --- 1. DESCRIÇÃO ---
+        let descRaw = getSection(2);
+        descRaw = descRaw.replace(/\*\*Parágrafo.*?\*\*/gi, '').replace(/^\s*[\r\n]/gm, ""); 
+        
+        const inputPlaylist = document.getElementById('playlistLinkInput').value;
+        const linkMatch = descRaw.match(/https:\/\/youtube\.com\/playlist\?list=[\w-]+/);
+        const playlistLink = inputPlaylist ? inputPlaylist : (linkMatch ? linkMatch[0] : "https://youtube.com/playlist?list=PLVlpF84gZ5TA");
+        
+        descRaw = descRaw.replace(/https:\/\/youtube\.com\/playlist\?list=[\w-]+/, '').trim();
+        descRaw = descRaw.replace(/📚 Assista à playlist completa:/gi, '').trim();
+
+        let paragraphs = descRaw.split(/\n\s*\n/).map(p => p.trim()).filter(p => p.length > 0);
+        let finalDesc = "";
+        
+        if (paragraphs.length > 0) {
+            finalDesc += paragraphs[0] + "\n\n";
+            finalDesc += `📚 Assista à playlist completa:\n🔗 ${playlistLink}\n\n`;
+            for (let i = 1; i < paragraphs.length; i++) {
+                if (!paragraphs[i].match(/^\d{2}:\d{2}/) && !paragraphs[i].startsWith('#')) {
+                    finalDesc += paragraphs[i] + "\n\n";
+                }
+            }
+        }
+
+        // --- 2. TIMESTAMPS ---
+        let chaptersRaw = getSection(3);
+        const timestamps = chaptersRaw.split('\n').filter(line => line.match(/^\d{1,2}:\d{2}/));
+        if (timestamps.length > 0) finalDesc += timestamps.join('\n') + "\n\n";
+
+        finalDesc += "💬 Conte nos comentários como você se sentiu depois desta leitura e inscreva-se no canal para não perder as próximas histórias inspiradoras.\n\n";
+
+        const allHashtags = cleanText.match(/#\w+/g) || [];
+        if (allHashtags.length) finalDesc += [...new Set(allHashtags)].join(' ');
+
+        // --- 3. TAGS & 4. COMENTÁRIO ---
+        let tagsRaw = getSection(4).replace(/[*_]/g, '').trim();
+        let commentRaw = getSection(5).replace(/^["']|["']$/g, '').replace(/[*_]/g, '').trim();
+
+        // Atualizar UI e Salvar
+        document.getElementById('descOutput').value = finalDesc.trim();
+        document.getElementById('tagsOutput').value = tagsRaw;
+        document.getElementById('commentOutput').value = commentRaw;
+        
+        saveData('descOutput', finalDesc.trim());
+        saveData('tagsOutput', tagsRaw);
+        saveData('commentOutput', commentRaw);
+
+        document.getElementById('outputSection').style.display = 'grid';
+    }
+
+    function copyToClipboard(elementId, btnElement) {
+        const copyText = document.getElementById(elementId);
+        copyText.select();
+        navigator.clipboard.writeText(copyText.value).then(() => {
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "✅ COPIADO";
+            btnElement.style.background = "var(--success)";
+            btnElement.style.color = "#000";
+            
+            setTimeout(() => {
+                btnElement.innerText = originalText;
+                btnElement.style.background = "";
+                btnElement.style.color = "";
+            }, 2000);
+        });
+    }
+
+    function toggleMenu() {
+        const sidebar = document.getElementById('sidebarMenu');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggle = document.getElementById('menuToggle');
+        const isOpen = sidebar.classList.contains('open');
+
+        if (isOpen) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            toggle.classList.remove('open');
+            sidebar.setAttribute('aria-hidden', 'true');
+        } else {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            toggle.classList.add('open');
+            sidebar.setAttribute('aria-hidden', 'false');
+        }
+    }
+
+    function closeMenu() {
+        const sidebar = document.getElementById('sidebarMenu');
+        const overlay = document.getElementById('sidebarOverlay');
+        const toggle = document.getElementById('menuToggle');
+
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        toggle.classList.remove('open');
+        sidebar.setAttribute('aria-hidden', 'true');
+    }
+
+    window.onload = loadData;
+
+</script>
+</body>
+</html>
