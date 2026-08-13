@@ -259,15 +259,143 @@
             color: #ff7f7f;
             border-left: 4px solid transparent;
         }
-        .noise-item:hover { 
-            background-color: rgba(255, 71, 87, 0.1); 
+        .noise-item:hover {
+            background-color: rgba(255, 71, 87, 0.1);
             border-left-color: var(--danger);
+        }
+
+        /* Estilo específico para itens com texto encontrado */
+        .matched-item {
+            color: #2ecc71;
+            border-left: 4px solid transparent;
+        }
+        .matched-item:hover {
+            background-color: rgba(46, 204, 113, 0.1);
+            border-left-color: #2ecc71;
+        }
+
+        /* Sub-abas do painel lateral (Ruídos / Texto Encontrado) */
+        .side-tab-bar {
+            display: flex;
+            background-color: #16161b;
+            border-bottom: 1px solid var(--border);
+        }
+        .side-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            color: var(--text-muted);
+            padding: 8px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .side-tab:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        .side-tab.active {
+            color: white;
+            border-bottom-color: var(--accent);
+            background-color: rgba(108, 92, 231, 0.1);
         }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-dark); }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
         .icon { width: 16px; height: 16px; fill: currentColor; }
+
+        .search-panel {
+            background-color: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .search-panel textarea {
+            width: 100%;
+            min-height: 80px;
+            background: #121216;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            resize: vertical;
+        }
+        .transcription-section {
+            background-color: var(--bg-panel);
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            overflow-y: auto;
+            max-height: 320px;
+        }
+        .transcript-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+            background: #121216;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .transcript-card.matched {
+            border-color: var(--danger);
+        }
+        .transcript-card.saved {
+            border-color: #2ecc71;
+            box-shadow: 0 0 0 1px rgba(46, 204, 113, 0.25);
+        }
+        .transcript-card.active {
+            box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.35);
+        }
+        .transcript-card-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .transcript-text {
+            min-height: 120px;
+            max-height: 320px;
+            background: #0f0f14;
+            border: 1px solid #222;
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--text-main);
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            overflow-y: auto;
+            outline: none;
+            user-select: text;
+            line-height: 1.45;
+        }
+        .transcript-text.saved {
+            border-color: #2ecc71;
+            box-shadow: 0 0 0 1px rgba(46, 204, 113, 0.25);
+        }
+        .search-panel textarea.saved {
+            border-color: #2ecc71;
+            box-shadow: 0 0 0 1px rgba(46, 204, 113, 0.25);
+        }
+        .transcript-text:focus {
+            border-color: var(--accent);
+        }
+        .transcript-footer {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -367,7 +495,7 @@
                 </div>
 
                 <!-- Configuração de Tempo -->
-                <div class="time-input-group">
+                <div id="timeInputGroup" class="time-input-group">
                     <span style="color:var(--text-muted); font-size:12px; margin-right:5px;">TRECHO:</span>
                     
                     <!-- SUBSTITUA A LINHA DO INPUT ANTIGO POR ESTA: -->
@@ -380,29 +508,82 @@
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
                     AUTO
                 </button>
+
+                <button onclick="toggleSearchPanel()" class="secondary" title="Inserir texto para busca">
+                    🔎 Inserir Texto
+                </button>
+            </div>
+
+            <div id="searchPanel" class="search-panel" style="display:none;">
+                <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+                    <div style="font-size:13px; color:var(--text-muted);">Texto para salvar e buscar nas transcrições</div>
+                    <textarea id="searchTextInput" placeholder="Digite o texto para salvar e comparar com as transcrições..." rows="3" oninput="updateSearchDraft()"></textarea>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button onclick="saveSearchText()" class="secondary">Salvar</button>
+                        <button onclick="clearSearchText()" class="secondary">Limpar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transcription-section">
+                <div class="list-header">
+                    <strong>Transcrições</strong>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <small id="transcriptCount" style="background:#333; padding:2px 6px; border-radius:4px;">0</small>
+                        <small id="matchSummary" style="background:#222; padding:2px 6px; border-radius:4px; color:#a0a0a0;">Nenhuma busca salva</small>
+                    </div>
+                </div>
+                <div style="font-size:12px; color:#a0a0a0; margin-bottom:10px;">
+                    O Web Speech usa o microfone do navegador enquanto o áudio é reproduzido. Use Chrome/Edge e permita acesso ao microfone.
+                </div>
+                <div id="transcriptContainer"></div>
             </div>
         </div>
 
         <!-- Painel Direito: Listas -->
         <div class="right-panel">
             
-            <!-- Lista de Ruídos -->
-            
+            <!-- Lista de Ruídos / Texto Encontrado (sub-abas) -->
+
             <div class="list-section noise-section">
-                <div class="list-header">
+                <div class="side-tab-bar">
+                    <button type="button" class="side-tab active" id="noiseTabBtn" onclick="switchNoiseSidebarTab('noise')">
+                        ⚠ RUÍDOS / BAIXO VOLUME
+                    </button>
+                    <button type="button" class="side-tab" id="matchedTabBtn" onclick="switchNoiseSidebarTab('matched')">
+                        ✅ TEXTO ENCONTRADO
+                    </button>
+                </div>
+
+                <div class="list-header" id="noiseHeader">
                     <span style="color: #ff7f7f;">⚠ Ruídos / Baixo Volume</span>
                     <div style="display: flex; align-items: center; gap: 5px;">
                         <small id="noiseCount" style="background:#333; padding:2px 6px; border-radius:4px;">0</small>
                         <!-- BOTÃO COPIAR ADICIONADO AQUI -->
-                        <button onclick="copyNoiseList()" title="Copiar nomes dos ruídos" 
+                        <button onclick="copyNoiseList()" id="copyNoiseBtn" title="Copiar nomes dos ruídos"
                                 style="padding: 2px 8px; font-size: 11px; background-color: #444; color: white; border: none; border-radius: 4px; cursor: pointer;">
                             📋 Copiar
                         </button>
                     </div>
                 </div>
+                <div class="list-header" id="matchedHeader" style="display:none;">
+                    <span style="color: #2ecc71;">✅ Texto Encontrado</span>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <small id="matchedCount" style="background:#333; padding:2px 6px; border-radius:4px;">0</small>
+                        <button onclick="copyMatchedList()" id="copyMatchedBtn" title="Copiar nomes dos arquivos com texto encontrado"
+                                style="padding: 2px 8px; font-size: 11px; background-color: #444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            📋 Copiar
+                        </button>
+                    </div>
+                </div>
+
                 <ul class="file-list" id="noiseList">
                     <!-- Itens de ruído inseridos via JS -->
                     <li class="file-item" style="justify-content:center; color:#666; font-style:italic;">Nenhum ruído detectado ainda.</li>
+                </ul>
+                <ul class="file-list" id="matchedList" style="display:none;">
+                    <!-- Itens com texto encontrado inseridos via JS -->
+                    <li class="file-item" style="justify-content:center; color:#666; font-style:italic;">Nenhum texto encontrado ainda.</li>
                 </ul>
             </div>
 
@@ -470,10 +651,36 @@
         const timeInputGroup = document.getElementById('timeInputGroup');
         const playlistEl = document.getElementById('playlist');
         const noiseListEl = document.getElementById('noiseList');
+        const matchedListEl = document.getElementById('matchedList');
         const autoStatus = document.getElementById('autoStatus');
         const volumeSlider = document.getElementById('volumeSlider');
         const fullAudioToggle = document.getElementById('fullAudioToggle');
         const noiseCountEl = document.getElementById('noiseCount');
+        const matchedCountEl = document.getElementById('matchedCount');
+        const noiseTabBtn = document.getElementById('noiseTabBtn');
+        const matchedTabBtn = document.getElementById('matchedTabBtn');
+        const noiseHeader = document.getElementById('noiseHeader');
+        const matchedHeader = document.getElementById('matchedHeader');
+        let activeNoiseSidebarTab = 'noise';
+        const searchPanel = document.getElementById('searchPanel');
+        const searchTextInput = document.getElementById('searchTextInput');
+        const transcriptContainer = document.getElementById('transcriptContainer');
+        const transcriptCountEl = document.getElementById('transcriptCount');
+        const matchSummaryEl = document.getElementById('matchSummary');
+
+        let searchDraft = '';
+        let savedSearchText = '';
+        let transcripts = [];
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let currentRecognitionIndex = null;
+        let recognitionActive = false;
+        let pendingAutoAdvance = false;
+        let similaritySearchInProgress = false;
+        let transcriptRenderTimer = null;
+        const SIMILARITY_MATCH_THRESHOLD = 0.30;
+        const speechSupported = !!SpeechRecognition;
 
         const totalFilesStat = document.getElementById('totalFilesStat');
         const currentTrackStat = document.getElementById('currentTrackStat');
@@ -608,6 +815,452 @@
             let totalSec = isFullAudioMode ? count * 60 : count * duration; 
             totalTimeStat.innerText = formatTimeDetailed(totalSec);
             elapsedTimeStat.innerText = formatTimeDetailed(elapsedSeconds);
+            transcriptCountEl.innerText = transcripts.length;
+        }
+
+        function renderTranscripts() {
+            transcriptContainer.innerHTML = '';
+            transcriptCountEl.innerText = transcripts.length;
+
+            if (transcripts.length === 0) {
+                transcriptContainer.innerHTML = '<div class="transcript-card" style="justify-content:center; color:#666; font-style:italic;">Sem transcrições ainda.</div>';
+                return;
+            }
+
+            transcripts.forEach((entry, index) => {
+                const card = document.createElement('div');
+                const savedClass = entry.saved ? ' saved' : '';
+                card.className = `transcript-card${entry.matched ? ' matched' : ''}${index === currentIndex ? ' active' : ''}${savedClass}`;
+                card.id = `transcript-card-${index}`;
+
+                const title = document.createElement('div');
+                title.className = 'transcript-card-title';
+                title.textContent = `${(index + 1).toString().padStart(2, '0')}. ${entry.file.name}`;
+
+                const textWrapper = document.createElement('div');
+                textWrapper.className = `transcript-text${entry.saved ? ' saved' : ''}`;
+                textWrapper.contentEditable = true;
+                textWrapper.spellcheck = false;
+                textWrapper.dataset.index = index;
+                textWrapper.innerText = getTranscriptDisplayText(entry);
+                textWrapper.oninput = function() {
+                    updateTranscriptText(index, this.innerText);
+                };
+
+                const footer = document.createElement('div');
+                footer.className = 'transcript-footer';
+                footer.textContent = entry.loading ? 'Transcrição em andamento...' : 'Edite este texto manualmente ou cole a transcrição real aqui.';
+
+                card.appendChild(title);
+                card.appendChild(textWrapper);
+                card.appendChild(footer);
+                transcriptContainer.appendChild(card);
+            });
+        }
+
+        function getTranscriptDisplayText(entry) {
+            return entry.text || entry.accumulatedText || (entry.loading ? 'Transcrevendo...' : 'Transcrição pendente.');
+        }
+
+        function updateTranscriptCard(index) {
+            const entry = transcripts[index];
+            const card = document.getElementById(`transcript-card-${index}`);
+            if (!entry || !card) return;
+
+            const textWrapper = card.querySelector('.transcript-text');
+            const footer = card.querySelector('.transcript-footer');
+            if (textWrapper && document.activeElement !== textWrapper) {
+                const shouldStickToBottom = textWrapper.scrollTop + textWrapper.clientHeight >= textWrapper.scrollHeight - 12;
+                textWrapper.innerText = getTranscriptDisplayText(entry);
+                if (shouldStickToBottom) textWrapper.scrollTop = textWrapper.scrollHeight;
+            }
+            if (textWrapper) textWrapper.classList.toggle('saved', !!entry.saved);
+            if (footer) footer.textContent = entry.loading ? 'Transcrição em andamento...' : 'Edite este texto manualmente ou cole a transcrição real aqui.';
+
+            card.classList.toggle('matched', !!entry.matched);
+            card.classList.toggle('saved', !!entry.saved);
+            card.classList.toggle('active', index === currentIndex);
+        }
+
+        function scheduleTranscriptCardUpdate(index) {
+            clearTimeout(transcriptRenderTimer);
+            transcriptRenderTimer = setTimeout(() => updateTranscriptCard(index), 120);
+        }
+
+        function toggleSearchPanel() {
+            if (!searchPanel) return;
+            searchPanel.style.display = searchPanel.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        function clearSearchText() {
+            searchTextInput.value = '';
+            searchDraft = '';
+            savedSearchText = '';
+            searchTextInput.classList.remove('saved');
+            searchTranscripts();
+            updateMatchSummary();
+        }
+
+        function updateSearchDraft() {
+            searchDraft = searchTextInput.value.trim();
+            searchTextInput.classList.remove('saved');
+        }
+
+        function saveSearchText() {
+            savedSearchText = searchDraft;
+            if (!savedSearchText) {
+                alert('Insira o texto antes de salvar.');
+                return;
+            }
+            searchTranscripts();
+            searchTextInput.classList.add('saved');
+        }
+
+        async function searchTranscripts() {
+            const query = savedSearchText.trim();
+            for (const entry of transcripts) {
+                const sourceText = entry.accumulatedText || entry.text || '';
+                if (!query || !sourceText) {
+                    entry.matched = false;
+                    entry.similarityScore = 0;
+                    continue;
+                }
+                const result = await findBestTranscriptMatchAsync(query, sourceText);
+                entry.similarityScore = result.score;
+                entry.matched = result.matched;
+            }
+            renderTranscriptHighlights();
+            updateMatchSummary();
+        }
+
+        async function runSimilaritySearchForEntry(index) {
+            similaritySearchInProgress = true;
+            const entry = transcripts[index];
+            try {
+                const query = savedSearchText.trim();
+                if (entry) {
+                    const sourceText = entry.accumulatedText || entry.text || '';
+                    if (query && sourceText) {
+                        const result = await findBestTranscriptMatchAsync(query, sourceText);
+                        entry.similarityScore = result.score;
+                        entry.matched = result.matched;
+                    } else {
+                        entry.similarityScore = 0;
+                        entry.matched = false;
+                    }
+                }
+            } finally {
+                renderTranscriptHighlights();
+                updateMatchSummary();
+                if (entry) updateTranscriptCard(index);
+                similaritySearchInProgress = false;
+            }
+            return entry ? entry.similarityScore : 0;
+        }
+
+        function renderTranscriptHighlights() {
+            transcripts.forEach((entry, index) => {
+                const card = document.getElementById(`transcript-card-${index}`);
+                if (!card) return;
+                card.classList.toggle('matched', !!entry.matched);
+            });
+        }
+
+        function updateMatchSummary() {
+            renderMatchedList();
+
+            if (!savedSearchText) {
+                matchSummaryEl.innerText = 'Nenhuma busca salva';
+                matchSummaryEl.style.color = '#a0a0a0';
+                return;
+            }
+            const matched = transcripts.filter(entry => entry.matched);
+            if (matched.length === 0) {
+                matchSummaryEl.innerText = '0 correspondências';
+                matchSummaryEl.style.color = '#ff6b6b';
+                return;
+            }
+            const fileNames = matched.map(entry => entry.file.name.replace(/\.[^/.]+$/, '')).slice(0, 4);
+            const suffix = matched.length > fileNames.length ? '...' : '';
+            matchSummaryEl.innerText = `Encontrado em ${matched.length} arquivo(s): ${fileNames.join(', ')}${suffix}`;
+            matchSummaryEl.style.color = '#00d2ff';
+        }
+
+        function updateTranscriptText(index, text) {
+            if (!transcripts[index]) return;
+            const normalized = text || '';
+            transcripts[index].text = normalized;
+            transcripts[index].accumulatedText = normalized;
+            transcripts[index].saved = !!normalized.trim();
+            transcripts[index].loading = false;
+            transcripts[index].transcriptionComplete = true;
+            searchTranscripts();
+        }
+
+        function scrollTranscriptToCurrent() {
+            const currentCard = document.getElementById(`transcript-card-${currentIndex}`);
+            if (currentCard) {
+                currentCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                transcripts.forEach((entry, index) => {
+                    const card = document.getElementById(`transcript-card-${index}`);
+                    if (card) {
+                        card.classList.toggle('active', index === currentIndex);
+                    }
+                });
+            }
+        }
+
+        function ensureTranscriptEntries() {
+            const existingKeys = transcripts.map(entry => entry.key);
+            transcripts = playlist.map(file => {
+                const key = `${file.name}:${file.size}:${file.lastModified}`;
+                const existing = transcripts.find(e => e.key === key);
+                return existing || { file, key, text: '', accumulatedText: '', finalSegments: {}, loading: false, matched: false, similarityScore: 0, transcriptionComplete: false, saved: false };
+            });
+            renderTranscripts();
+        }
+
+        function initSpeechRecognition() {
+            if (!speechSupported) return false;
+            if (recognition) return true;
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 5;
+            recognition.continuous = true;
+
+            recognition.onresult = function(event) {
+                if (currentRecognitionIndex === null) return;
+                const entry = transcripts[currentRecognitionIndex];
+                if (!entry) return;
+
+                entry.finalSegments = entry.finalSegments || {};
+                let interimParts = [];
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    const bestAlternative = chooseBestSpeechAlternative(result);
+                    const transcript = (bestAlternative && bestAlternative.transcript ? bestAlternative.transcript : '').trim();
+                    if (!transcript) continue;
+
+                    if (result.isFinal) {
+                        entry.finalSegments[i] = transcript;
+                    } else {
+                        interimParts.push(transcript);
+                    }
+                }
+
+                const finalText = Object.keys(entry.finalSegments)
+                    .sort((a, b) => Number(a) - Number(b))
+                    .map(key => entry.finalSegments[key])
+                    .filter(Boolean)
+                    .join('\n');
+                const interimText = interimParts.join(' ').trim();
+
+                entry.accumulatedText = finalText;
+                entry.text = [finalText, interimText].filter(Boolean).join('\n');
+                entry.loading = true;
+                scheduleTranscriptCardUpdate(currentRecognitionIndex);
+            };
+
+            recognition.onerror = function(event) {
+                if (currentRecognitionIndex === null) return;
+                const entry = transcripts[currentRecognitionIndex];
+                if (!entry) return;
+                entry.loading = false;
+                entry.text = `Erro de reconhecimento: ${event.error}`;
+                updateTranscriptCard(currentRecognitionIndex);
+            };
+
+            recognition.onend = async function() {
+                if (currentRecognitionIndex === null) return;
+                const finishedIndex = currentRecognitionIndex;
+                const entry = transcripts[finishedIndex];
+                if (!entry) return;
+
+                const finalText = entry.accumulatedText || entry.text || '';
+                if (!finalText || finalText.trim() === 'Transcrevendo com Web Speech...') {
+                    entry.text = 'Nenhuma transcrição detectada. Reproduza novamente e permita o microfone.';
+                    entry.saved = false;
+                } else {
+                    entry.text = finalText.trim();
+                    entry.accumulatedText = entry.text;
+                    entry.saved = true;
+                }
+
+                entry.loading = false;
+                entry.transcriptionComplete = true;
+                updateTranscriptCard(finishedIndex);
+
+                const shouldAdvance = pendingAutoAdvance;
+                pendingAutoAdvance = false;
+                const nextIndex = finishedIndex + 1;
+
+                await runSimilaritySearchForEntry(finishedIndex);
+
+                currentRecognitionIndex = null;
+                recognitionActive = false;
+
+                if (shouldAdvance && isAutoMode) {
+                    if (nextIndex < playlist.length) {
+                        setTimeout(() => loadTrack(nextIndex, true), 300);
+                    } else {
+                        isAutoMode = false;
+                        updateAutoUI();
+                        alert('Processo automático concluído.');
+                    }
+                }
+            };
+
+            return true;
+        }
+
+        function chooseBestSpeechAlternative(result) {
+            let best = result[0];
+            for (let i = 1; i < result.length; i++) {
+                const candidate = result[i];
+                if ((candidate.confidence || 0) > (best.confidence || 0)) {
+                    best = candidate;
+                }
+            }
+            return best;
+        }
+
+        function startSpeechTranscription(index) {
+            if (index < 0 || index >= playlist.length) return;
+            if (!speechSupported) {
+                const entry = transcripts[index];
+                if (entry) {
+                    entry.loading = false;
+                    entry.text = 'Web Speech não suportado neste navegador. Use Chrome ou Edge.';
+                    renderTranscripts();
+                }
+                return;
+            }
+            if (!initSpeechRecognition()) return;
+
+            const entry = transcripts[index];
+            if (!entry) return;
+
+            if (currentRecognitionIndex !== null && currentRecognitionIndex !== index) {
+                stopSpeechRecognition();
+            }
+
+            if (currentRecognitionIndex === index && recognitionActive) {
+                return;
+            }
+
+            currentRecognitionIndex = index;
+            entry.loading = true;
+            entry.finalSegments = {};
+            entry.accumulatedText = '';
+            entry.text = 'Transcrevendo com Web Speech...';
+            entry.transcriptionComplete = false;
+            updateTranscriptCard(index);
+
+            try {
+                recognition.start();
+                recognitionActive = true;
+            } catch (err) {
+                entry.loading = false;
+                entry.text = `Erro ao iniciar Web Speech: ${err.message}`;
+                recognitionActive = false;
+                renderTranscripts();
+            }
+        }
+
+        function stopSpeechRecognition(preserveIndex = false) {
+            if (recognition) {
+                try { recognition.stop(); } catch (err) {}
+                if (!preserveIndex) {
+                    currentRecognitionIndex = null;
+                }
+            }
+        }
+
+        function transcribeTrack(index) {
+            if (index < 0 || index >= playlist.length) return;
+            const file = playlist[index];
+            const key = `${file.name}:${file.size}:${file.lastModified}`;
+            let entry = transcripts[index];
+            if (!entry || entry.key !== key) {
+                entry = { file, key, text: '', accumulatedText: '', finalSegments: {}, loading: false, matched: false, similarityScore: 0, transcriptionComplete: false, saved: false };
+                transcripts[index] = entry;
+            }
+            entry.accumulatedText = entry.accumulatedText || '';
+            if (entry.text && !entry.loading && !entry.text.startsWith('Transcrevendo')) {
+                return;
+            }
+            entry.loading = true;
+            entry.transcriptionComplete = false;
+            entry.saved = false;
+            entry.text = speechSupported ? 'Transcrevendo com Web Speech...' : 'Web Speech não suportado neste navegador. Use Chrome ou Edge.';
+            if (!speechSupported) {
+                entry.loading = false;
+                entry.transcriptionComplete = true;
+            }
+            renderTranscripts();
+        }
+
+        function generateTranscriptPlaceholder(file) {
+            const displayName = file.name.replace(/[-_\.]/g, ' ');
+            return `Transcrição simulada do arquivo "${displayName}". Cole ou edite o texto real aqui, se quiser.`;
+        }
+
+        // ========================================
+        // BUSCA POR SIMILARIDADE (PORTADA DE timestamps_legendas.html)
+        // Mesma tecnica de "findBestSubtitleMatchAsync": normaliza o texto,
+        // desliza uma janela (mesmo numero de palavras do texto salvo) por
+        // toda a transcricao e usa a proporcao de palavras em comum como
+        // score. Igual ao original: score >= 30% e considerado valido.
+        // ========================================
+
+        function normalizeTextForSimilarity(str) {
+            return (str || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9\s]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        async function findBestTranscriptMatchAsync(queryText, transcriptText, minSimilarity = SIMILARITY_MATCH_THRESHOLD) {
+            const inputWords = normalizeTextForSimilarity(queryText).split(' ').filter(Boolean);
+            const transcriptWords = normalizeTextForSimilarity(transcriptText).split(' ').filter(Boolean);
+
+            if (inputWords.length < 3 || transcriptWords.length === 0) {
+                return { score: 0, matched: false };
+            }
+
+            let bestScore = 0;
+            const totalIterations = transcriptWords.length - inputWords.length;
+
+            if (totalIterations < 0) {
+                // Transcricao mais curta que o texto salvo: compara o bloco inteiro.
+                const commonCount = inputWords.filter(w => transcriptWords.includes(w)).length;
+                bestScore = commonCount / inputWords.length;
+                return { score: bestScore, matched: bestScore >= minSimilarity };
+            }
+
+            const CHUNK_SIZE = 500; // Processa em lotes para nao travar a interface
+
+            for (let i = 0; i <= totalIterations; i += CHUNK_SIZE) {
+                const end = Math.min(i + CHUNK_SIZE, totalIterations + 1);
+
+                for (let j = i; j < end; j++) {
+                    const windowWords = transcriptWords.slice(j, j + inputWords.length);
+                    const commonCount = inputWords.filter(w => windowWords.includes(w)).length;
+                    const similarity = commonCount / inputWords.length;
+                    if (similarity > bestScore) bestScore = similarity;
+                }
+
+                // Pausa estrategica: devolve o controle ao navegador entre lotes
+                await new Promise(resolve => requestAnimationFrame(resolve));
+            }
+
+            return { score: bestScore, matched: bestScore >= minSimilarity };
         }
 
         function formatTimeDetailed(totalSeconds) {
@@ -627,6 +1280,7 @@
                 playlist.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
             }
             
+            ensureTranscriptEntries();
             renderPlaylist();
             updateStats();
             
@@ -668,6 +1322,44 @@
                 li.innerHTML = `<span>⚠ ${file.name}</span>`;
                 noiseListEl.appendChild(li);
             });
+        }
+
+        function renderMatchedList() {
+            if (!matchedListEl || !matchedCountEl) return;
+
+            const matchedEntries = transcripts.filter(entry => entry.matched);
+            matchedCountEl.innerText = matchedEntries.length;
+            matchedListEl.innerHTML = '';
+
+            if (matchedEntries.length === 0) {
+                matchedListEl.innerHTML = '<li class="file-item" style="justify-content:center; color:#666; font-style:italic;">Nenhum texto encontrado ainda.</li>';
+                return;
+            }
+
+            matchedEntries.forEach((entry) => {
+                const li = document.createElement('li');
+                li.className = 'file-item matched-item';
+                li.title = "Clique para abrir este áudio e ver a transcrição";
+                li.onclick = () => {
+                    const index = playlist.indexOf(entry.file);
+                    if (index !== -1) loadAndPlay(index);
+                };
+                const scorePercent = Math.round((entry.similarityScore || 0) * 100);
+                li.innerHTML = `<span>✅ ${entry.file.name} (${scorePercent}%)</span>`;
+                matchedListEl.appendChild(li);
+            });
+        }
+
+        function switchNoiseSidebarTab(tab) {
+            activeNoiseSidebarTab = tab;
+            const isNoise = tab === 'noise';
+
+            noiseTabBtn.classList.toggle('active', isNoise);
+            matchedTabBtn.classList.toggle('active', !isNoise);
+            noiseHeader.style.display = isNoise ? 'flex' : 'none';
+            matchedHeader.style.display = isNoise ? 'none' : 'flex';
+            noiseListEl.style.display = isNoise ? 'block' : 'none';
+            matchedListEl.style.display = isNoise ? 'none' : 'block';
         }
 
         async function loadFileDirectly(file) {
@@ -728,8 +1420,13 @@
                 // Analisa o Pico Sustentado
                 const peak = analyzeSustainedPeak(audioBuffer);
                 
+                // Interrompe qualquer reconhecimento anterior
+                stopSpeechRecognition();
+                
                 // Classifica (apenas lista se for ruído, não remove da playlist)
                 updateNoiseClassification(file, peak);
+                transcribeTrack(index);
+                scrollTranscriptToCurrent();
 
                 // Sempre desenha e prepara para tocar, independente de ser ruído ou não
                 fileInfoDisplay.innerHTML = `
@@ -785,6 +1482,7 @@
             sourceNode.start(0, 0, actualDuration);
             isPlaying = true;
             updatePlayButtonUI();
+            startSpeechTranscription(currentIndex);
 
             sourceNode.onended = () => {
                 setTimeout(() => {
@@ -804,14 +1502,26 @@
             elapsedTimeStat.innerText = formatTimeDetailed(elapsedSeconds);
             
             if (isAutoMode) {
-                // Avança sempre para o próximo índice da playlist principal
-                if (currentIndex < playlist.length - 1) {
-                    loadTrack(currentIndex + 1, true);
-                } else {
-                    isAutoMode = false; 
+                const nextIndex = currentIndex + 1;
+                if (nextIndex >= playlist.length) {
+                    isAutoMode = false;
                     updateAutoUI();
                     alert("Processo automático concluído.");
+                    return;
                 }
+
+                const currentEntry = transcripts[currentIndex];
+                const waitingForTranscription = currentEntry && !currentEntry.transcriptionComplete;
+                const waitingForSimilarity = similaritySearchInProgress;
+                if (waitingForTranscription || waitingForSimilarity) {
+                    pendingAutoAdvance = true;
+                    if (speechSupported && currentRecognitionIndex === currentIndex) {
+                        stopSpeechRecognition(true);
+                    }
+                    return;
+                }
+
+                loadTrack(nextIndex, true);
             }
         }
 
@@ -819,6 +1529,7 @@
             if (!audioBuffer) return;
             if (isPlaying) {
                 if (sourceNode) { try { sourceNode.stop(); } catch(e){} sourceNode.disconnect(); sourceNode = null; }
+                stopSpeechRecognition();
                 isPlaying = false; 
                 isAutoMode = false; 
                 updateAutoUI();
@@ -830,6 +1541,7 @@
 
         function stopAll(resetUI = true) {
             if (sourceNode) { try { sourceNode.stop(); } catch(e){} sourceNode.disconnect(); sourceNode = null; }
+            stopSpeechRecognition();
             isPlaying = false; 
             isAutoMode = false; 
             updateAutoUI();
@@ -865,6 +1577,7 @@
             
             // Remove da playlist principal
             playlist.splice(currentIndex, 1);
+            ensureTranscriptEntries();
             
             if (playlist.length === 0) {
                 currentIndex = -1;
@@ -873,6 +1586,7 @@
                 ctx.clearRect(0,0,canvas.width, canvas.height);
                 fileInfoDisplay.innerText = "Lista vazia.";
                 renderPlaylist();
+                renderTranscripts();
             } else {
                 // Ajusta índice
                 if (currentIndex >= playlist.length) {
@@ -886,16 +1600,26 @@
 
         function startAutoProcess() {
             if (playlist.length === 0) { alert("Selecione arquivos primeiro."); return; }
-            
-            elapsedSeconds = 0; 
+
+            elapsedSeconds = 0;
             elapsedTimeStat.innerText = "00:00:00";
-            
+
             // Opcional: Resetar estatísticas de ruído ao iniciar novo processo?
             // noiseList = []; renderNoiseList();
-            
-            isAutoMode = true; 
+
+            // O processo automático precisa da transcrição COMPLETA de cada áudio
+            // para que a comparação com o texto salvo seja confiável.
+            if (!isFullAudioMode) {
+                isFullAudioMode = true;
+                fullAudioToggle.classList.add('active');
+                timeInputGroup.style.opacity = "0.5";
+                timeInputGroup.style.pointerEvents = "none";
+            }
+
+            isAutoMode = true;
             updateAutoUI();
-            
+            updatePlayButtonUI();
+
             if (!isPlaying) {
                 let startIndex = currentIndex === -1 ? 0 : currentIndex;
                 loadTrack(startIndex, true);
@@ -1009,28 +1733,42 @@
         // =========================================
         // FUNÇÃO PARA COPIAR LISTA DE RUÍDOS
         // =========================================
-        function copyNoiseList() {
-            if (noiseList.length === 0) {
-                alert("Não há ruídos na lista para copiar.");
+        function copyFileNamesToClipboard(fileNames, buttonEl, emptyMessage) {
+            if (fileNames.length === 0) {
+                alert(emptyMessage);
                 return;
             }
 
-            // Cria uma string com os nomes, um por linha
-            const textToCopy = noiseList.map(file => file.name).join('\n');
+            const textToCopy = fileNames.join('\n');
 
-            // Usa a API de Clipboard do navegador
             navigator.clipboard.writeText(textToCopy).then(() => {
-                // Feedback visual opcional
-                const btn = document.querySelector('.noise-section button');
-                const originalText = btn.innerText;
-                btn.innerText = "✅ Copiado!";
+                if (!buttonEl) return;
+                const originalText = buttonEl.innerText;
+                buttonEl.innerText = "✅ Copiado!";
                 setTimeout(() => {
-                    btn.innerText = originalText;
+                    buttonEl.innerText = originalText;
                 }, 2000);
             }).catch(err => {
                 console.error('Erro ao copiar: ', err);
                 alert("Erro ao copiar para a área de transferência.");
             });
+        }
+
+        function copyNoiseList() {
+            copyFileNamesToClipboard(
+                noiseList.map(file => file.name),
+                document.getElementById('copyNoiseBtn'),
+                "Não há ruídos na lista para copiar."
+            );
+        }
+
+        function copyMatchedList() {
+            const matchedFileNames = transcripts.filter(entry => entry.matched).map(entry => entry.file.name);
+            copyFileNamesToClipboard(
+                matchedFileNames,
+                document.getElementById('copyMatchedBtn'),
+                "Não há arquivos com texto encontrado para copiar."
+            );
         }
     </script>
 </body>
