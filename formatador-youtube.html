@@ -608,7 +608,7 @@ Concentre as melhores palavras-chave nas duas primeiras linhas.
 Após os capítulos acrescente: 💬 Conte nos comentários como você se sentiu depois desta leitura e inscreva-se no canal para não perder as próximas histórias inspiradoras. 
 Acrescente também # Hashtags que façam sentido para o vídeo.
   
-4. BLOCO DE TAGS: Um bloco único com termos relevantes separados por vírgula (máximo 900 caracteres).
+4. BLOCO DE TAGS: Um bloco único com termos relevantes separados por vírgula (máximo 450 caracteres).
 5. COMENTÁRIO FIXADO: Uma pergunta instigante baseada no vídeo para eu fixar no topo e gerar engajamento.
 
 Entregue tudo formatado e pronto para copiar e colar em Português do Brasil. Use alguns Emojis na descrição para deixar mais amigável, mas não muitos, para que não fique enjoativo. Não use emojis nos capítulos`;
@@ -623,7 +623,7 @@ Entregue tudo formatado e pronto para copiar e colar em Português do Brasil. Us
         if (!rawText.trim()) return alert("Cole os dados primeiro!");
 
         // Sanitização
-        let cleanText = rawText.replace(/\\([.#!*])/g, '$1'); 
+        let cleanText = rawText.replace(/\\([.#!*_&()\[\]-])/g, '$1');
         cleanText = cleanText.replace(/^#{1,6}\s+/gm, '');
         cleanText = cleanText.replace(/\r\n/g, '\n');
 
@@ -666,10 +666,10 @@ Entregue tudo formatado e pronto para copiar e colar em Português do Brasil. Us
         descRaw = descRaw.replace(/\*\*Parágrafo.*?\*\*/gi, '').replace(/^\s*[\r\n]/gm, ""); 
         
         const inputPlaylist = document.getElementById('playlistLinkInput').value;
-        const linkMatch = descRaw.match(/https:\/\/youtube\.com\/playlist\?list=[\w-]+/);
+        const linkMatch = descRaw.match(/https:\/\/youtube\.com\/playlist\?list=\S+/);
         const playlistLink = inputPlaylist ? inputPlaylist : (linkMatch ? linkMatch[0] : "https://youtube.com/playlist?list=PLVlpF84gZ5TA");
-        
-        descRaw = descRaw.replace(/https:\/\/youtube\.com\/playlist\?list=[\w-]+/, '').trim();
+
+        descRaw = descRaw.replace(/https:\/\/youtube\.com\/playlist\?list=\S+/, '').trim();
         descRaw = descRaw.replace(/📚 Assista à playlist completa:/gi, '').trim();
 
         let paragraphs = descRaw.split(/\n\s*\n/).map(p => p.trim()).filter(p => p.length > 0);
