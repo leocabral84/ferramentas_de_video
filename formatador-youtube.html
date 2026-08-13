@@ -687,12 +687,12 @@ Entregue tudo formatado e pronto para copiar e colar em Português do Brasil. Us
 
         // --- 2. TIMESTAMPS ---
         let chaptersRaw = getSection(3);
-        const timestamps = chaptersRaw.split('\n').filter(line => line.match(/^\d{1,2}:\d{2}/));
+        const timestamps = chaptersRaw.split('\n').map(line => line.trim()).filter(line => line.match(/^\d{1,2}:\d{2}/));
         if (timestamps.length > 0) finalDesc += timestamps.join('\n') + "\n\n";
 
         finalDesc += "💬 Conte nos comentários como você se sentiu depois desta leitura e inscreva-se no canal para não perder as próximas histórias inspiradoras.\n\n";
 
-        const allHashtags = cleanText.match(/#\w+/g) || [];
+        const allHashtags = cleanText.match(/#[\p{L}\p{N}_]+/gu) || [];
         if (allHashtags.length) finalDesc += [...new Set(allHashtags)].join(' ');
 
         // --- 3. TAGS & 4. COMENTÁRIO ---
