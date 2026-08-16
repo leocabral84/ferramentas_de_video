@@ -758,38 +758,24 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* background-attachment:"scroll" (o padrão) prende a imagem à própria
+           caixa do #textDisplay: ela fica parada enquanto só o texto (conteúdo
+           normal do elemento) se move com o scroll. "local" faria a imagem
+           rolar junto com o texto e "cover" seria calculado contra a altura
+           total rolável (texto longo) em vez da altura visível — por isso NÃO
+           usar "local" aqui. */
         #textDisplay {
             flex: 1;
             overflow-y: auto;
             padding: 30px 38px;
             scroll-behavior: smooth;
-            transition: background-color 0.4s;
+            transition: background-color 0.4s, background-image 0.4s;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            background-attachment: scroll;
             position: relative;
             perspective: 1600px;
-        }
-
-        /* Camada de imagem de fundo: fixa ao tamanho visível do painel (não ao
-           tamanho total do texto), senão "background-size:cover" amplia a
-           imagem para caber num texto longo e ela some atrás de um recorte
-           minúsculo/escuro. Fica atrás do texto e não acompanha o scroll. */
-        .bg-layer {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-
-        .bg-overlay {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background: transparent;
-            transition: background 0.3s;
         }
 
         /* ── PAGE FLIP ANIMATION ── */
@@ -1138,7 +1124,7 @@
                     <label>Palavras destacadas ao mesmo tempo</label>
                     <div class="range-row">
                         <input type="range" id="hlCount" min="1" max="15" value="4"
-                               oninput="document.getElementById('hlCountVal').textContent=this.value">
+                               oninput="document.getElementById('hlCountVal').textContent=this.value; saveSettings();">
                         <span class="range-val" id="hlCountVal">4</span>
                     </div>
                 </div>
@@ -1153,7 +1139,7 @@
                 </div>
 
                 <label class="check-row">
-                    <input type="checkbox" id="dimRead" checked>
+                    <input type="checkbox" id="dimRead" checked onchange="saveSettings()">
                     <span>Escurecer palavras já lidas</span>
                 </label>
             </div>
@@ -1163,12 +1149,12 @@
         <div>
             <div class="section-title">📖 Virada de Página</div>
             <label class="check-row" style="margin-top:0">
-                <input type="checkbox" id="pageFlipEnabled">
+                <input type="checkbox" id="pageFlipEnabled" onchange="saveSettings()">
                 <span>Animar virada de página durante a leitura</span>
             </label>
             <div class="form-group" style="margin-top:9px">
                 <label>Intervalo (minutos)</label>
-                <input type="number" id="pageFlipMinutes" min="1" max="60" value="5">
+                <input type="number" id="pageFlipMinutes" min="1" max="60" value="5" onchange="saveSettings()">
             </div>
         </div>
 
@@ -1179,7 +1165,7 @@
                 <label>Offset (ajuste fino ±10 s)</label>
                 <div class="range-row">
                     <input type="range" id="syncOffset" min="-10" max="10" value="0" step="0.5"
-                           oninput="document.getElementById('syncOffsetVal').textContent=(this.value>0?'+':'')+this.value+'s'">
+                           oninput="document.getElementById('syncOffsetVal').textContent=(this.value>0?'+':'')+this.value+'s'; saveSettings();">
                     <span class="range-val" id="syncOffsetVal">0s</span>
                 </div>
             </div>
@@ -1221,7 +1207,7 @@
             <div class="vol-section">
                 <span style="font-size:15px">🔊</span>
                 <input type="range" id="volSlider" min="0" max="100" value="80"
-                       oninput="audio.volume=this.value/100">
+                       oninput="audio.volume=this.value/100; saveSettings();">
             </div>
 
             <div class="speed-control" title="Velocidade do áudio">
@@ -1251,9 +1237,6 @@
             </div>
 
             <div id="textDisplay">
-                <!-- Camadas de fundo (imagem + escurecimento), sempre atrás do texto -->
-                <div class="bg-layer" id="bgLayer"></div>
-                <div class="bg-overlay" id="bgOverlayLayer"></div>
                 <!-- Placeholder -->
                 <div class="placeholder" id="placeholder">
                     <div class="placeholder-icon">📖</div>
@@ -1296,6 +1279,7 @@ const S = {
     audioOk: false,
     textOk: false,
     bgImage: null,
+    bgImageName: '',
     bgMode: 'color',
     bgColor: '#1a1a22',
     hlStyle: 'bg',
@@ -1309,6 +1293,116 @@ const S = {
 };
 
 const audio = document.getElementById('audioEl');
+
+/* ─────────────────────────────────────────────
+   MEMORIZAR CONFIGURAÇÕES (localStorage)
+   Guarda apenas preferências de exibição/leitura — o .txt e o .mp3
+   narrados não são salvos (são grandes demais e mudam a cada uso).
+───────────────────────────────────────────── */
+const SETTINGS_KEY = 'leitorSyncSettings_v1';
+let settingsLoaded  = false; // vira true só depois da carga inicial, p/ não regravar o que acabou de ler
+let saveSettingsTimer = null;
+
+function saveSettings() {
+    if (!settingsLoaded) return;
+    clearTimeout(saveSettingsTimer);
+    saveSettingsTimer = setTimeout(() => {
+        const data = {
+            bgMode: S.bgMode,
+            bgColor: S.bgColor,
+            bgImage: S.bgImage,
+            bgImageName: S.bgImageName,
+            bgImageOpacity: document.getElementById('bgImageOpacity').value,
+            bgOverlay: document.getElementById('bgOverlay').value,
+            textAlign: document.querySelector('.align-btn.active')?.dataset.align || 'left',
+            font: document.getElementById('fontSelect').value,
+            fontSize: document.getElementById('fontSize').value,
+            lineHeight: document.getElementById('lineHeight').value,
+            textColor: document.getElementById('textColor').value,
+            hlStyle: S.hlStyle,
+            hlColor: S.hlColor,
+            hlCount: document.getElementById('hlCount').value,
+            dimRead: document.getElementById('dimRead').checked,
+            hlEnabled: S.hlEnabled,
+            pageFlipEnabled: document.getElementById('pageFlipEnabled').checked,
+            pageFlipMinutes: document.getElementById('pageFlipMinutes').value,
+            syncOffset: document.getElementById('syncOffset').value,
+            volume: document.getElementById('volSlider').value,
+        };
+        try {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
+        } catch (err) {
+            // provavelmente estourou a cota do localStorage por causa da imagem em base64
+            try {
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...data, bgImage: null, bgImageName: '' }));
+            } catch (err2) { /* localStorage indisponível — segue sem memorizar */ }
+        }
+    }, 300);
+}
+
+function loadSettings() {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch (err) { data = null; }
+    if (!data) return;
+
+    if (data.bgColor) S.bgColor = data.bgColor;
+    document.getElementById('customColor').value = S.bgColor;
+
+    if (data.bgImage) {
+        S.bgImage = data.bgImage;
+        S.bgImageName = data.bgImageName || '';
+        document.getElementById('bgImgDrop').classList.add('loaded');
+        document.getElementById('bgImgFileName').textContent = S.bgImageName || 'imagem restaurada';
+    }
+    if (typeof data.bgImageOpacity !== 'undefined') {
+        document.getElementById('bgImageOpacity').value = data.bgImageOpacity;
+        document.getElementById('bgImageOpacityVal').textContent = data.bgImageOpacity + '%';
+    }
+    if (typeof data.bgOverlay !== 'undefined') {
+        document.getElementById('bgOverlay').value = data.bgOverlay;
+        document.getElementById('bgOverlayVal').textContent = data.bgOverlay + '%';
+    }
+    setBgMode(data.bgMode === 'image' && S.bgImage ? 'image' : 'color');
+
+    if (data.textAlign) {
+        const btn = document.querySelector(`.align-btn[data-align="${data.textAlign}"]`);
+        if (btn) setTextAlign(data.textAlign, btn);
+    }
+
+    if (data.font)       document.getElementById('fontSelect').value = data.font;
+    if (data.fontSize)   document.getElementById('fontSize').value = data.fontSize;
+    if (data.lineHeight) document.getElementById('lineHeight').value = data.lineHeight;
+    if (data.textColor)  document.getElementById('textColor').value = data.textColor;
+
+    if (data.hlStyle) {
+        const hlBtn = document.querySelector(`.hl-btn[data-style="${data.hlStyle}"]`);
+        if (hlBtn) setHL(data.hlStyle, hlBtn);
+    }
+    if (data.hlColor) {
+        S.hlColor = data.hlColor;
+        document.getElementById('hlCustomColor').value = data.hlColor;
+    }
+    if (typeof data.hlCount !== 'undefined') {
+        document.getElementById('hlCount').value = data.hlCount;
+        document.getElementById('hlCountVal').textContent = data.hlCount;
+    }
+    if (typeof data.dimRead === 'boolean') document.getElementById('dimRead').checked = data.dimRead;
+    if (typeof data.hlEnabled === 'boolean') {
+        document.getElementById('hlEnabled').checked = data.hlEnabled;
+        S.hlEnabled = data.hlEnabled;
+        document.getElementById('hlControls').classList.toggle('disabled-group', !data.hlEnabled);
+    }
+
+    if (typeof data.pageFlipEnabled === 'boolean') document.getElementById('pageFlipEnabled').checked = data.pageFlipEnabled;
+    if (data.pageFlipMinutes) document.getElementById('pageFlipMinutes').value = data.pageFlipMinutes;
+
+    if (typeof data.syncOffset !== 'undefined') {
+        document.getElementById('syncOffset').value = data.syncOffset;
+        document.getElementById('syncOffsetVal').textContent = (data.syncOffset > 0 ? '+' : '') + data.syncOffset + 's';
+    }
+
+    if (typeof data.volume !== 'undefined') document.getElementById('volSlider').value = data.volume;
+}
 
 /* ─────────────────────────────────────────────
    CORES PREDEFINIDAS
@@ -1372,6 +1466,7 @@ function hexToRgbStr(hex) {
 function applyHLColor() {
     document.documentElement.style.setProperty('--hl-color', S.hlColor);
     document.documentElement.style.setProperty('--hl-rgb', hexToRgbStr(S.hlColor));
+    saveSettings();
 }
 
 document.getElementById('hlCustomColor').addEventListener('input', function () {
@@ -1452,6 +1547,7 @@ wireDrop('bgImgDrop', 'bgImgFile', (file, drop) => {
     const r = new FileReader();
     r.onload = e => {
         S.bgImage = e.target.result;
+        S.bgImageName = file.name;
         drop.classList.add('loaded');
         document.getElementById('bgImgFileName').textContent = file.name;
         setBgMode('image');
@@ -1744,9 +1840,7 @@ function setBgMode(mode) {
 }
 
 function applyBackground() {
-    const d       = document.getElementById('textDisplay');
-    const bgLayer = document.getElementById('bgLayer');
-    const bgOv    = document.getElementById('bgOverlayLayer');
+    const d = document.getElementById('textDisplay');
 
     if (S.bgMode === 'image' && S.bgImage) {
         const ov = (+document.getElementById('bgOverlay').value) / 100;
@@ -1754,17 +1848,28 @@ function applyBackground() {
         document.getElementById('bgOverlayVal').textContent = document.getElementById('bgOverlay').value + '%';
         document.getElementById('bgImageOpacityVal').textContent = document.getElementById('bgImageOpacity').value + '%';
 
-        // A imagem fica numa camada própria (dimensionada ao painel visível, não ao
-        // tamanho total do texto) para não ser distorcida/ampliada em textos longos.
-        bgLayer.style.backgroundImage = `url(${S.bgImage})`;
-        bgLayer.style.opacity = op;
-        bgOv.style.background = `rgba(0,0,0,${ov})`;
-        d.style.backgroundColor = 'var(--bg-dark)';
+        // Tudo é pintado como background do próprio #textDisplay (não em uma
+        // camada/DOM separada), com background-attachment:"scroll" (o padrão):
+        // assim a imagem fica presa à caixa do elemento — parada — enquanto
+        // somente o texto (conteúdo normal, que rola) se move por cima dela.
+        // Duas camadas de gradiente sólido simulam, respectivamente, a
+        // opacidade da imagem (funde com a cor de base) e o escurecimento
+        // para legibilidade; a imagem em si fica por baixo de ambas.
+        const baseRGB = '15,15,19'; // mesmo tom de --bg-dark
+        d.style.backgroundImage =
+            `linear-gradient(rgba(0,0,0,${ov}),rgba(0,0,0,${ov})),` +
+            `linear-gradient(rgba(${baseRGB},${1 - op}),rgba(${baseRGB},${1 - op})),` +
+            `url(${S.bgImage})`;
+        d.style.backgroundSize       = 'cover, cover, cover';
+        d.style.backgroundPosition   = 'center, center, center';
+        d.style.backgroundRepeat     = 'no-repeat, no-repeat, no-repeat';
+        d.style.backgroundAttachment = 'scroll, scroll, scroll';
+        d.style.backgroundColor      = '';
     } else {
-        bgLayer.style.backgroundImage = 'none';
-        bgOv.style.background = 'transparent';
+        d.style.backgroundImage = 'none';
         d.style.backgroundColor = S.bgColor;
     }
+    saveSettings();
 }
 
 document.getElementById('customColor').addEventListener('input', function () {
@@ -1791,6 +1896,7 @@ function applyTypography() {
     d.style.fontSize   = size + 'px';
     d.style.lineHeight = lh;
     d.style.color      = col;
+    saveSettings();
 }
 
 /* ─────────────────────────────────────────────
@@ -1801,6 +1907,7 @@ function setHL(style, btn) {
     document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     S.lastIdx = -99; // força re-render imediato
+    saveSettings();
 }
 
 /* ─────────────────────────────────────────────
@@ -1814,6 +1921,7 @@ function toggleHlEnabled(enabled) {
         const idx = idxAtTime(audio.currentTime);
         renderStatic(idx);
     }
+    saveSettings();
 }
 
 /* ─────────────────────────────────────────────
@@ -1823,6 +1931,7 @@ function setTextAlign(align, btn) {
     document.querySelectorAll('.align-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('textContent').style.textAlign = align;
+    saveSettings();
 }
 
 /* ─────────────────────────────────────────────
@@ -2048,12 +2157,14 @@ window.addEventListener('resize', () => {
 /* ─────────────────────────────────────────────
    INIT
 ───────────────────────────────────────────── */
+loadSettings();
 buildColorGrid();
 buildHLColorGrid();
 applyHLColor();
 applyBackground();
 applyTypography();
-audio.volume = 0.8;
+audio.volume = (+document.getElementById('volSlider').value || 80) / 100;
+settingsLoaded = true; // a partir daqui, qualquer alteração do usuário é memorizada
 </script>
 </body>
 </html>
