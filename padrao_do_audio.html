@@ -1425,7 +1425,9 @@
                 
                 // Classifica (apenas lista se for ruído, não remove da playlist)
                 updateNoiseClassification(file, peak);
-                transcribeTrack(index);
+                if (isFullAudioMode) {
+                    transcribeTrack(index);
+                }
                 scrollTranscriptToCurrent();
 
                 // Sempre desenha e prepara para tocar, independente de ser ruído ou não
@@ -1482,7 +1484,9 @@
             sourceNode.start(0, 0, actualDuration);
             isPlaying = true;
             updatePlayButtonUI();
-            startSpeechTranscription(currentIndex);
+            if (isFullAudioMode) {
+                startSpeechTranscription(currentIndex);
+            }
 
             sourceNode.onended = () => {
                 setTimeout(() => {
@@ -1510,15 +1514,17 @@
                     return;
                 }
 
-                const currentEntry = transcripts[currentIndex];
-                const waitingForTranscription = currentEntry && !currentEntry.transcriptionComplete;
-                const waitingForSimilarity = similaritySearchInProgress;
-                if (waitingForTranscription || waitingForSimilarity) {
-                    pendingAutoAdvance = true;
-                    if (speechSupported && currentRecognitionIndex === currentIndex) {
-                        stopSpeechRecognition(true);
+                if (isFullAudioMode) {
+                    const currentEntry = transcripts[currentIndex];
+                    const waitingForTranscription = currentEntry && !currentEntry.transcriptionComplete;
+                    const waitingForSimilarity = similaritySearchInProgress;
+                    if (waitingForTranscription || waitingForSimilarity) {
+                        pendingAutoAdvance = true;
+                        if (speechSupported && currentRecognitionIndex === currentIndex) {
+                            stopSpeechRecognition(true);
+                        }
+                        return;
                     }
-                    return;
                 }
 
                 loadTrack(nextIndex, true);
@@ -1607,15 +1613,8 @@
             // Opcional: Resetar estatísticas de ruído ao iniciar novo processo?
             // noiseList = []; renderNoiseList();
 
-            // O processo automático precisa da transcrição COMPLETA de cada áudio
-            // para que a comparação com o texto salvo seja confiável.
-            if (!isFullAudioMode) {
-                isFullAudioMode = true;
-                fullAudioToggle.classList.add('active');
-                timeInputGroup.style.opacity = "0.5";
-                timeInputGroup.style.pointerEvents = "none";
-            }
-
+            // Respeita o modo escolhido pelo usuário no toggle "Completo":
+            // ativado = transcrição + comparação; desativado = apenas toca o trecho.
             isAutoMode = true;
             updateAutoUI();
             updatePlayButtonUI();

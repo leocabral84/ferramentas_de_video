@@ -178,11 +178,11 @@
 <!-- Container Principal -->
 <div class="container mt-4">
 
-    <!-- Input para buscar arquivo txt -->
-    <input type="file" id="fileInput" accept=".txt" class="form-control mb-3">
+    <!-- Input para buscar arquivo txt/srt -->
+    <input type="file" id="fileInput" accept=".txt,.srt" class="form-control mb-3">
 
     <!-- Caixa de texto principal -->
-    <textarea id="mainText" class="form-control" rows="5" placeholder="Digite ou cole seu texto aqui..."></textarea><br>
+    <textarea id="mainText" class="form-control" rows="5" placeholder="Digite ou cole seu texto (ou legenda .srt) aqui..."></textarea><br>
 
     <!-- Configurações de divisão -->
    <input type="number" id="charLimit" class="form-control" value="5000" min="1"> Número de caracteres máximo
@@ -194,6 +194,11 @@
    </select>
 
     <button class="btn btn-primary" onclick="splitText()">Dividir Texto</button>
+    <br>
+
+    <!-- Configuração específica da divisão de legendas SRT -->
+    <input type="number" id="srtBlocksPerPart" class="form-control" value="5" min="1"> Número de blocos de legenda por parte
+    <button class="btn btn-warning" onclick="splitSRT()">Dividir SRT</button>
     <br>
 
     <!-- Navegação entre partes -->
@@ -212,6 +217,7 @@
     <button class="btn btn-danger" onclick="resetAll()">Apagar Tudo</button>
     <button class="btn btn-primary" onclick="playText()">Play</button>
     <button class="btn btn-secondary" onclick="stopText()">Stop</button>
+    <button class="btn btn-info" id="downloadSrtBtn" onclick="downloadSRT()" style="display:none;">Baixar .srt</button>
 
     <!-- Tabela de resultados -->
     <table id="resultTable" class="table table-bordered mt-4">
@@ -230,6 +236,8 @@
 <script>
 let textParts = [];
 let currentIndex = 0;
+let isSrtMode = false;
+let srtResults = [];
 
 // Carrega o último texto salvo e prepara eventos
 window.onload = function () {
@@ -240,10 +248,10 @@ window.onload = function () {
     });
 };
 
-// Lê o arquivo txt selecionado
+// Lê o arquivo txt/srt selecionado
 function loadTextFromFile(event) {
     const file = event.target.files[0];
-    if (file && file.name.endsWith(".txt")) {
+    if (file && (file.name.endsWith(".txt") || file.name.endsWith(".srt"))) {
         const reader = new FileReader();
         reader.onload = function (e) {
             const content = e.target.result;
@@ -252,6 +260,99 @@ function loadTextFromFile(event) {
         };
         reader.readAsText(file);
     }
+}
+
+// ================== DIVISOR DE LEGENDAS SRT ==================
+// Divide uma legenda .srt em partes contendo um número fixo de blocos
+// ORIGINAIS completos cada uma. Nenhum bloco é alterado, mesclado ou
+// recalculado: número, timestamp e texto de cada bloco permanecem
+// exatamente como no arquivo de origem — apenas são agrupados em partes.
+
+// Seta usada entre os timestamps, montada por concatenação para evitar a
+// sequência literal "-->" no código-fonte (alguns parsers de HTML a
+// confundem com o fechamento de um comentário)
+const SRT_ARROW = "-" + "-" + ">";
+const SRT_TIME_LINE_REGEX = new RegExp(
+    "(\\d{1,2}:\\d{1,2}:\\d{1,2}[,.]\\d{1,3})\\s*" + SRT_ARROW + "\\s*(\\d{1,2}:\\d{1,2}:\\d{1,2}[,.]\\d{1,3})"
+);
+
+// Extrai os blocos {number, start, end, text} de um conteúdo .srt, sem
+// alterar timestamps nem numeração
+function parseSRT(content) {
+    content = content.replace(/\r/g, "");
+    let blocks = content.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+    let entries = [];
+    blocks.forEach(block => {
+        let lines = block.split("\n");
+        let hasNumber = /^\d+$/.test(lines[0].trim());
+        let lineIdx = hasNumber ? 1 : 0;
+        if (!lines[lineIdx]) return;
+        let m = lines[lineIdx].match(SRT_TIME_LINE_REGEX);
+        if (!m) return;
+        let text = lines.slice(lineIdx + 1).join(" ").replace(/\s+/g, " ").trim();
+        if (!text) return;
+        let number = hasNumber ? lines[0].trim() : String(entries.length + 1);
+        entries.push({ number, start: m[1], end: m[2], text });
+    });
+    return entries;
+}
+
+// Formata um bloco de legenda no padrão .srt
+function formatSRTBlock(number, start, end, text) {
+    return number + "\n" + start + " " + SRT_ARROW + " " + end + "\n" + text;
+}
+
+// Junta uma sequência de blocos originais no texto .srt de uma parte
+function formatSRTPart(blocks) {
+    return blocks.map(b => formatSRTBlock(b.number, b.start, b.end, b.text)).join("\n\n");
+}
+
+// Divide uma legenda .srt em partes de N blocos originais, mantendo
+// número, timestamp e texto de cada bloco inalterados
+function splitSRT() {
+    let rawText = document.getElementById("mainText").value.trim();
+    let blocksPerPart = parseInt(document.getElementById("srtBlocksPerPart").value, 10);
+    let entries = parseSRT(rawText);
+
+    if (entries.length === 0) {
+        alert("Não foi possível identificar blocos de legenda válidos (.srt) no texto informado.");
+        return;
+    }
+    if (!blocksPerPart || blocksPerPart < 1) blocksPerPart = 1;
+
+    isSrtMode = true;
+    srtResults = [];
+    textParts = [];
+
+    for (let i = 0; i < entries.length; i += blocksPerPart) {
+        let chunk = entries.slice(i, i + blocksPerPart);
+        let text = formatSRTPart(chunk);
+        srtResults.push({ part: srtResults.length + 1, blocks: chunk, text });
+        textParts.push(text);
+    }
+
+    document.getElementById("downloadSrtBtn").style.display = "inline-block";
+    populateTable();
+    showText(0);
+    document.getElementById("totalTextCount").innerText = 'de ' + textParts.length;
+}
+
+// Baixa o resultado como arquivo .srt (todas as partes reunidas)
+function downloadSRT() {
+    if (!isSrtMode || srtResults.length === 0) {
+        alert("Divida uma legenda com \"Dividir SRT\" antes de baixar.");
+        return;
+    }
+    let content = srtResults.map(p => p.text).join("\n\n") + "\n";
+    let blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "legendas_divididas.srt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // Salva no localStorage
@@ -272,6 +373,9 @@ function splitText() {
     let text = document.getElementById("mainText").value.trim();
     let charLimit = parseInt(document.getElementById("charLimit").value, 10);
     let splitMode = document.getElementById("splitMode").value;
+    isSrtMode = false;
+    srtResults = [];
+    document.getElementById("downloadSrtBtn").style.display = "none";
     textParts = [];
 
     if (splitMode === "charLimit") {
@@ -345,13 +449,32 @@ function splitText() {
 
 // Preenche tabela
 function populateTable() {
-    let tableBody = document.getElementById("resultTable").getElementsByTagName("tbody")[0];
+    let table = document.getElementById("resultTable");
+    let thead = table.getElementsByTagName("thead")[0];
+    let tableBody = table.getElementsByTagName("tbody")[0];
     tableBody.innerHTML = "";
-    textParts.forEach((part, index) => {
-        let row = tableBody.insertRow();
-        row.insertCell(0).innerText = index + 1;
-        row.insertCell(1).innerText = part;
-    });
+
+    if (isSrtMode) {
+        thead.innerHTML = "<tr><th>Parte</th><th>Blocos</th><th>Conteúdo</th></tr>";
+        srtResults.forEach(part => {
+            let row = tableBody.insertRow();
+            let first = part.blocks[0];
+            let last = part.blocks[part.blocks.length - 1];
+            let blocksLabel = part.blocks.length > 1
+                ? (first.number + "-" + last.number + " (" + first.start + " " + SRT_ARROW + " " + last.end + ")")
+                : (first.number + " (" + first.start + " " + SRT_ARROW + " " + first.end + ")");
+            row.insertCell(0).innerText = part.part;
+            row.insertCell(1).innerText = blocksLabel;
+            row.insertCell(2).innerText = part.text;
+        });
+    } else {
+        thead.innerHTML = "<tr><th>#</th><th>Texto Dividido</th></tr>";
+        textParts.forEach((part, index) => {
+            let row = tableBody.insertRow();
+            row.insertCell(0).innerText = index + 1;
+            row.insertCell(1).innerText = part;
+        });
+    }
 }
 
 // Exibe parte do texto
@@ -391,11 +514,16 @@ function copyText() {
 function resetAll() {
     document.getElementById("mainText").value = "";
     document.getElementById("charLimit").value = 5000;
+    document.getElementById("srtBlocksPerPart").value = 5;
     document.getElementById("displayText").value = "";
     document.getElementById("currentTextIndex").value = 1;
     document.getElementById("totalTextCount").innerText = "de 0";
+    document.getElementById("downloadSrtBtn").style.display = "none";
+    document.getElementById("resultTable").getElementsByTagName("thead")[0].innerHTML = "<tr><th>#</th><th>Texto Dividido</th></tr>";
     document.getElementById("resultTable").getElementsByTagName("tbody")[0].innerHTML = "";
     textParts = [];
+    srtResults = [];
+    isSrtMode = false;
     currentIndex = 0;
     localStorage.removeItem("lastDivisorText");
 }
