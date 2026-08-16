@@ -179,6 +179,7 @@
             font-weight: 700;
             background: linear-gradient(135deg, var(--primary-light), #ffaa66);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
         }
@@ -222,6 +223,18 @@
             grid-template-columns: 330px 1fr;
             flex: 1;
             min-height: 0;
+            transition: grid-template-columns 0.3s ease;
+        }
+
+        .app-layout.sidebar-collapsed { grid-template-columns: 0 1fr; }
+        .app-layout.sidebar-collapsed .sidebar {
+            padding: 22px 0;
+            border-right: none;
+            overflow: hidden;
+        }
+        .app-layout.sidebar-collapsed .sidebar > * {
+            opacity: 0;
+            pointer-events: none;
         }
 
         /* ── SIDEBAR ── */
@@ -549,6 +562,20 @@
         .btn-stop { color: var(--danger) !important; }
         .btn-stop:hover { background: rgba(231,76,60,0.15) !important; border-color: var(--danger) !important; }
 
+        .btn-toggle-sidebar {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            font-size: 15px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-toggle-sidebar:hover { background: var(--border); color: var(--primary-light); }
+
         /* ── PROGRESS ── */
         .progress-section { flex: 1; display: flex; flex-direction: column; gap: 5px; }
 
@@ -678,6 +705,12 @@
 
         .text-display-header > span { font-size: 12px; color: var(--text-muted); }
 
+        .text-display-header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
         .word-counter {
             font-size: 12px;
             color: var(--text-muted);
@@ -685,6 +718,41 @@
         }
 
         .word-counter strong { color: var(--primary-light); }
+
+        .btn-record {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-record:hover { border-color: var(--danger); }
+
+        .btn-record.recording {
+            background: rgba(231,76,60,0.15);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-record.recording .rec-dot { animation: pulse 1s infinite; }
+
+        .record-timer {
+            display: none;
+            font-size: 12px;
+            color: var(--danger);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
 
         #textDisplay {
             flex: 1;
@@ -1071,6 +1139,9 @@
 
         <!-- PLAYER BAR -->
         <div class="player-bar">
+            <button class="btn-toggle-sidebar" id="toggleSidebarBtn"
+                    onclick="toggleSidebar()" title="Ocultar painel lateral">⬅️</button>
+
             <div class="transport-controls">
                 <button class="btn-t btn-sec btn-stop" id="btnStop"
                         onclick="stopAudio()" title="Parar (Esc)">⏹</button>
@@ -1113,7 +1184,14 @@
         <div class="text-display-wrap">
             <div class="text-display-header">
                 <span id="dispInfo">Carregue um arquivo .txt para começar</span>
-                <div class="word-counter" id="wordCounter"></div>
+                <div class="text-display-header-right">
+                    <span class="record-timer" id="recordTimer">🔴 0:00</span>
+                    <button class="btn-record" id="recordBtn" onclick="toggleRecording()"
+                            title="Grava apenas esta área de leitura + o áudio narrado em um vídeo (.webm). Ao ser solicitado, escolha 'Esta aba'.">
+                        <span class="rec-dot">🔴</span> Gravar vídeo
+                    </button>
+                    <div class="word-counter" id="wordCounter"></div>
+                </div>
             </div>
 
             <div id="textDisplay">
@@ -1648,6 +1726,189 @@ function setHL(style, btn) {
     document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     S.lastIdx = -99; // força re-render imediato
+}
+
+/* ─────────────────────────────────────────────
+   OCULTAR / EXPANDIR PAINEL LATERAL
+───────────────────────────────────────────── */
+function toggleSidebar() {
+    const layout   = document.querySelector('.app-layout');
+    const btn      = document.getElementById('toggleSidebarBtn');
+    const collapsed = layout.classList.toggle('sidebar-collapsed');
+    btn.textContent = collapsed ? '➡️' : '⬅️';
+    btn.title = collapsed ? 'Mostrar painel lateral' : 'Ocultar painel lateral';
+}
+
+/* ─────────────────────────────────────────────
+   GRAVAÇÃO DE TELA + ÁUDIO (sem programas externos)
+   Usa getDisplayMedia (captura de tela nativa do navegador)
+   + Web Audio API (mixa o áudio do <audio> na gravação)
+───────────────────────────────────────────── */
+let mediaRecorder      = null;
+let recordedChunks     = [];
+let activeDisplayStream = null;
+let audioCtx           = null;
+let audioDestNode      = null;
+let recordTimerHandle  = null;
+let recordStartedAt    = 0;
+
+function getMixedAudioStream() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!S.audioSourceNode) {
+        // Conectar o <audio> ao Web Audio desvia sua saída padrão para os alto-falantes;
+        // por isso precisamos reconectar explicitamente ao destino para continuar ouvindo.
+        S.audioSourceNode = audioCtx.createMediaElementSource(audio);
+        S.audioSourceNode.connect(audioCtx.destination);
+    }
+    if (!audioDestNode) {
+        audioDestNode = audioCtx.createMediaStreamDestination();
+        S.audioSourceNode.connect(audioDestNode);
+    }
+    return audioDestNode.stream;
+}
+
+function toggleRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') stopRecording();
+    else startRecording();
+}
+
+async function startRecording() {
+    if (!S.audioOk || !S.textOk) {
+        toast('Carregue o texto e o áudio antes de gravar!', '⚠️');
+        return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        toast('Seu navegador não suporta gravação de tela (use Chrome/Edge atualizado).', '⚠️');
+        return;
+    }
+
+    // Criar/retomar o AudioContext ainda dentro do gesto de clique do usuário
+    const audioStream = getMixedAudioStream();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    let displayStream;
+    try {
+        displayStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { frameRate: 30 },
+            audio: false,
+            preferCurrentTab: true, // dica (Chrome) para pré-selecionar "esta aba" no seletor
+            selfBrowserSurface: 'include'
+        });
+    } catch (err) {
+        toast('Captura de tela cancelada.', 'ℹ️');
+        return;
+    }
+
+    // Recorta a captura para mostrar SOMENTE a área de leitura do texto (Region Capture API,
+    // suportada no Chrome/Edge). Só funciona quando o próprio conteúdo desta aba é compartilhado —
+    // se o usuário escolher outra aba/janela/tela inteira, a gravação sai sem o recorte.
+    let cropped = false;
+    try {
+        const videoTrack = displayStream.getVideoTracks()[0];
+        if (window.CropTarget && typeof videoTrack.cropTo === 'function') {
+            const cropTarget = await CropTarget.fromElement(document.getElementById('textDisplay'));
+            await videoTrack.cropTo(cropTarget);
+            cropped = true;
+        }
+    } catch (err) {
+        console.warn('Não foi possível recortar a gravação para a área de texto:', err);
+    }
+
+    if (!cropped) {
+        toast('Aviso: seu navegador não recortou a gravação — selecione "Esta aba" para gravar apenas a área de leitura.', '⚠️');
+    }
+
+    const combined = new MediaStream([
+        ...displayStream.getVideoTracks(),
+        ...audioStream.getAudioTracks()
+    ]);
+
+    // Se o usuário clicar em "Parar compartilhamento" na barra do navegador
+    displayStream.getVideoTracks()[0].addEventListener('ended', () => stopRecording());
+
+    const mimeCandidates = [
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm'
+    ];
+    const mimeType = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || '';
+
+    recordedChunks = [];
+    activeDisplayStream = displayStream;
+    try {
+        mediaRecorder = new MediaRecorder(combined, mimeType ? { mimeType } : undefined);
+    } catch (err) {
+        toast('Não foi possível iniciar o gravador.', '❌');
+        displayStream.getTracks().forEach(t => t.stop());
+        return;
+    }
+
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+        activeDisplayStream.getTracks().forEach(t => t.stop());
+        saveRecording();
+    };
+    mediaRecorder.start(1000);
+
+    recordStartedAt = performance.now();
+    const btn = document.getElementById('recordBtn');
+    btn.classList.add('recording');
+    btn.innerHTML = '<span class="rec-dot">⏺️</span> Parar gravação';
+    const timerEl = document.getElementById('recordTimer');
+    timerEl.style.display = 'inline';
+    recordTimerHandle = setInterval(() => {
+        timerEl.textContent = '🔴 ' + fmtTime((performance.now() - recordStartedAt) / 1000);
+    }, 500);
+
+    if (cropped) toast('Gravação iniciada — apenas a área de leitura será salva no vídeo.', '🎥');
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    clearInterval(recordTimerHandle);
+    const btn = document.getElementById('recordBtn');
+    btn.classList.remove('recording');
+    btn.innerHTML = '<span class="rec-dot">🔴</span> Gravar vídeo';
+    document.getElementById('recordTimer').style.display = 'none';
+}
+
+async function saveRecording() {
+    if (!recordedChunks.length) return;
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const suggestedName = `LeitorSync-gravacao-${stamp}.webm`;
+
+    // Navegadores com File System Access API abrem o diálogo nativo "Salvar como"
+    if (window.showSaveFilePicker) {
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName,
+                types: [{ description: 'Vídeo WebM', accept: { 'video/webm': ['.webm'] } }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            toast('Gravação salva no local escolhido!', '✅');
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                toast('Salvamento cancelado.', 'ℹ️');
+                return;
+            }
+            console.warn('showSaveFilePicker falhou, usando download padrão:', err);
+        }
+    }
+
+    // Fallback: download comum (vai para a pasta de downloads do navegador)
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = suggestedName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    toast('Gravação salva! Verifique sua pasta de downloads.', '✅');
 }
 
 /* ─────────────────────────────────────────────
