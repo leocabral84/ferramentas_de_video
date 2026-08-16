@@ -211,6 +211,7 @@
 
         .header-badge.active .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
         .header-badge.playing .dot { background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: pulse 1s infinite; }
+        .header-badge.exporting .dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); animation: pulse 1s infinite; }
 
         @keyframes pulse {
             0%,100% { opacity:1; transform:scale(1); }
@@ -342,6 +343,176 @@
         .file-drop.loaded .file-drop-text,
         .file-drop.loaded .file-drop-icon { display: none; }
         .file-drop.loaded .file-name { display: flex; }
+
+        /* ── PLAYLIST / SLIDES ── */
+        /* Paginador de um slide por vez: as setas ficam sempre na mesma posição
+           na tela (independente do conteúdo do slide atual), o que permite
+           automatizar a edição em lote com um macro de cliques em coordenadas fixas. */
+        .slide-pager {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+        }
+
+        .slide-pager-arrow {
+            flex-shrink: 0;
+            width: 32px; height: 32px;
+            margin-top: 2px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-main);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .slide-pager-arrow:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary-light);
+            background: rgba(232,98,26,0.1);
+        }
+
+        .slide-pager-arrow:disabled { opacity: 0.3; cursor: default; }
+
+        .slide-pager .slide-item { flex: 1; min-width: 0; margin-bottom: 0; }
+
+        .slide-item { margin-bottom: 8px; }
+
+        .slide-row {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slide-row-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+        .slide-row:hover { border-color: var(--primary); }
+
+        .slide-row.current {
+            border-color: var(--primary);
+            background: rgba(232,98,26,0.08);
+        }
+
+        .slide-row.missing-text { border-color: var(--danger); }
+
+        .slide-num {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--text-main);
+            font-size: 10.5px;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slide-row.current .slide-num { background: var(--primary); color: #fff; }
+
+        .slide-info { flex: 1; min-width: 0; }
+
+        .slide-name {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .slide-meta { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+
+        .slide-actions { display: flex; align-items: center; gap: 6px; }
+
+        .slide-btn {
+            width: 25px; height: 25px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-family: inherit;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .slide-btn:hover { border-color: var(--primary); color: var(--primary-light); }
+        .slide-btn.text-btn.has-text { border-color: var(--success); color: var(--success); }
+        .slide-btn.del-btn { margin-left: auto; }
+        .slide-btn.del-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+        .slide-textarea-wrap { padding: 8px 2px 2px; }
+
+        .slide-textarea-wrap textarea {
+            width: 100%;
+            min-height: 84px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 12.5px;
+            padding: 8px 10px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .slide-textarea-wrap textarea:focus { border-color: var(--primary); }
+
+        .slide-textarea-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            justify-content: flex-end;
+        }
+
+        .slide-textarea-actions button {
+            padding: 5px 13px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-size: 11.5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .slide-textarea-actions button.save { border-color: var(--primary); color: var(--primary-light); }
+        .slide-textarea-actions button:hover { background: var(--border); }
+
+        .slide-empty-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 16px 8px;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .slide-indicator {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+
+        .slide-indicator strong { color: var(--primary-light); }
 
         /* ── BG MODE TABS ── */
         .bg-options { display: flex; gap: 7px; margin-bottom: 10px; }
@@ -767,6 +938,7 @@
         #textDisplay {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 30px 38px;
             scroll-behavior: smooth;
             transition: background-color 0.4s, background-image 0.4s;
@@ -916,6 +1088,15 @@
 
         .toast.show { transform: translateX(-50%) translateY(0); }
 
+        /* ── EXPORT LOCK ── */
+        body.is-exporting .sidebar,
+        body.is-exporting .transport-controls,
+        body.is-exporting .progress-wrap,
+        body.is-exporting .speed-control {
+            pointer-events: none;
+            opacity: 0.55;
+        }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 860px) {
             .app-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
@@ -933,7 +1114,7 @@
         <div class="logo-icon">🎙️</div>
         <div class="logo-text">
             <h1>LeitorSync</h1>
-            <span>Sincronizador de Áudio &amp; Texto</span>
+            <span>Slides Narrados &amp; Exportação em Vídeo</span>
         </div>
     </div>
     <div class="header-badge" id="statusBadge">
@@ -979,32 +1160,31 @@
     <!-- ══ SIDEBAR ══ -->
     <aside class="sidebar">
 
-        <!-- ARQUIVOS -->
+        <!-- PLAYLIST DE SLIDES -->
         <div>
-            <div class="section-title">📁 Arquivos</div>
+            <div class="section-title">📁 Playlist de Áudios</div>
 
             <div class="file-group">
-                <label class="file-label">Texto narrado <small>(.txt)</small></label>
-                <div class="file-drop" id="txtDrop">
-                    <input type="file" id="txtFile" accept=".txt,.text,text/plain">
-                    <div class="file-drop-icon">📄</div>
-                    <div class="file-drop-text">Arraste ou <strong>clique aqui</strong><br>para selecionar o .txt</div>
-                    <div class="file-name">✅ <span id="txtFileName"></span></div>
-                </div>
-            </div>
-
-            <div class="file-group" style="margin-top:11px">
-                <label class="file-label">Áudio narrado <small>(.mp3)</small></label>
+                <label class="file-label">Áudios narrados <small>(.mp3 — selecione vários)</small></label>
                 <div class="file-drop" id="mp3Drop">
-                    <input type="file" id="mp3File" accept=".mp3,audio/mpeg,audio/*">
+                    <input type="file" id="mp3Files" accept=".mp3,audio/mpeg,audio/*" multiple>
                     <div class="file-drop-icon">🎵</div>
-                    <div class="file-drop-text">Arraste ou <strong>clique aqui</strong><br>para selecionar o .mp3</div>
-                    <div class="file-name">✅ <span id="mp3FileName"></span></div>
+                    <div class="file-drop-text">Arraste um ou mais áudios, ou <strong>clique aqui</strong><br>para importar a playlist</div>
                 </div>
             </div>
 
+            <div class="slide-pager" id="slidePager">
+                <button class="slide-pager-arrow" id="pagerPrevBtn" onclick="prevSlide()" title="Slide anterior (Page Up)">◀</button>
+                <div class="slide-item" id="slidePagerItem"></div>
+                <button class="slide-pager-arrow" id="pagerNextBtn" onclick="nextSlide()" title="Próximo slide (Page Down)">▶</button>
+            </div>
+            <div class="slide-empty-hint" id="slideEmptyHint">
+                Nenhum slide ainda. Importe os áudios (.mp3) acima — cada áudio vira um slide.
+                Depois, use as setas <strong>◀ ▶</strong> para navegar e o <strong>➕</strong> para colar o texto narrado de cada um.
+            </div>
+
             <div class="file-group" style="margin-top:11px">
-                <label class="file-label">Imagem de fundo <small>(opcional)</small></label>
+                <label class="file-label">Imagem de fundo <small>(opcional — vale para todos os slides)</small></label>
                 <div class="file-drop" id="bgImgDrop">
                     <input type="file" id="bgImgFile" accept="image/*">
                     <div class="file-drop-icon">🖼️</div>
@@ -1119,7 +1299,7 @@
 
             <label class="check-row" style="margin-top:0;margin-bottom:11px">
                 <input type="checkbox" id="hlEnabled" checked onchange="toggleHlEnabled(this.checked)">
-                <span>Destacar palavras (desligue p/ manter só o auto-scroll — fica invisível, inclusive em gravações)</span>
+                <span>Destacar palavras (desligue p/ manter só o auto-scroll — fica invisível, inclusive no vídeo exportado)</span>
             </label>
 
             <div id="hlControls">
@@ -1170,6 +1350,29 @@
             </div>
         </div>
 
+        <!-- TRANSIÇÃO ENTRE SLIDES -->
+        <div>
+            <div class="section-title">🔀 Transição entre Slides</div>
+            <div class="highlight-options" id="transitionOptions">
+                <button class="hl-btn" data-transition="none"  onclick="setTransition('none',this)">🚫 Corte seco</button>
+                <button class="hl-btn active" data-transition="fade"  onclick="setTransition('fade',this)">🌫️ Fade</button>
+                <button class="hl-btn" data-transition="slide" onclick="setTransition('slide',this)">➡️ Deslizar</button>
+                <button class="hl-btn" data-transition="zoom"  onclick="setTransition('zoom',this)">🔍 Zoom</button>
+            </div>
+            <div class="form-group" id="transitionDurGroup" style="margin-top:11px">
+                <label>Duração da transição</label>
+                <div class="range-row">
+                    <input type="range" id="transitionDuration" min="200" max="1500" step="50" value="600"
+                           oninput="document.getElementById('transitionDurationVal').textContent=(this.value/1000).toFixed(2)+'s'; S.transitionDuration=+this.value; saveSettings();">
+                    <span class="range-val" id="transitionDurationVal">0.60s</span>
+                </div>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:7px;line-height:1.55">
+                "Fade" começa transparente e vai aparecendo aos poucos — a mesma troca acontece ao vivo
+                e é gravada exatamente assim no vídeo exportado, sem atrasar o áudio.
+            </p>
+        </div>
+
         <!-- VIRADA DE PÁGINA -->
         <div>
             <div class="section-title">📖 Virada de Página</div>
@@ -1181,6 +1384,9 @@
                 <label>Intervalo (minutos)</label>
                 <input type="number" id="pageFlipMinutes" min="1" max="60" value="5" onchange="saveSettings()">
             </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:7px;line-height:1.55">
+                Esta animação aparece só na tela, ao vivo — não é incluída no vídeo exportado.
+            </p>
         </div>
 
         <!-- SYNC OFFSET -->
@@ -1199,7 +1405,7 @@
             </p>
 
             <div class="form-group" style="margin-top:13px">
-                <label>Calibração manual (corrige desvios durante a leitura)</label>
+                <label>Calibração manual (corrige desvios durante a leitura deste slide)</label>
                 <p style="font-size:11px;color:var(--text-muted);line-height:1.55;margin-bottom:8px">
                     Durante a reprodução, dê <span class="kbd">Shift</span> + clique na palavra que
                     está sendo dita naquele instante. O destaque se realinha a partir dali — use
@@ -1209,9 +1415,26 @@
                     <span style="font-size:12px;color:var(--text-muted)">
                         Pontos de calibração: <strong id="anchorCount" style="color:var(--primary-light)">0</strong>
                     </span>
-                    <button class="hl-btn" onclick="clearSyncAnchors()" title="Remove todos os pontos de calibração">🗑️ Limpar</button>
+                    <button class="hl-btn" onclick="clearSyncAnchors()" title="Remove todos os pontos de calibração deste slide">🗑️ Limpar</button>
                 </div>
             </div>
+        </div>
+
+        <!-- EXPORTAÇÃO -->
+        <div>
+            <div class="section-title">🎬 Exportar Vídeo</div>
+            <div class="form-group">
+                <label>Resolução do vídeo</label>
+                <select id="exportRes" onchange="saveSettings()">
+                    <option value="1280x720">HD (1280×720)</option>
+                    <option value="1920x1080" selected>Full HD (1920×1080)</option>
+                </select>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:7px;line-height:1.55">
+                Duração total estimada: <strong id="totalDurationLabel" style="color:var(--primary-light)">—</strong><br>
+                O MP4 final tem a duração exata da soma dos áudios: cada slide aparece pelo tempo do seu
+                próprio narrador, com o mesmo fundo, fonte e destaque configurados nesta barra lateral.
+            </p>
         </div>
 
     </aside>
@@ -1227,13 +1450,18 @@
             <div class="transport-controls">
                 <button class="btn-t btn-sec btn-stop" id="btnStop"
                         onclick="stopAudio()" title="Parar (Esc)">⏹</button>
+                <button class="btn-t btn-sec" id="btnPrevSlide"
+                        onclick="prevSlide()" title="Slide anterior (Page Up)">⏪</button>
                 <button class="btn-t btn-play" id="btnPlay"
                         onclick="togglePlay()" title="Play / Pausa (Espaço)">▶</button>
+                <button class="btn-t btn-sec" id="btnNextSlide"
+                        onclick="nextSlide()" title="Próximo slide (Page Down)">⏩</button>
                 <button class="btn-t btn-sec" id="btnRestart"
-                        onclick="restartAudio()" title="Reiniciar">⏮</button>
+                        onclick="restartAudio()" title="Reiniciar apresentação (volta ao slide 1)">⏮</button>
             </div>
 
             <div class="progress-section">
+                <div class="slide-indicator" id="slideIndicator">Nenhum slide carregado</div>
                 <div class="progress-wrap" id="progressWrap" onclick="seekAudio(event)"
                      onmousedown="startDragProgress(event)">
                     <div class="progress-fill" id="progressFill"></div>
@@ -1259,18 +1487,19 @@
             <div class="shortcuts-col">
                 <span><span class="kbd">Espaço</span> Play/Pausa</span>
                 <span><span class="kbd">Esc</span> Parar &nbsp;<span class="kbd">←→</span> ±5s</span>
+                <span><span class="kbd">PgUp/PgDn</span> Slide anterior/próximo</span>
             </div>
         </div>
 
         <!-- TEXT DISPLAY -->
         <div class="text-display-wrap">
             <div class="text-display-header">
-                <span id="dispInfo">Carregue um arquivo .txt para começar</span>
+                <span id="dispInfo">Importe áudios (.mp3) para começar</span>
                 <div class="text-display-header-right">
-                    <span class="record-timer" id="recordTimer">🔴 0:00</span>
-                    <button class="btn-record" id="recordBtn" onclick="toggleRecording()"
-                            title="Grava apenas esta área de leitura + o áudio narrado em um vídeo (.webm). Ao ser solicitado, escolha 'Esta aba'.">
-                        <span class="rec-dot">🔴</span> Gravar vídeo
+                    <span class="record-timer" id="exportStatus">🎬 0:00</span>
+                    <button class="btn-record" id="exportBtn" onclick="toggleExport()"
+                            title="Renderiza o fundo + texto destacado de cada slide junto com seu áudio direto em um .mp4, sem gravar a tela.">
+                        <span class="rec-dot">🎬</span> Exportar MP4
                     </button>
                     <div class="word-counter" id="wordCounter"></div>
                 </div>
@@ -1280,8 +1509,9 @@
                 <!-- Placeholder -->
                 <div class="placeholder" id="placeholder">
                     <div class="placeholder-icon">📖</div>
-                    <h2>Nenhum texto carregado</h2>
-                    <p>Selecione um arquivo <strong>.txt</strong> na barra lateral para visualizar o texto sincronizado com o áudio.</p>
+                    <h2>Nenhum slide carregado</h2>
+                    <p>Importe um ou mais áudios <strong>.mp3</strong> na barra lateral — cada um vira um slide.
+                       Depois clique no <strong>➕</strong> de cada slide para colar o texto narrado correspondente.</p>
                     <p style="margin-top:6px;font-size:12px">
                         <span class="kbd">Espaço</span> Play / Pausa &nbsp;&nbsp;
                         <span class="kbd">Esc</span> Parar &nbsp;&nbsp;
@@ -1304,8 +1534,9 @@
     <span id="toastMsg"></span>
 </div>
 
-<!-- AUDIO -->
+<!-- AUDIO + EXPORT CANVAS -->
 <audio id="audioEl" preload="auto"></audio>
+<canvas id="exportCanvas" style="display:none"></canvas>
 
 <!-- ══════════════ JAVASCRIPT ══════════════ -->
 <script>
@@ -1313,15 +1544,15 @@
    ESTADO GLOBAL
 ───────────────────────────────────────────── */
 const S = {
+    slides: [],        // { id, file, url, name, duration, text, words, paraBreaks, wordWeights, cumWeights, totalWeight, anchors }
+    currentSlide: -1,
     words: [],
     spans: [],
-    wordWeights: [],   // peso estimado (duração relativa) de cada palavra
-    cumWeights: [0],   // soma acumulada dos pesos — usada para interpolar tempo ↔ palavra
+    wordWeights: [],
+    cumWeights: [0],
     totalWeight: 0,
-    anchors: [],       // pontos de calibração manual: [{ t: segundos, wIdx: índice da palavra }]
+    anchors: [],
     playing: false,
-    audioOk: false,
-    textOk: false,
     bgImage: null,
     bgImageName: '',
     bgMode: 'color',
@@ -1329,21 +1560,26 @@ const S = {
     hlStyle: 'bg',
     hlColor: '#e8621a',
     hlEnabled: true,
+    transitionType: 'fade',
+    transitionDuration: 600,
     speed: 1.0,
     raf: null,
     lastIdx: -99,
     dragging: false,
     readSeconds: 0,
+    exporting: false,
+    exportCancelled: false,
+    audioSourceNode: null,
 };
 
 const audio = document.getElementById('audioEl');
 
 /* ─────────────────────────────────────────────
    MEMORIZAR CONFIGURAÇÕES (localStorage)
-   Guarda apenas preferências de exibição/leitura — o .txt e o .mp3
-   narrados não são salvos (são grandes demais e mudam a cada uso).
+   Guarda apenas preferências de exibição/leitura — os áudios e os textos
+   de cada slide não são salvos (são grandes demais e mudam a cada uso).
 ───────────────────────────────────────────── */
-const SETTINGS_KEY = 'leitorSyncSettings_v1';
+const SETTINGS_KEY = 'leitorSyncSettings_v2';
 let settingsLoaded  = false; // vira true só depois da carga inicial, p/ não regravar o que acabou de ler
 let saveSettingsTimer = null;
 
@@ -1369,10 +1605,13 @@ function saveSettings() {
             cloudSize: document.getElementById('cloudSize').value,
             dimRead: document.getElementById('dimRead').checked,
             hlEnabled: S.hlEnabled,
+            transitionType: S.transitionType,
+            transitionDuration: S.transitionDuration,
             pageFlipEnabled: document.getElementById('pageFlipEnabled').checked,
             pageFlipMinutes: document.getElementById('pageFlipMinutes').value,
             syncOffset: document.getElementById('syncOffset').value,
             volume: document.getElementById('volSlider').value,
+            exportRes: document.getElementById('exportRes').value,
         };
         try {
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
@@ -1442,6 +1681,16 @@ function loadSettings() {
         document.getElementById('hlControls').classList.toggle('disabled-group', !data.hlEnabled);
     }
 
+    if (data.transitionType) {
+        const trBtn = document.querySelector(`#transitionOptions .hl-btn[data-transition="${data.transitionType}"]`);
+        if (trBtn) setTransition(data.transitionType, trBtn);
+    }
+    if (typeof data.transitionDuration !== 'undefined') {
+        S.transitionDuration = +data.transitionDuration;
+        document.getElementById('transitionDuration').value = data.transitionDuration;
+        document.getElementById('transitionDurationVal').textContent = (data.transitionDuration / 1000).toFixed(2) + 's';
+    }
+
     if (typeof data.pageFlipEnabled === 'boolean') document.getElementById('pageFlipEnabled').checked = data.pageFlipEnabled;
     if (data.pageFlipMinutes) document.getElementById('pageFlipMinutes').value = data.pageFlipMinutes;
 
@@ -1451,6 +1700,7 @@ function loadSettings() {
     }
 
     if (typeof data.volume !== 'undefined') document.getElementById('volSlider').value = data.volume;
+    if (data.exportRes) document.getElementById('exportRes').value = data.exportRes;
 }
 
 /* ─────────────────────────────────────────────
@@ -1512,6 +1762,10 @@ function hexToRgbStr(hex) {
     return [(num >> 16) & 255, (num >> 8) & 255, num & 255].join(',');
 }
 
+function hexToRgba(hex, alpha) {
+    return `rgba(${hexToRgbStr(hex)},${alpha})`;
+}
+
 function applyHLColor() {
     document.documentElement.style.setProperty('--hl-color', S.hlColor);
     document.documentElement.style.setProperty('--hl-rgb', hexToRgbStr(S.hlColor));
@@ -1545,8 +1799,12 @@ function setStatus(txt, cls = '') {
     document.getElementById('statusBadge').className = 'header-badge ' + cls;
 }
 
+function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 /* ─────────────────────────────────────────────
-   DRAG & DROP + FILE INPUT
+   DRAG & DROP (imagem de fundo — arquivo único)
 ───────────────────────────────────────────── */
 function wireDrop(dropId, inputId, fn) {
     const drop  = document.getElementById(dropId);
@@ -1563,36 +1821,6 @@ function wireDrop(dropId, inputId, fn) {
     });
 }
 
-/* ── TXT ─ */
-wireDrop('txtDrop', 'txtFile', (file, drop) => {
-    const r = new FileReader();
-    r.onload = e => {
-        buildWords(e.target.result);
-        drop.classList.add('loaded');
-        document.getElementById('txtFileName').textContent = file.name;
-        S.textOk = true;
-        checkReady();
-        toast('Texto carregado!', '📄');
-    };
-    r.readAsText(file, 'UTF-8');
-});
-
-/* ── MP3 ── */
-wireDrop('mp3Drop', 'mp3File', (file, drop) => {
-    audio.src = URL.createObjectURL(file);
-    audio.load();
-    drop.classList.add('loaded');
-    document.getElementById('mp3FileName').textContent = file.name;
-    S.audioOk = true;
-    S.anchors = []; // um novo áudio invalida os pontos de calibração antigos (eixo do tempo mudou)
-    updateAnchorCount();
-    audio.addEventListener('loadedmetadata', () => {
-        document.getElementById('totTime').textContent = fmtTime(audio.duration);
-    }, { once: true });
-    checkReady();
-    toast('Áudio carregado!', '🎵');
-});
-
 /* ── BG IMAGE ── */
 wireDrop('bgImgDrop', 'bgImgFile', (file, drop) => {
     const r = new FileReader();
@@ -1608,55 +1836,362 @@ wireDrop('bgImgDrop', 'bgImgFile', (file, drop) => {
     r.readAsDataURL(file);
 });
 
-function checkReady() {
-    if (S.textOk && S.audioOk)      setStatus('Pronto — pressione Espaço ▶', 'active');
-    else if (S.textOk || S.audioOk) setStatus('Carregue o outro arquivo…', '');
+/* ─────────────────────────────────────────────
+   PLAYLIST DE ÁUDIOS (MÚLTIPLOS ARQUIVOS = SLIDES)
+───────────────────────────────────────────── */
+const mp3Drop  = document.getElementById('mp3Drop');
+const mp3Input = document.getElementById('mp3Files');
+
+['dragenter','dragover'].forEach(e =>
+    mp3Drop.addEventListener(e, ev => { ev.preventDefault(); mp3Drop.classList.add('dragover'); }));
+['dragleave','drop'].forEach(e =>
+    mp3Drop.addEventListener(e, ev => { ev.preventDefault(); mp3Drop.classList.remove('dragover'); }));
+mp3Drop.addEventListener('drop', ev => {
+    if (ev.dataTransfer.files.length) addSlidesFromFiles(ev.dataTransfer.files);
+});
+mp3Input.addEventListener('change', () => {
+    if (mp3Input.files.length) addSlidesFromFiles(mp3Input.files);
+    mp3Input.value = '';
+});
+
+function addSlidesFromFiles(fileList) {
+    const files = Array.from(fileList).filter(f => /^audio\//i.test(f.type) || /\.mp3$/i.test(f.name));
+    if (!files.length) { toast('Nenhum arquivo de áudio válido encontrado.', '⚠️'); return; }
+
+    files.forEach(file => {
+        const slide = {
+            id: 'sl' + Date.now().toString(36) + Math.random().toString(36).slice(2),
+            file, url: URL.createObjectURL(file), name: file.name,
+            duration: null, text: '', words: [], paraBreaks: new Set(),
+            wordWeights: [], cumWeights: [0], totalWeight: 0, anchors: [],
+        };
+        S.slides.push(slide);
+
+        const probe = new Audio();
+        probe.preload = 'metadata';
+        probe.src = slide.url;
+        probe.addEventListener('loadedmetadata', () => {
+            slide.duration = probe.duration;
+            updateTotalDuration();
+            // Não re-renderiza se houver um editor de texto aberto: evitaria apagar
+            // um rascunho em digitação. A duração atualiza no próximo render natural.
+            if (!document.querySelector('#slidePagerItem .slide-textarea-wrap')) renderSlideList();
+        }, { once: true });
+    });
+
+    if (S.currentSlide === -1) loadSlideCommon(0, {});
+    renderSlideList();
+    checkReady();
+    toast(files.length + ' áudio(s) adicionados à playlist!', '🎵');
 }
 
 /* ─────────────────────────────────────────────
-   BUILD WORD SPANS
+   PAGINADOR DE SLIDES (um por vez, com setas ◀ ▶)
+   Mostra sempre um único cartão, na mesma posição da tela, com o slide
+   atual (S.currentSlide) — permite automatizar a edição em lote com um
+   macro de cliques em coordenadas fixas: seta ▶, ✏️, colar texto, Salvar,
+   repetir. pagerLastRenderedSlideId identifica o slide (não o índice, que
+   muda ao reordenar) para preservar um rascunho não salvo entre re-renders.
 ───────────────────────────────────────────── */
-function buildWords(raw) {
-    const paras = raw.split(/\n\s*\n/)
-                     .map(p => p.replace(/\s+/g, ' ').trim())
-                     .filter(Boolean);
-    S.words = [];
-    S.spans = [];
-    const box = document.getElementById('textContent');
-    box.innerHTML = '';
+let pagerLastRenderedSlideId = null;
 
+function renderSlideList() {
+    const pager = document.getElementById('slidePager');
+    const hint  = document.getElementById('slideEmptyHint');
+    const item  = document.getElementById('slidePagerItem');
+    const prevBtn = document.getElementById('pagerPrevBtn');
+    const nextBtn = document.getElementById('pagerNextBtn');
+
+    if (!S.slides.length) {
+        pager.style.display = 'none';
+        hint.style.display = 'block';
+        item.innerHTML = '';
+        pagerLastRenderedSlideId = null;
+        updateTotalDuration();
+        updateSlideIndicator();
+        return;
+    }
+
+    pager.style.display = 'flex';
+    hint.style.display = 'none';
+
+    const i = Math.max(0, Math.min(S.currentSlide, S.slides.length - 1));
+    const slide = S.slides[i];
+
+    const openTextarea = item.querySelector('.slide-textarea-wrap textarea');
+    const preserveDraft = (openTextarea && slide.id === pagerLastRenderedSlideId) ? openTextarea.value : null;
+    pagerLastRenderedSlideId = slide.id;
+
+    prevBtn.disabled = i === 0;
+    nextBtn.disabled = i === S.slides.length - 1;
+
+    const row = document.createElement('div');
+    row.className = 'slide-row current' + (!slide.text.trim() ? ' missing-text' : '');
+    row.style.cursor = 'default';
+
+    const dur = slide.duration != null ? fmtTime(slide.duration) : '…';
+    const wc  = slide.words.length ? slide.words.length + ' palavras' : 'sem texto';
+
+    row.innerHTML =
+        '<div class="slide-row-top">' +
+            '<div class="slide-num">' + (i + 1) + '</div>' +
+            '<div class="slide-info">' +
+                '<div class="slide-name" title="' + escapeHtml(slide.name) + '">' + escapeHtml(slide.name) + '</div>' +
+                '<div class="slide-meta">' + dur + ' · ' + wc + '</div>' +
+            '</div>' +
+        '</div>';
+
+    const actions = document.createElement('div');
+    actions.className = 'slide-actions';
+
+    const textBtn = document.createElement('button');
+    textBtn.className = 'slide-btn text-btn' + (slide.text.trim() ? ' has-text' : '');
+    textBtn.title = slide.text.trim() ? 'Editar texto narrado' : 'Adicionar texto narrado';
+    textBtn.textContent = slide.text.trim() ? '✏️' : '➕';
+    textBtn.onclick = (e) => { e.stopPropagation(); toggleSlideTextEditor(item, i); };
+
+    const upBtn = document.createElement('button');
+    upBtn.className = 'slide-btn';
+    upBtn.title = 'Mover para cima na playlist';
+    upBtn.textContent = '↑';
+    if (i === 0) upBtn.style.opacity = '0.35';
+    upBtn.onclick = (e) => { e.stopPropagation(); moveSlide(i, -1); };
+
+    const downBtn = document.createElement('button');
+    downBtn.className = 'slide-btn';
+    downBtn.title = 'Mover para baixo na playlist';
+    downBtn.textContent = '↓';
+    if (i === S.slides.length - 1) downBtn.style.opacity = '0.35';
+    downBtn.onclick = (e) => { e.stopPropagation(); moveSlide(i, 1); };
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'slide-btn del-btn';
+    delBtn.title = 'Remover slide';
+    delBtn.textContent = '🗑️';
+    delBtn.onclick = (e) => { e.stopPropagation(); deleteSlide(i); };
+
+    actions.append(textBtn, upBtn, downBtn, delBtn);
+    row.appendChild(actions);
+
+    item.innerHTML = '';
+    item.appendChild(row);
+    if (preserveDraft !== null) openSlideTextEditor(item, i, preserveDraft, false);
+
+    updateTotalDuration();
+    updateSlideIndicator();
+}
+
+function toggleSlideTextEditor(item, i) {
+    const existing = item.querySelector('.slide-textarea-wrap');
+    if (existing) { existing.remove(); return; }
+    openSlideTextEditor(item, i, S.slides[i].text, true);
+}
+
+function openSlideTextEditor(item, i, initialValue, focusIt) {
+    const wrap = document.createElement('div');
+    wrap.className = 'slide-textarea-wrap';
+    wrap.innerHTML =
+        '<textarea placeholder="Cole aqui o texto narrado neste áudio (slide ' + (i + 1) + ')...">' +
+            escapeHtml(initialValue || '') +
+        '</textarea>' +
+        '<div class="slide-textarea-actions">' +
+            '<button class="cancel">Cancelar</button>' +
+            '<button class="save">Salvar</button>' +
+        '</div>';
+
+    const textarea = wrap.querySelector('textarea');
+    wrap.querySelector('.cancel').onclick = () => wrap.remove();
+    wrap.querySelector('.save').onclick = () => {
+        setSlideText(i, textarea.value);
+        wrap.remove();
+        renderSlideList();
+        toast('Texto do slide ' + (i + 1) + ' salvo!', '📄');
+    };
+    item.appendChild(wrap);
+    if (focusIt) textarea.focus();
+}
+
+function moveSlide(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= S.slides.length) return;
+    [S.slides[i], S.slides[j]] = [S.slides[j], S.slides[i]];
+    if (S.currentSlide === i) S.currentSlide = j;
+    else if (S.currentSlide === j) S.currentSlide = i;
+    renderSlideList();
+}
+
+function deleteSlide(i) {
+    const wasCurrent = i === S.currentSlide;
+    URL.revokeObjectURL(S.slides[i].url);
+    S.slides.splice(i, 1);
+
+    if (S.currentSlide > i) S.currentSlide--;
+    else if (wasCurrent) {
+        stopAudio();
+        S.currentSlide = -1;
+        if (S.slides.length) loadSlideCommon(0, {});
+        else clearViewer();
+    }
+    renderSlideList();
+    checkReady();
+}
+
+function clearViewer() {
+    S.words = []; S.spans = []; S.wordWeights = []; S.cumWeights = [0]; S.totalWeight = 0; S.anchors = [];
+    document.getElementById('textContent').innerHTML = '';
+    document.getElementById('textContent').style.display = 'none';
+    document.getElementById('placeholder').style.display = 'flex';
+    document.getElementById('dispInfo').textContent = 'Importe áudios (.mp3) para começar';
+    document.getElementById('wordCounter').innerHTML = '';
+    document.getElementById('totTime').textContent = '0:00';
+    document.getElementById('curTime').textContent = '0:00';
+    updateSlideIndicator();
+    updateAnchorCount();
+}
+
+function checkReady() {
+    if (!S.slides.length) { setStatus('Aguardando arquivos…', ''); return; }
+    const missing = S.slides.filter(s => !s.text.trim()).length;
+    if (missing === 0) setStatus('Pronto — pressione Espaço ▶', 'active');
+    else setStatus(missing + ' slide(s) sem texto — adicione com ➕', '');
+}
+
+function updateTotalDuration() {
+    const el = document.getElementById('totalDurationLabel');
+    if (!el) return;
+    const known = S.slides.filter(s => s.duration != null);
+    if (!known.length) { el.textContent = '—'; return; }
+    const total = known.reduce((a, s) => a + s.duration, 0);
+    const suffix = known.length < S.slides.length ? ' (parcial)' : '';
+    el.textContent = fmtTime(total) + suffix;
+}
+
+function updateSlideIndicator() {
+    const el = document.getElementById('slideIndicator');
+    if (!el) return;
+    if (!S.slides.length || S.currentSlide === -1) { el.textContent = 'Nenhum slide carregado'; return; }
+    el.innerHTML = 'Slide <strong>' + (S.currentSlide + 1) + '</strong> / ' + S.slides.length;
+}
+
+/* ─────────────────────────────────────────────
+   TEXTO DE CADA SLIDE → PALAVRAS
+───────────────────────────────────────────── */
+function setSlideText(i, rawText) {
+    const slide = S.slides[i];
+    if (!slide) return;
+
+    const paras = rawText.split(/\n\s*\n/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const words = [];
+    const paraBreaks = new Set();
     paras.forEach(para => {
-        const pDiv = document.createElement('div');
-        pDiv.style.marginBottom = '1.15em';
-        para.split(' ').filter(Boolean).forEach(tok => {
-            const sp = document.createElement('span');
-            sp.className = 'word';
-            sp.textContent = tok + ' ';
-            sp.dataset.i = S.words.length;
-            // clique normal = pular para a palavra; Shift+clique = calibrar
-            // sincronização (marca "o narrador está dizendo esta palavra agora").
-            sp.addEventListener('click', e => {
-                if (e.shiftKey) addSyncAnchor(+sp.dataset.i);
-                else             jumpToWord(+sp.dataset.i);
-            });
-            pDiv.appendChild(sp);
-            S.words.push(tok);
-            S.spans.push(sp);
-        });
-        box.appendChild(pDiv);
+        const toks = para.split(' ').filter(Boolean);
+        if (toks.length && words.length) paraBreaks.add(words.length);
+        toks.forEach(tok => words.push(tok + ' '));
     });
 
-    computeWordWeights();
-    S.anchors = [];
-    updateAnchorCount();
+    slide.text = rawText;
+    slide.words = words;
+    slide.paraBreaks = paraBreaks;
+    const wt = computeWordWeights(words);
+    slide.wordWeights = wt.wordWeights;
+    slide.cumWeights = wt.cumWeights;
+    slide.totalWeight = wt.totalWeight;
+    slide.anchors = [];
 
-    document.getElementById('placeholder').style.display = 'none';
-    box.style.display = 'block';
-    document.getElementById('dispInfo').textContent = S.words.length + ' palavras carregadas';
-    document.getElementById('wordCounter').innerHTML =
-        'Palavra <strong id="curWord">—</strong> / ' + S.words.length;
+    if (i === S.currentSlide) loadSlideCommon(i, {});
+    checkReady();
+}
+
+function buildSlideContent(box, slide) {
+    box.innerHTML = '';
+    S.spans = [];
+
+    if (!slide.words.length) {
+        const empty = document.createElement('div');
+        empty.style.color = 'var(--text-muted)';
+        empty.style.fontStyle = 'italic';
+        empty.textContent = 'Este slide ainda não tem texto narrado. Clique no ➕ na barra lateral para adicioná-lo.';
+        box.appendChild(empty);
+        return;
+    }
+
+    let pDiv = document.createElement('div');
+    pDiv.style.marginBottom = '1.15em';
+    box.appendChild(pDiv);
+
+    slide.words.forEach((tok, idx) => {
+        if (slide.paraBreaks.has(idx)) {
+            pDiv = document.createElement('div');
+            pDiv.style.marginBottom = '1.15em';
+            box.appendChild(pDiv);
+        }
+        const sp = document.createElement('span');
+        sp.className = 'word';
+        sp.textContent = tok;
+        sp.dataset.i = idx;
+        // clique normal = pular para a palavra; Shift+clique = calibrar
+        // sincronização (marca "o narrador está dizendo esta palavra agora").
+        sp.addEventListener('click', e => {
+            if (e.shiftKey) addSyncAnchor(idx);
+            else             jumpToWord(idx);
+        });
+        pDiv.appendChild(sp);
+        S.spans.push(sp);
+    });
+}
+
+function renderSlideDOM(slide) {
+    const box = document.getElementById('textContent');
+    buildSlideContent(box, slide);
     applyTypography();
     applyBackground();
+}
+
+/* ─────────────────────────────────────────────
+   TRANSIÇÃO ENTRE SLIDES (ao vivo)
+   Anima a troca do conteúdo de #textContent: primeiro some o slide antigo,
+   depois — só então — o DOM é reconstruído com as palavras do novo slide,
+   que aparece com a animação de entrada. As mesmas opções (tipo + duração)
+   valem também para o vídeo exportado (ver drawExportFrame).
+───────────────────────────────────────────── */
+const LIVE_TRANSITIONS = {
+    fade:  { out: { opacity: '0', transform: 'none' },              inFrom: { opacity: '0', transform: 'none' } },
+    slide: { out: { opacity: '0', transform: 'translateX(-40px)' }, inFrom: { opacity: '0', transform: 'translateX(40px)' } },
+    zoom:  { out: { opacity: '0', transform: 'scale(0.92)' },       inFrom: { opacity: '0', transform: 'scale(1.08)' } },
+};
+
+function animateSlideContentSwap(slide, onSwapped) {
+    const box = document.getElementById('textContent');
+    const def = LIVE_TRANSITIONS[S.transitionType];
+    if (!def || !S.transitionDuration) {
+        buildSlideContent(box, slide);
+        applyTypography();
+        applyBackground();
+        onSwapped();
+        return;
+    }
+
+    const half = Math.max(60, S.transitionDuration / 2);
+    box.style.transition = `opacity ${half}ms ease, transform ${half}ms ease`;
+    box.style.opacity = def.out.opacity;
+    box.style.transform = def.out.transform;
+
+    setTimeout(() => {
+        buildSlideContent(box, slide);
+        applyTypography();
+        applyBackground();
+
+        box.style.transition = 'none';
+        box.style.opacity = def.inFrom.opacity;
+        box.style.transform = def.inFrom.transform;
+        void box.offsetWidth; // força reflow antes de reativar a transição, senão o navegador funde os dois estados
+        box.style.transition = `opacity ${half}ms ease, transform ${half}ms ease`;
+        requestAnimationFrame(() => {
+            box.style.opacity = '1';
+            box.style.transform = 'none';
+        });
+        setTimeout(() => { box.style.transition = ''; onSwapped(); }, half + 30);
+    }, half);
 }
 
 /* ─────────────────────────────────────────────
@@ -1668,16 +2203,82 @@ function buildWords(raw) {
 function wordWeight(tok) {
     const clean = tok.replace(/[.,;:!?…"'“”‘’()\[\]{}\-–—]/g, '');
     let w = Math.max(1, clean.length);
-    if (/[,;:]$/.test(tok))    w += 2; // pausa curta (vírgula, dois-pontos, ponto e vírgula)
-    if (/[.!?…]$/.test(tok))   w += 5; // pausa maior (fim de frase)
+    if (/[,;:]\s*$/.test(tok))  w += 2; // pausa curta (vírgula, dois-pontos, ponto e vírgula)
+    if (/[.!?…]\s*$/.test(tok)) w += 5; // pausa maior (fim de frase)
     return w;
 }
 
-function computeWordWeights() {
-    S.wordWeights = S.words.map(wordWeight);
-    S.cumWeights = [0];
-    S.wordWeights.forEach((w, i) => S.cumWeights.push(S.cumWeights[i] + w));
-    S.totalWeight = S.cumWeights[S.cumWeights.length - 1] || 1;
+function computeWordWeights(words) {
+    const wordWeights = words.map(wordWeight);
+    const cumWeights = [0];
+    wordWeights.forEach((w, i) => cumWeights.push(cumWeights[i] + w));
+    const totalWeight = cumWeights[cumWeights.length - 1] || 1;
+    return { wordWeights, cumWeights, totalWeight };
+}
+
+/* ─────────────────────────────────────────────
+   CARREGAR SLIDE NO VISUALIZADOR
+───────────────────────────────────────────── */
+function loadSlideCommon(i, opts) {
+    opts = opts || {};
+    const slide = S.slides[i];
+    if (!slide) return;
+    const switchingSlide = audio.src !== slide.url;
+
+    S.currentSlide = i;
+    S.words = slide.words;
+    S.wordWeights = slide.wordWeights;
+    S.cumWeights = slide.cumWeights;
+    S.totalWeight = slide.totalWeight;
+    S.anchors = slide.anchors;
+    S.lastIdx = -99;
+
+    if (switchingSlide) {
+        audio.src = slide.url;
+        audio.load();
+        audio.addEventListener('loadedmetadata', function onMeta() {
+            audio.removeEventListener('loadedmetadata', onMeta);
+            slide.duration = audio.duration;
+            document.getElementById('totTime').textContent = fmtTime(audio.duration);
+            updateTotalDuration();
+        }, { once: true });
+    } else if (audio.duration) {
+        document.getElementById('totTime').textContent = fmtTime(audio.duration);
+    }
+
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('textContent').style.display = 'block';
+    document.getElementById('textDisplay').scrollTo({ top: 0 });
+    document.getElementById('dispInfo').textContent =
+        'Slide ' + (i + 1) + ' de ' + S.slides.length + ' — ' + slide.words.length + ' palavra(s)';
+    document.getElementById('wordCounter').innerHTML =
+        'Palavra <strong id="curWord">—</strong> / ' + slide.words.length;
+    updateAnchorCount();
+    updateSlideIndicator();
+
+    // O áudio começa imediatamente — a transição visual só sobrepõe a troca do
+    // texto por cima do áudio já tocando, sem atrasar o início da narração.
+    const startAutoplay = () => {
+        if (!opts.autoplay) return;
+        if (switchingSlide) {
+            const begin = () => audio.play();
+            if (audio.readyState >= 1) begin();
+            else audio.addEventListener('canplay', begin, { once: true });
+        } else {
+            audio.play();
+        }
+    };
+
+    if (opts.transition && switchingSlide && S.transitionType !== 'none') {
+        startAutoplay();
+        animateSlideContentSwap(slide, () => {
+            if (!S.playing) renderStatic(idxAtTime(audio.currentTime));
+        });
+    } else {
+        renderSlideDOM(slide);
+        if (!S.playing) renderStatic(idxAtTime(audio.currentTime));
+        startAutoplay();
+    }
 }
 
 /* ─────────────────────────────────────────────
@@ -1745,6 +2346,7 @@ function addSyncAnchor(idx) {
     S.anchors = S.anchors.filter(a => Math.abs(a.t - t) > 0.15); // evita pontos redundantes muito próximos
     S.anchors.push({ t, wIdx: idx });
     S.anchors.sort((a, b) => a.t - b.t);
+    if (S.currentSlide !== -1) S.slides[S.currentSlide].anchors = S.anchors;
     S.lastIdx = -99;
     updateAnchorCount();
     toast(`🎯 Sincronizado na palavra ${idx + 1}`, '🎯');
@@ -1753,6 +2355,7 @@ function addSyncAnchor(idx) {
 
 function clearSyncAnchors() {
     S.anchors = [];
+    if (S.currentSlide !== -1) S.slides[S.currentSlide].anchors = S.anchors;
     S.lastIdx = -99;
     updateAnchorCount();
     toast('Calibração de sincronização limpa.', '🗑️');
@@ -1766,13 +2369,6 @@ function updateAnchorCount() {
 
 /* ─────────────────────────────────────────────
    PINTURA DO DESTAQUE
-   Dois modos:
-   - Preciso (bg/box/underline/bold): acende uma janela de N palavras a
-     partir da posição sincronizada — bom quando a sincronização está fina.
-   - Nuvem (cloud): acende uma região mais larga, ANTES e DEPOIS da posição
-     atual, com intensidade decrescente a partir do centro — não tenta ser
-     exata, só indica "a leitura está por aqui". Tolera bem mais imprecisão
-     de sincronização, já que não aponta uma palavra específica.
 ───────────────────────────────────────────── */
 function paintHighlights(idx) {
     const dimRead = S.hlEnabled && document.getElementById('dimRead').checked;
@@ -1789,7 +2385,7 @@ function paintHighlights(idx) {
         S.spans.forEach((sp, i) => {
             const dist = Math.abs(i - idx);
             if (dist <= radius) {
-                const intensity = 1 - dist / (radius + 1); // pico no centro, esmaece nas bordas
+                const intensity = 1 - dist / (radius + 1);
                 sp.classList.add('hl-cloud');
                 sp.style.setProperty('--ci', (intensity * 0.42).toFixed(3));
             } else if (dimRead && i < idx - radius) {
@@ -1800,9 +2396,6 @@ function paintHighlights(idx) {
         const hlN  = +document.getElementById('hlCount').value || 4;
         const sCls = 's-' + S.hlStyle;
         S.spans.forEach((sp, i) => {
-            // 'hl-active' fica marcado mesmo se o destaque estiver desligado no
-            // topo (chamada só ocorre com S.hlEnabled true aqui) — o auto-scroll
-            // usa o índice, não a classe visual.
             if (i >= idx && i < idx + hlN) sp.classList.add('hl-active', sCls);
             else if (dimRead && i < idx)    sp.classList.add('hl-read');
         });
@@ -1818,6 +2411,7 @@ function tick() {
         if (cw) cw.textContent = idx + 1;
         autoScroll(idx);
     }
+    if (S.exporting) drawExportFrame(idx);
     S.raf = requestAnimationFrame(tick);
 }
 
@@ -1848,11 +2442,18 @@ function renderStatic(idx) {
 }
 
 /* ─────────────────────────────────────────────
-   TRANSPORT CONTROLS
+   TRANSPORT CONTROLS (playlist de slides)
 ───────────────────────────────────────────── */
 function togglePlay() {
-    if (!S.audioOk) { toast('Carregue um arquivo de áudio!', '⚠️'); return; }
-    if (!S.textOk)  { toast('Carregue um arquivo de texto!',  '⚠️'); return; }
+    if (S.exporting) return;
+    if (!S.slides.length) { toast('Importe ao menos um áudio!', '⚠️'); return; }
+    if (S.currentSlide === -1) loadSlideCommon(0, {});
+
+    const missingIdx = S.slides.findIndex(s => !s.text.trim());
+    if (missingIdx !== -1) {
+        toast('Adicione o texto do slide ' + (missingIdx + 1) + ' antes de reproduzir!', '⚠️');
+        return;
+    }
 
     if (audio.paused) {
         audio.play();
@@ -1871,6 +2472,7 @@ function togglePlay() {
 }
 
 function stopAudio() {
+    if (S.exporting) return;
     audio.pause();
     audio.currentTime = 0;
     S.playing = false;
@@ -1887,21 +2489,36 @@ function stopAudio() {
     const cw = document.getElementById('curWord');
     if (cw) cw.textContent = '—';
     document.getElementById('textDisplay').scrollTo({ top: 0, behavior: 'smooth' });
-    setStatus(
-        S.audioOk && S.textOk ? 'Pronto — pressione Espaço ▶' : 'Aguardando arquivos…',
-        S.audioOk && S.textOk ? 'active' : ''
-    );
+    checkReady();
 }
 
 function restartAudio() {
-    audio.currentTime = 0;
-    S.lastIdx = -99;
-    S.readSeconds = 0;
-    if (!S.playing) togglePlay();
+    if (S.exporting || !S.slides.length) return;
+    stopAudio();
+    S.playing = true;
+    document.getElementById('btnPlay').textContent = '⏸';
+    setStatus('Reproduzindo…', 'playing');
+    loadSlideCommon(0, { autoplay: true, transition: true });
+    renderSlideList();
+    tick();
+}
+
+function prevSlide() {
+    if (S.exporting || S.currentSlide <= 0) return;
+    const wasPlaying = S.playing;
+    loadSlideCommon(S.currentSlide - 1, { autoplay: wasPlaying, transition: wasPlaying });
+    renderSlideList();
+}
+
+function nextSlide() {
+    if (S.exporting || S.currentSlide === -1 || S.currentSlide >= S.slides.length - 1) return;
+    const wasPlaying = S.playing;
+    loadSlideCommon(S.currentSlide + 1, { autoplay: wasPlaying, transition: wasPlaying });
+    renderSlideList();
 }
 
 /* ─────────────────────────────────────────────
-   VIRADA DE PÁGINA (animação)
+   VIRADA DE PÁGINA (animação — só na tela, ao vivo)
 ───────────────────────────────────────────── */
 function triggerPageFlip() {
     const el = document.getElementById('pageFlipOverlay');
@@ -1926,7 +2543,7 @@ setInterval(() => {
 
 /* ── SEEK ── */
 function seekAudio(e) {
-    if (!audio.duration) return;
+    if (!audio.duration || S.exporting) return;
     const r   = document.getElementById('progressWrap').getBoundingClientRect();
     const pct = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
     audio.currentTime = pct * audio.duration;
@@ -1934,6 +2551,7 @@ function seekAudio(e) {
 }
 
 function startDragProgress(e) {
+    if (S.exporting) return;
     S.dragging = true;
     const move = ev => { if (S.dragging) seekAudio(ev); };
     const up   = ()  => {
@@ -1967,11 +2585,17 @@ audio.addEventListener('timeupdate', () => {
 });
 
 audio.addEventListener('ended', () => {
-    S.playing = false;
-    cancelAnimationFrame(S.raf);
-    document.getElementById('btnPlay').textContent = '▶';
-    setStatus('Reprodução concluída ✅', 'active');
-    toast('Reprodução concluída!', '✅');
+    if (S.exporting) return; // durante a exportação, o próprio fluxo de export controla o avanço
+    if (S.currentSlide < S.slides.length - 1) {
+        loadSlideCommon(S.currentSlide + 1, { autoplay: true, transition: true });
+        renderSlideList();
+    } else {
+        S.playing = false;
+        cancelAnimationFrame(S.raf);
+        document.getElementById('btnPlay').textContent = '▶';
+        setStatus('Apresentação concluída ✅', 'active');
+        toast('Apresentação concluída!', '✅');
+    }
 });
 
 audio.addEventListener('error', () => {
@@ -1989,6 +2613,7 @@ function fmtTime(s) {
 ───────────────────────────────────────────── */
 document.addEventListener('keydown', e => {
     if (['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+    if (S.exporting) return;
     switch (e.code) {
         case 'Space':
             e.preventDefault(); togglePlay(); break;
@@ -2002,6 +2627,10 @@ document.addEventListener('keydown', e => {
             e.preventDefault();
             audio.currentTime = Math.max(0, audio.currentTime - 5);
             S.lastIdx = -99; break;
+        case 'PageUp':
+            e.preventDefault(); prevSlide(); break;
+        case 'PageDown':
+            e.preventDefault(); nextSlide(); break;
     }
 });
 
@@ -2026,13 +2655,6 @@ function applyBackground() {
         document.getElementById('bgOverlayVal').textContent = document.getElementById('bgOverlay').value + '%';
         document.getElementById('bgImageOpacityVal').textContent = document.getElementById('bgImageOpacity').value + '%';
 
-        // Tudo é pintado como background do próprio #textDisplay (não em uma
-        // camada/DOM separada), com background-attachment:"scroll" (o padrão):
-        // assim a imagem fica presa à caixa do elemento — parada — enquanto
-        // somente o texto (conteúdo normal, que rola) se move por cima dela.
-        // Duas camadas de gradiente sólido simulam, respectivamente, a
-        // opacidade da imagem (funde com a cor de base) e o escurecimento
-        // para legibilidade; a imagem em si fica por baixo de ambas.
         const baseRGB = '15,15,19'; // mesmo tom de --bg-dark
         d.style.backgroundImage =
             `linear-gradient(rgba(0,0,0,${ov}),rgba(0,0,0,${ov})),` +
@@ -2082,7 +2704,7 @@ function applyTypography() {
 ───────────────────────────────────────────── */
 function setHL(style, btn) {
     S.hlStyle = style;
-    document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#hlControls .hl-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('hlCountGroup').style.display    = style === 'cloud' ? 'none' : '';
     document.getElementById('cloudSizeGroup').style.display  = style === 'cloud' ? '' : 'none';
@@ -2092,12 +2714,23 @@ function setHL(style, btn) {
 }
 
 /* ─────────────────────────────────────────────
+   TRANSIÇÃO ENTRE SLIDES (tipo + duração)
+───────────────────────────────────────────── */
+function setTransition(type, btn) {
+    S.transitionType = type;
+    document.querySelectorAll('#transitionOptions .hl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('transitionDurGroup').style.display = type === 'none' ? 'none' : '';
+    saveSettings();
+}
+
+/* ─────────────────────────────────────────────
    LIGAR/DESLIGAR DESTAQUE (mantém só o auto-scroll)
 ───────────────────────────────────────────── */
 function toggleHlEnabled(enabled) {
     S.hlEnabled = enabled;
     document.getElementById('hlControls').classList.toggle('disabled-group', !enabled);
-    S.lastIdx = -99; // força re-render imediato (remove/reaplica as classes visuais)
+    S.lastIdx = -99;
     if (!S.playing && S.words.length) {
         const idx = idxAtTime(audio.currentTime);
         renderStatic(idx);
@@ -2127,23 +2760,17 @@ function toggleSidebar() {
 }
 
 /* ─────────────────────────────────────────────
-   GRAVAÇÃO DE TELA + ÁUDIO (sem programas externos)
-   Usa getDisplayMedia (captura de tela nativa do navegador)
-   + Web Audio API (mixa o áudio do <audio> na gravação)
+   MIXAGEM DE ÁUDIO (Web Audio) — usada na exportação
+   Conectar o <audio> ao Web Audio desvia sua saída padrão para os
+   alto-falantes; por isso reconectamos explicitamente ao destino para
+   continuar ouvindo, além de mandar uma cópia para o destino de gravação.
 ───────────────────────────────────────────── */
-let mediaRecorder      = null;
-let recordedChunks     = [];
-let activeDisplayStream = null;
-let audioCtx           = null;
-let audioDestNode      = null;
-let recordTimerHandle  = null;
-let recordStartedAt    = 0;
+let audioCtx      = null;
+let audioDestNode = null;
 
 function getMixedAudioStream() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (!S.audioSourceNode) {
-        // Conectar o <audio> ao Web Audio desvia sua saída padrão para os alto-falantes;
-        // por isso precisamos reconectar explicitamente ao destino para continuar ouvindo.
         S.audioSourceNode = audioCtx.createMediaElementSource(audio);
         S.audioSourceNode.connect(audioCtx.destination);
     }
@@ -2154,139 +2781,211 @@ function getMixedAudioStream() {
     return audioDestNode.stream;
 }
 
-function toggleRecording() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') stopRecording();
-    else startRecording();
+/* ─────────────────────────────────────────────
+   EXPORTAÇÃO EM MP4 (canvas + áudio, sem gravar tela)
+   Desenha o fundo + texto (com o mesmo destaque configurado ao lado) direto
+   num <canvas> a cada frame, e grava esse canvas + o áudio de cada slide
+   com o MediaRecorder — mais leve do que capturar a tela inteira.
+───────────────────────────────────────────── */
+let exportRecorder    = null;
+let exportChunks      = [];
+let exportCtx         = null;
+let exportCanvasEl    = null;
+let exportCamera      = { y: 0 };
+let exportLayoutCache = null;
+let exportBgImg       = null;
+let exportStartedAt   = 0;
+let exportTimerHandle = null;
+let exportTransition  = null; // { img: <canvas com o último frame do slide anterior>, durationSec }
+
+function toggleExport() {
+    if (S.exporting) cancelExport();
+    else startExport();
 }
 
-async function startRecording() {
-    if (!S.audioOk || !S.textOk) {
-        toast('Carregue o texto e o áudio antes de gravar!', '⚠️');
-        return;
-    }
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        toast('Seu navegador não suporta gravação de tela (use Chrome/Edge atualizado).', '⚠️');
+function cancelExport() {
+    if (!S.exporting) return;
+    S.exportCancelled = true;
+    toast('Cancelando exportação…', 'ℹ️');
+}
+
+async function startExport() {
+    if (!S.slides.length) { toast('Importe os áudios antes de exportar!', '⚠️'); return; }
+    const missingIdx = S.slides.findIndex(s => !s.text.trim());
+    if (missingIdx !== -1) { toast('Adicione o texto do slide ' + (missingIdx + 1) + ' antes de exportar!', '⚠️'); return; }
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+        toast('Seu navegador não suporta exportação de vídeo (use Chrome/Edge atualizado).', '⚠️');
         return;
     }
 
-    // Criar/retomar o AudioContext ainda dentro do gesto de clique do usuário
+    audio.pause();
+    S.playing = false;
+    cancelAnimationFrame(S.raf);
+    document.getElementById('btnPlay').textContent = '▶';
+
+    const [rw, rh] = document.getElementById('exportRes').value.split('x').map(Number);
+    exportCanvasEl = document.getElementById('exportCanvas');
+    exportCanvasEl.width = rw;
+    exportCanvasEl.height = rh;
+    exportCtx = exportCanvasEl.getContext('2d');
+    exportCamera.y = 0;
+    exportLayoutCache = null;
+    exportTransition = null;
+
+    exportBgImg = null;
+    if (S.bgMode === 'image' && S.bgImage) {
+        exportBgImg = await new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = S.bgImage;
+        });
+    }
+    drawCanvasBackground(rw, rh); // primeiro frame não fica em branco
+
     const audioStream = getMixedAudioStream();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
-
-    let displayStream;
-    try {
-        displayStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { frameRate: 30 },
-            audio: false,
-            preferCurrentTab: true, // dica (Chrome) para pré-selecionar "esta aba" no seletor
-            selfBrowserSurface: 'include'
-        });
-    } catch (err) {
-        toast('Captura de tela cancelada.', 'ℹ️');
-        return;
-    }
-
-    // Recorta a captura para mostrar SOMENTE a área de leitura do texto (Region Capture API,
-    // suportada no Chrome/Edge). Só funciona quando o próprio conteúdo desta aba é compartilhado —
-    // se o usuário escolher outra aba/janela/tela inteira, a gravação sai sem o recorte.
-    let cropped = false;
-    try {
-        const videoTrack = displayStream.getVideoTracks()[0];
-        if (window.CropTarget && typeof videoTrack.cropTo === 'function') {
-            const cropTarget = await CropTarget.fromElement(document.getElementById('textDisplay'));
-            await videoTrack.cropTo(cropTarget);
-            cropped = true;
-        }
-    } catch (err) {
-        console.warn('Não foi possível recortar a gravação para a área de texto:', err);
-    }
-
-    if (!cropped) {
-        toast('Aviso: seu navegador não recortou a gravação — selecione "Esta aba" para gravar apenas a área de leitura.', '⚠️');
-    }
-
-    const combined = new MediaStream([
-        ...displayStream.getVideoTracks(),
-        ...audioStream.getAudioTracks()
-    ]);
-
-    // Se o usuário clicar em "Parar compartilhamento" na barra do navegador
-    displayStream.getVideoTracks()[0].addEventListener('ended', () => stopRecording());
+    const videoStream = exportCanvasEl.captureStream(30);
+    const combined = new MediaStream([...videoStream.getVideoTracks(), ...audioStream.getAudioTracks()]);
 
     const mimeCandidates = [
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4;codecs=h264,aac',
+        'video/mp4',
         'video/webm;codecs=vp9,opus',
         'video/webm;codecs=vp8,opus',
         'video/webm'
     ];
     const mimeType = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || '';
+    const usingMp4 = mimeType.startsWith('video/mp4');
+    if (!usingMp4) toast('Seu navegador não gera MP4 nativamente — o vídeo será salvo em .webm.', '⚠️');
 
-    recordedChunks = [];
-    activeDisplayStream = displayStream;
+    exportChunks = [];
     try {
-        mediaRecorder = new MediaRecorder(combined, mimeType ? { mimeType } : undefined);
+        exportRecorder = new MediaRecorder(combined, mimeType ? { mimeType } : undefined);
     } catch (err) {
-        toast('Não foi possível iniciar o gravador.', '❌');
-        displayStream.getTracks().forEach(t => t.stop());
+        toast('Não foi possível iniciar o exportador.', '❌');
         return;
     }
+    exportRecorder.ondataavailable = e => { if (e.data.size > 0) exportChunks.push(e.data); };
+    exportRecorder.onstop = () => {
+        S.exporting = false;
+        exportTransition = null;
+        clearInterval(exportTimerHandle);
+        document.getElementById('exportStatus').style.display = 'none';
+        document.getElementById('statusBadge').classList.remove('exporting');
+        document.body.classList.remove('is-exporting');
+        const btn = document.getElementById('exportBtn');
+        btn.classList.remove('recording');
+        btn.innerHTML = '<span class="rec-dot">🎬</span> Exportar MP4';
+        checkReady();
 
-    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-    mediaRecorder.onstop = () => {
-        activeDisplayStream.getTracks().forEach(t => t.stop());
-        saveRecording();
+        if (S.exportCancelled) {
+            toast('Exportação cancelada.', 'ℹ️');
+            exportChunks = [];
+            return;
+        }
+        saveExportedVideo(exportChunks, usingMp4);
     };
-    mediaRecorder.start(1000);
 
-    recordStartedAt = performance.now();
-    const btn = document.getElementById('recordBtn');
+    S.exporting = true;
+    S.exportCancelled = false;
+    document.body.classList.add('is-exporting');
+    const btn = document.getElementById('exportBtn');
     btn.classList.add('recording');
-    btn.innerHTML = '<span class="rec-dot">⏺️</span> Parar gravação';
-    const timerEl = document.getElementById('recordTimer');
-    timerEl.style.display = 'inline';
-    recordTimerHandle = setInterval(() => {
-        timerEl.textContent = '🔴 ' + fmtTime((performance.now() - recordStartedAt) / 1000);
+    btn.innerHTML = '<span class="rec-dot">⏺️</span> Cancelar exportação';
+    document.getElementById('statusBadge').classList.add('exporting');
+    document.getElementById('statusText').textContent = 'Exportando vídeo…';
+    const statusEl = document.getElementById('exportStatus');
+    statusEl.style.display = 'inline';
+    exportStartedAt = performance.now();
+    exportTimerHandle = setInterval(() => {
+        statusEl.textContent = '🎬 ' + fmtTime((performance.now() - exportStartedAt) / 1000);
     }, 500);
 
-    if (cropped) toast('Gravação iniciada — apenas a área de leitura será salva no vídeo.', '🎥');
-}
+    exportRecorder.start(1000);
+    S.raf = requestAnimationFrame(tick);
 
-function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-    clearInterval(recordTimerHandle);
-    const btn = document.getElementById('recordBtn');
-    btn.classList.remove('recording');
-    btn.innerHTML = '<span class="rec-dot">🔴</span> Gravar vídeo';
-    document.getElementById('recordTimer').style.display = 'none';
-}
-
-async function saveRecording() {
-    if (!recordedChunks.length) return;
-    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const suggestedName = `LeitorSync-gravacao-${stamp}.webm`;
-
-    // Navegadores com File System Access API abrem o diálogo nativo "Salvar como"
-    if (window.showSaveFilePicker) {
-        try {
-            const handle = await window.showSaveFilePicker({
-                suggestedName,
-                types: [{ description: 'Vídeo WebM', accept: { 'video/webm': ['.webm'] } }]
-            });
-            const writable = await handle.createWritable();
-            await writable.write(blob);
-            await writable.close();
-            toast('Gravação salva no local escolhido!', '✅');
-            return;
-        } catch (err) {
-            if (err.name === 'AbortError') {
-                toast('Salvamento cancelado.', 'ℹ️');
-                return;
-            }
-            console.warn('showSaveFilePicker falhou, usando download padrão:', err);
+    try {
+        for (let i = 0; i < S.slides.length; i++) {
+            if (S.exportCancelled) break;
+            await exportPlaySlide(i);
         }
+    } catch (err) {
+        console.error('Erro durante a exportação:', err);
+        toast('Erro durante a exportação.', '❌');
     }
 
-    // Fallback: download comum (vai para a pasta de downloads do navegador)
+    cancelAnimationFrame(S.raf);
+    if (exportRecorder && exportRecorder.state !== 'inactive') exportRecorder.stop();
+}
+
+function captureExportSnapshot() {
+    if (!exportCanvasEl) return null;
+    const snap = document.createElement('canvas');
+    snap.width = exportCanvasEl.width;
+    snap.height = exportCanvasEl.height;
+    snap.getContext('2d').drawImage(exportCanvasEl, 0, 0);
+    return snap;
+}
+
+function exportPlaySlide(i) {
+    return new Promise((resolve) => {
+        // Captura o último frame já desenhado (do slide anterior, ou só o fundo
+        // se for o primeiro slide) para servir de imagem de saída na transição:
+        // ela é sobreposta ao novo frame e some ao longo de exportTransition.durationSec,
+        // usando audio.currentTime do slide que está ENTRANDO — não atrasa o áudio.
+        if (S.transitionType !== 'none') {
+            const rawDur = S.slides[i].duration;
+            const cap = rawDur ? rawDur * 0.8 : Infinity;
+            exportTransition = {
+                img: captureExportSnapshot(),
+                durationSec: Math.max(0.05, Math.min(S.transitionDuration / 1000, cap)),
+            };
+        } else {
+            exportTransition = null;
+        }
+
+        loadSlideCommon(i, {});
+        renderSlideList();
+        exportLayoutCache = null; // recalcula o layout do canvas para este slide
+
+        let settled = false;
+        const cancelCheck = setInterval(() => {
+            if (S.exportCancelled && !settled) settle();
+        }, 200);
+
+        function settle() {
+            if (settled) return;
+            settled = true;
+            clearInterval(cancelCheck);
+            audio.removeEventListener('ended', onEnded);
+            audio.pause();
+            resolve();
+        }
+
+        function onEnded() { settle(); }
+        audio.addEventListener('ended', onEnded, { once: true });
+
+        const begin = () => audio.play().catch(() => settle());
+        if (audio.readyState >= 1) begin();
+        else audio.addEventListener('canplay', begin, { once: true });
+    });
+}
+
+async function saveExportedVideo(chunks, usingMp4) {
+    if (!chunks.length) return;
+    const ext = usingMp4 ? 'mp4' : 'webm';
+    const blobType = usingMp4 ? 'video/mp4' : 'video/webm';
+    const blob = new Blob(chunks, { type: blobType });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const suggestedName = `LeitorSync-apresentacao-${stamp}.${ext}`;
+
+    // Não usamos showSaveFilePicker aqui: ele exige um gesto do usuário "fresco",
+    // mas uma exportação pode levar minutos (dura o mesmo tempo que a soma dos
+    // áudios) — quando o MediaRecorder termina, o gesto do clique original em
+    // "Exportar MP4" já expirou havia muito tempo, e o picker trava/rejeita.
+    // O download direto abaixo sempre funciona, não importa quanto tempo passou.
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -2295,7 +2994,199 @@ async function saveRecording() {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    toast('Gravação salva! Verifique sua pasta de downloads.', '✅');
+    toast('Vídeo exportado! Verifique sua pasta de downloads.', '✅');
+}
+
+/* ── DESENHO NO CANVAS ── */
+function roundRectPath(ctx, x, y, w, h, r) {
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+}
+
+function buildCanvasLayout(slide, W, H) {
+    const scale = W / 780; // 780px = largura de referência do #text-content na tela
+    const fontPx = (+document.getElementById('fontSize').value) * scale;
+    const lineHeightPx = fontPx * (+document.getElementById('lineHeight').value / 10);
+    const fontFamily = document.getElementById('fontSelect').value;
+    const paddingX = W * 0.08;
+    const maxWidth = W - paddingX * 2;
+
+    exportCtx.font = fontPx + 'px ' + fontFamily;
+
+    const lines = [];
+    let curLine = null;
+    let y = lineHeightPx;
+    function pushLine() { if (curLine) lines.push(curLine); }
+    function startLine(gap) {
+        pushLine();
+        y += (curLine ? lineHeightPx : 0) + gap;
+        curLine = { words: [], width: 0, y };
+    }
+    startLine(0);
+
+    slide.words.forEach((tok, idx) => {
+        const w = exportCtx.measureText(tok).width;
+        const isParaStart = slide.paraBreaks.has(idx);
+        if (isParaStart) {
+            startLine(lineHeightPx * 0.5);
+        } else if (curLine.width + w > maxWidth && curLine.words.length > 0) {
+            startLine(0);
+        }
+        curLine.words.push({ idx, text: tok, x: curLine.width, w });
+        curLine.width += w;
+    });
+    pushLine();
+
+    return { lines, totalHeight: y + lineHeightPx, fontPx, lineHeightPx, fontFamily, paddingX, maxWidth, slideId: slide.id };
+}
+
+function drawCanvasBackground(W, H) {
+    exportCtx.fillStyle = '#0f0f13';
+    exportCtx.fillRect(0, 0, W, H);
+
+    if (S.bgMode === 'image' && exportBgImg) {
+        const op = (+document.getElementById('bgImageOpacity').value) / 100;
+        const scale = Math.max(W / exportBgImg.width, H / exportBgImg.height);
+        const dw = exportBgImg.width * scale, dh = exportBgImg.height * scale;
+        const dx = (W - dw) / 2, dy = (H - dh) / 2;
+        exportCtx.globalAlpha = op;
+        exportCtx.drawImage(exportBgImg, dx, dy, dw, dh);
+        exportCtx.globalAlpha = 1;
+        const ov = (+document.getElementById('bgOverlay').value) / 100;
+        exportCtx.fillStyle = `rgba(0,0,0,${ov})`;
+        exportCtx.fillRect(0, 0, W, H);
+    } else {
+        exportCtx.fillStyle = S.bgColor;
+        exportCtx.fillRect(0, 0, W, H);
+    }
+}
+
+function drawExportTransitionOverlay(W, H) {
+    if (!exportTransition || !exportTransition.img || S.transitionType === 'none') return;
+    const t = audio.currentTime;
+    if (t >= exportTransition.durationSec) { exportTransition = null; return; }
+
+    const progress = Math.max(0, Math.min(1, t / exportTransition.durationSec));
+    exportCtx.save();
+    exportCtx.globalAlpha = 1 - progress;
+    if (S.transitionType === 'slide') {
+        exportCtx.translate(-progress * W * 0.4, 0);
+    } else if (S.transitionType === 'zoom') {
+        const scale = 1 + progress * 0.15;
+        exportCtx.translate(W / 2, H / 2);
+        exportCtx.scale(scale, scale);
+        exportCtx.translate(-W / 2, -H / 2);
+    }
+    exportCtx.drawImage(exportTransition.img, 0, 0);
+    exportCtx.restore();
+}
+
+function drawExportFrame(idx) {
+    if (!exportCtx || S.currentSlide === -1) return;
+    const slide = S.slides[S.currentSlide];
+    const W = exportCanvasEl.width, H = exportCanvasEl.height;
+    if (!slide || !slide.words.length) {
+        drawCanvasBackground(W, H);
+        drawExportTransitionOverlay(W, H);
+        return;
+    }
+
+    if (!exportLayoutCache || exportLayoutCache.slideId !== slide.id) {
+        exportLayoutCache = buildCanvasLayout(slide, W, H);
+        exportCamera.y = 0;
+    }
+    const layout = exportLayoutCache;
+
+    drawCanvasBackground(W, H);
+
+    const activeLine = layout.lines.find(l => l.words.length && idx >= l.words[0].idx && idx <= l.words[l.words.length - 1].idx) || layout.lines[0];
+    const paddingY = H * 0.12;
+    const visibleH = H - paddingY * 2;
+    const maxCam = Math.max(0, layout.totalHeight - visibleH);
+    const targetCam = Math.min(Math.max(activeLine.y - visibleH / 2, 0), maxCam);
+    exportCamera.y += (targetCam - exportCamera.y) * 0.15;
+
+    exportCtx.save();
+    exportCtx.beginPath();
+    exportCtx.rect(0, paddingY, W, visibleH);
+    exportCtx.clip();
+    exportCtx.translate(0, paddingY - exportCamera.y);
+
+    const align = document.querySelector('.align-btn.active')?.dataset.align || 'left';
+    const dimRead = S.hlEnabled && document.getElementById('dimRead').checked;
+    const hlN = +document.getElementById('hlCount').value || 4;
+    const cloudRadius = +document.getElementById('cloudSize').value || 18;
+    const baseColor = document.getElementById('textColor').value;
+    exportCtx.textBaseline = 'alphabetic';
+
+    layout.lines.forEach(line => {
+        let lineX = layout.paddingX;
+        if (align === 'center') lineX = layout.paddingX + (layout.maxWidth - line.width) / 2;
+        else if (align === 'right') lineX = layout.paddingX + (layout.maxWidth - line.width);
+
+        line.words.forEach(w => {
+            const gx = lineX + w.x, gy = line.y;
+            let mode = null, intensity = 1;
+
+            if (S.hlEnabled) {
+                if (S.hlStyle === 'cloud') {
+                    const dist = Math.abs(w.idx - idx);
+                    if (dist <= cloudRadius) { mode = 'cloud'; intensity = 1 - dist / (cloudRadius + 1); }
+                    else if (dimRead && w.idx < idx - cloudRadius) mode = 'dim';
+                } else {
+                    if (w.idx >= idx && w.idx < idx + hlN) mode = 'active';
+                    else if (dimRead && w.idx < idx) mode = 'dim';
+                }
+            }
+
+            if (mode === 'active') {
+                if (S.hlStyle === 'bg') {
+                    exportCtx.fillStyle = hexToRgba(S.hlColor, 0.38);
+                    roundRectPath(exportCtx, gx - 2, gy - layout.fontPx * 0.82, w.w + 4, layout.fontPx * 1.12, 4);
+                    exportCtx.fill();
+                } else if (S.hlStyle === 'box') {
+                    exportCtx.fillStyle = S.hlColor;
+                    roundRectPath(exportCtx, gx - 2, gy - layout.fontPx * 0.82, w.w + 4, layout.fontPx * 1.12, 4);
+                    exportCtx.fill();
+                } else if (S.hlStyle === 'underline') {
+                    exportCtx.strokeStyle = S.hlColor;
+                    exportCtx.lineWidth = Math.max(2, layout.fontPx * 0.08);
+                    exportCtx.beginPath();
+                    exportCtx.moveTo(gx, gy + layout.fontPx * 0.22);
+                    exportCtx.lineTo(gx + w.w, gy + layout.fontPx * 0.22);
+                    exportCtx.stroke();
+                }
+            } else if (mode === 'cloud') {
+                exportCtx.fillStyle = hexToRgba(S.hlColor, intensity * 0.42);
+                roundRectPath(exportCtx, gx - 2, gy - layout.fontPx * 0.82, w.w + 4, layout.fontPx * 1.12, 4);
+                exportCtx.fill();
+            }
+
+            exportCtx.save();
+            exportCtx.globalAlpha = mode === 'dim' ? 0.38 : 1;
+            let fillColor = baseColor;
+            let fontStr = layout.fontPx + 'px ' + layout.fontFamily;
+            if (mode === 'active') {
+                if (S.hlStyle === 'box' || S.hlStyle === 'bg') fillColor = '#ffffff';
+                else if (S.hlStyle === 'underline' || S.hlStyle === 'bold') fillColor = S.hlColor;
+                if (S.hlStyle === 'bold') fontStr = 'bold ' + fontStr;
+            }
+            exportCtx.fillStyle = fillColor;
+            exportCtx.font = fontStr;
+            exportCtx.fillText(w.text, gx, gy);
+            exportCtx.restore();
+        });
+    });
+
+    exportCtx.restore();
+    drawExportTransitionOverlay(W, H);
 }
 
 /* ─────────────────────────────────────────────
@@ -2344,6 +3235,8 @@ buildHLColorGrid();
 applyHLColor();
 applyBackground();
 applyTypography();
+renderSlideList();
+checkReady();
 audio.volume = (+document.getElementById('volSlider').value || 80) / 100;
 settingsLoaded = true; // a partir daqui, qualquer alteração do usuário é memorizada
 </script>
