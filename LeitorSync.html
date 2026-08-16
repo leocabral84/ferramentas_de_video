@@ -488,6 +488,8 @@
 
         .align-options { display: flex; gap: 5px; flex-wrap: wrap; }
 
+        #hlControls.disabled-group { opacity: 0.4; pointer-events: none; }
+
         /* ── CHECKBOX ROW ── */
         .check-row {
             display: flex;
@@ -1118,35 +1120,43 @@
         <!-- DESTAQUE -->
         <div>
             <div class="section-title">✨ Estilo do Destaque</div>
-            <div class="highlight-options">
-                <button class="hl-btn active" data-style="bg"        onclick="setHL('bg',this)">🟧 Fundo</button>
-                <button class="hl-btn"        data-style="box"       onclick="setHL('box',this)">⬛ Caixa</button>
-                <button class="hl-btn"        data-style="underline" onclick="setHL('underline',this)">▁ Sublinhado</button>
-                <button class="hl-btn"        data-style="bold"      onclick="setHL('bold',this)">𝐁 Negrito</button>
-            </div>
 
-            <div class="form-group" style="margin-top:11px">
-                <label>Palavras destacadas ao mesmo tempo</label>
-                <div class="range-row">
-                    <input type="range" id="hlCount" min="1" max="15" value="4"
-                           oninput="document.getElementById('hlCountVal').textContent=this.value">
-                    <span class="range-val" id="hlCountVal">4</span>
-                </div>
-            </div>
-
-            <div class="form-group" style="margin-top:11px">
-                <label>Cor do destaque</label>
-                <div class="color-grid" id="hlColorGrid" style="grid-template-columns:repeat(8,1fr)"></div>
-                <div class="custom-color-row">
-                    <input type="color" id="hlCustomColor" value="#e8621a">
-                    <span>Cor personalizada</span>
-                </div>
-            </div>
-
-            <label class="check-row">
-                <input type="checkbox" id="dimRead" checked>
-                <span>Escurecer palavras já lidas</span>
+            <label class="check-row" style="margin-top:0;margin-bottom:11px">
+                <input type="checkbox" id="hlEnabled" checked onchange="toggleHlEnabled(this.checked)">
+                <span>Destacar palavras (desligue p/ manter só o auto-scroll — fica invisível, inclusive em gravações)</span>
             </label>
+
+            <div id="hlControls">
+                <div class="highlight-options">
+                    <button class="hl-btn active" data-style="bg"        onclick="setHL('bg',this)">🟧 Fundo</button>
+                    <button class="hl-btn"        data-style="box"       onclick="setHL('box',this)">⬛ Caixa</button>
+                    <button class="hl-btn"        data-style="underline" onclick="setHL('underline',this)">▁ Sublinhado</button>
+                    <button class="hl-btn"        data-style="bold"      onclick="setHL('bold',this)">𝐁 Negrito</button>
+                </div>
+
+                <div class="form-group" style="margin-top:11px">
+                    <label>Palavras destacadas ao mesmo tempo</label>
+                    <div class="range-row">
+                        <input type="range" id="hlCount" min="1" max="15" value="4"
+                               oninput="document.getElementById('hlCountVal').textContent=this.value">
+                        <span class="range-val" id="hlCountVal">4</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:11px">
+                    <label>Cor do destaque</label>
+                    <div class="color-grid" id="hlColorGrid" style="grid-template-columns:repeat(8,1fr)"></div>
+                    <div class="custom-color-row">
+                        <input type="color" id="hlCustomColor" value="#e8621a">
+                        <span>Cor personalizada</span>
+                    </div>
+                </div>
+
+                <label class="check-row">
+                    <input type="checkbox" id="dimRead" checked>
+                    <span>Escurecer palavras já lidas</span>
+                </label>
+            </div>
         </div>
 
         <!-- VIRADA DE PÁGINA -->
@@ -1290,6 +1300,7 @@ const S = {
     bgColor: '#1a1a22',
     hlStyle: 'bg',
     hlColor: '#e8621a',
+    hlEnabled: true,
     speed: 1.0,
     raf: null,
     lastIdx: -99,
@@ -1505,15 +1516,20 @@ function idxAtTime(t) {
 function tick() {
     const idx     = idxAtTime(audio.currentTime);
     const hlN     = +document.getElementById('hlCount').value || 4;
-    const dimRead = document.getElementById('dimRead').checked;
+    const dimRead = S.hlEnabled && document.getElementById('dimRead').checked;
     const sCls    = 's-' + S.hlStyle;
 
     if (idx !== S.lastIdx) {
         S.lastIdx = idx;
         S.spans.forEach((sp, i) => {
             sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold');
-            if (i >= idx && i < idx + hlN)       sp.classList.add('hl-active', sCls);
-            else if (dimRead && i < idx)          sp.classList.add('hl-read');
+            // 'hl-active' fica marcado mesmo com destaque desligado (só não recebe a
+            // classe de estilo sCls) — o auto-scroll usa o índice, não a classe visual.
+            if (i >= idx && i < idx + hlN) {
+                sp.classList.add('hl-active');
+                if (S.hlEnabled) sp.classList.add(sCls);
+            }
+            else if (dimRead && i < idx) sp.classList.add('hl-read');
         });
         const cw = document.getElementById('curWord');
         if (cw) cw.textContent = idx + 1;
@@ -1544,12 +1560,15 @@ function jumpToWord(idx) {
 
 function renderStatic(idx) {
     const hlN  = +document.getElementById('hlCount').value || 4;
-    const dim  = document.getElementById('dimRead').checked;
+    const dim  = S.hlEnabled && document.getElementById('dimRead').checked;
     const sCls = 's-' + S.hlStyle;
     S.spans.forEach((sp, i) => {
         sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold');
-        if (i >= idx && i < idx + hlN)  sp.classList.add('hl-active', sCls);
-        else if (dim && i < idx)         sp.classList.add('hl-read');
+        if (i >= idx && i < idx + hlN) {
+            sp.classList.add('hl-active');
+            if (S.hlEnabled) sp.classList.add(sCls);
+        }
+        else if (dim && i < idx) sp.classList.add('hl-read');
     });
     autoScroll(idx);
     const cw = document.getElementById('curWord');
@@ -1782,6 +1801,19 @@ function setHL(style, btn) {
     document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     S.lastIdx = -99; // força re-render imediato
+}
+
+/* ─────────────────────────────────────────────
+   LIGAR/DESLIGAR DESTAQUE (mantém só o auto-scroll)
+───────────────────────────────────────────── */
+function toggleHlEnabled(enabled) {
+    S.hlEnabled = enabled;
+    document.getElementById('hlControls').classList.toggle('disabled-group', !enabled);
+    S.lastIdx = -99; // força re-render imediato (remove/reaplica as classes visuais)
+    if (!S.playing && S.words.length) {
+        const idx = idxAtTime(audio.currentTime);
+        renderStatic(idx);
+    }
 }
 
 /* ─────────────────────────────────────────────
