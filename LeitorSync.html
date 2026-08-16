@@ -865,6 +865,16 @@
             box-shadow: none !important;
         }
 
+        /* "Nuvem de leitura": região aproximada, sem apontar uma palavra exata.
+           --ci (0 a ~0.42) é definido por palavra via JS conforme a distância
+           até o centro da leitura — mais perto, mais intenso; nas bordas, some. */
+        .word.hl-cloud {
+            background: rgba(var(--hl-rgb), var(--ci, 0)) !important;
+            border-radius: 4px;
+            border-bottom-color: transparent !important;
+            box-shadow: 0 0 calc(var(--ci, 0) * 20px) rgba(var(--hl-rgb), calc(var(--ci, 0) * 0.6));
+        }
+
         .word.hl-read { opacity: 0.38; }
 
         /* ── PLACEHOLDER ── */
@@ -1118,14 +1128,29 @@
                     <button class="hl-btn"        data-style="box"       onclick="setHL('box',this)">⬛ Caixa</button>
                     <button class="hl-btn"        data-style="underline" onclick="setHL('underline',this)">▁ Sublinhado</button>
                     <button class="hl-btn"        data-style="bold"      onclick="setHL('bold',this)">𝐁 Negrito</button>
+                    <button class="hl-btn"        data-style="cloud"     onclick="setHL('cloud',this)">☁️ Nuvem</button>
                 </div>
+                <p style="font-size:11px;color:var(--text-muted);margin-top:7px;line-height:1.55">
+                    "Nuvem" acende uma região mais larga ao redor da leitura (antes e depois),
+                    sem apontar uma palavra exata — útil quando a sincronização não precisa ser perfeita,
+                    só indicar aproximadamente onde a leitura está.
+                </p>
 
-                <div class="form-group" style="margin-top:11px">
+                <div class="form-group" id="hlCountGroup" style="margin-top:11px">
                     <label>Palavras destacadas ao mesmo tempo</label>
                     <div class="range-row">
                         <input type="range" id="hlCount" min="1" max="15" value="4"
                                oninput="document.getElementById('hlCountVal').textContent=this.value; saveSettings();">
                         <span class="range-val" id="hlCountVal">4</span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="cloudSizeGroup" style="margin-top:11px;display:none">
+                    <label>Tamanho da nuvem (palavras para cada lado)</label>
+                    <div class="range-row">
+                        <input type="range" id="cloudSize" min="3" max="60" value="18"
+                               oninput="document.getElementById('cloudSizeVal').textContent=this.value; S.lastIdx=-99; if(!S.playing && S.words.length) renderStatic(idxAtTime(audio.currentTime)); saveSettings();">
+                        <span class="range-val" id="cloudSizeVal">18</span>
                     </div>
                 </div>
 
@@ -1170,8 +1195,23 @@
                 </div>
             </div>
             <p style="font-size:11px;color:var(--text-muted);margin-top:7px;line-height:1.55">
-                Use se o destaque estiver adiantado ou atrasado em relação à voz.
+                Use se o destaque estiver adiantado ou atrasado em relação à voz o tempo todo.
             </p>
+
+            <div class="form-group" style="margin-top:13px">
+                <label>Calibração manual (corrige desvios durante a leitura)</label>
+                <p style="font-size:11px;color:var(--text-muted);line-height:1.55;margin-bottom:8px">
+                    Durante a reprodução, dê <span class="kbd">Shift</span> + clique na palavra que
+                    está sendo dita naquele instante. O destaque se realinha a partir dali — use
+                    quantas vezes precisar ao longo do texto.
+                </p>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <span style="font-size:12px;color:var(--text-muted)">
+                        Pontos de calibração: <strong id="anchorCount" style="color:var(--primary-light)">0</strong>
+                    </span>
+                    <button class="hl-btn" onclick="clearSyncAnchors()" title="Remove todos os pontos de calibração">🗑️ Limpar</button>
+                </div>
+            </div>
         </div>
 
     </aside>
@@ -1275,6 +1315,10 @@
 const S = {
     words: [],
     spans: [],
+    wordWeights: [],   // peso estimado (duração relativa) de cada palavra
+    cumWeights: [0],   // soma acumulada dos pesos — usada para interpolar tempo ↔ palavra
+    totalWeight: 0,
+    anchors: [],       // pontos de calibração manual: [{ t: segundos, wIdx: índice da palavra }]
     playing: false,
     audioOk: false,
     textOk: false,
@@ -1322,6 +1366,7 @@ function saveSettings() {
             hlStyle: S.hlStyle,
             hlColor: S.hlColor,
             hlCount: document.getElementById('hlCount').value,
+            cloudSize: document.getElementById('cloudSize').value,
             dimRead: document.getElementById('dimRead').checked,
             hlEnabled: S.hlEnabled,
             pageFlipEnabled: document.getElementById('pageFlipEnabled').checked,
@@ -1385,6 +1430,10 @@ function loadSettings() {
     if (typeof data.hlCount !== 'undefined') {
         document.getElementById('hlCount').value = data.hlCount;
         document.getElementById('hlCountVal').textContent = data.hlCount;
+    }
+    if (typeof data.cloudSize !== 'undefined') {
+        document.getElementById('cloudSize').value = data.cloudSize;
+        document.getElementById('cloudSizeVal').textContent = data.cloudSize;
     }
     if (typeof data.dimRead === 'boolean') document.getElementById('dimRead').checked = data.dimRead;
     if (typeof data.hlEnabled === 'boolean') {
@@ -1535,6 +1584,8 @@ wireDrop('mp3Drop', 'mp3File', (file, drop) => {
     drop.classList.add('loaded');
     document.getElementById('mp3FileName').textContent = file.name;
     S.audioOk = true;
+    S.anchors = []; // um novo áudio invalida os pontos de calibração antigos (eixo do tempo mudou)
+    updateAnchorCount();
     audio.addEventListener('loadedmetadata', () => {
         document.getElementById('totTime').textContent = fmtTime(audio.duration);
     }, { once: true });
@@ -1582,13 +1633,22 @@ function buildWords(raw) {
             sp.className = 'word';
             sp.textContent = tok + ' ';
             sp.dataset.i = S.words.length;
-            sp.addEventListener('click', () => jumpToWord(+sp.dataset.i));
+            // clique normal = pular para a palavra; Shift+clique = calibrar
+            // sincronização (marca "o narrador está dizendo esta palavra agora").
+            sp.addEventListener('click', e => {
+                if (e.shiftKey) addSyncAnchor(+sp.dataset.i);
+                else             jumpToWord(+sp.dataset.i);
+            });
             pDiv.appendChild(sp);
             S.words.push(tok);
             S.spans.push(sp);
         });
         box.appendChild(pDiv);
     });
+
+    computeWordWeights();
+    S.anchors = [];
+    updateAnchorCount();
 
     document.getElementById('placeholder').style.display = 'none';
     box.style.display = 'block';
@@ -1600,33 +1660,160 @@ function buildWords(raw) {
 }
 
 /* ─────────────────────────────────────────────
-   SYNC ENGINE
+   PESO DE CADA PALAVRA (estimativa de duração de fala)
+   Palavras mais longas levam mais tempo para serem faladas, e uma pausa
+   ocorre após vírgulas/pontos — isso aproxima bem mais a leitura real do
+   que assumir que toda palavra dura o mesmo tempo.
 ───────────────────────────────────────────── */
+function wordWeight(tok) {
+    const clean = tok.replace(/[.,;:!?…"'“”‘’()\[\]{}\-–—]/g, '');
+    let w = Math.max(1, clean.length);
+    if (/[,;:]$/.test(tok))    w += 2; // pausa curta (vírgula, dois-pontos, ponto e vírgula)
+    if (/[.!?…]$/.test(tok))   w += 5; // pausa maior (fim de frase)
+    return w;
+}
+
+function computeWordWeights() {
+    S.wordWeights = S.words.map(wordWeight);
+    S.cumWeights = [0];
+    S.wordWeights.forEach((w, i) => S.cumWeights.push(S.cumWeights[i] + w));
+    S.totalWeight = S.cumWeights[S.cumWeights.length - 1] || 1;
+}
+
+/* ─────────────────────────────────────────────
+   SYNC ENGINE
+   Em vez de mapear tempo→palavra linearmente (que assume que toda palavra
+   dura o mesmo tempo — a causa da dessincronização progressiva), interpola
+   pelo peso estimado de cada palavra (computeWordWeights) e, se houver
+   pontos de calibração manual (S.anchors, via Shift+clique), interpola por
+   trechos entre eles — o que corrige o desvio acumulado em cada ponto.
+───────────────────────────────────────────── */
+function getEffectiveAnchors() {
+    const list = [
+        { t: 0, w: 0 },
+        ...S.anchors.map(a => ({ t: a.t, w: S.cumWeights[a.wIdx] || 0 })),
+        { t: audio.duration || 0, w: S.totalWeight },
+    ];
+    list.sort((a, b) => a.t - b.t);
+    return list;
+}
+
+function weightToIndex(w) {
+    // cumWeights é crescente: acha a última palavra cujo início (cumWeights[i]) <= w
+    let lo = 0, hi = S.words.length - 1;
+    while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (S.cumWeights[mid] <= w) lo = mid; else hi = mid - 1;
+    }
+    return lo;
+}
+
 function idxAtTime(t) {
     if (!audio.duration || !S.words.length) return 0;
     const off = parseFloat(document.getElementById('syncOffset').value) || 0;
-    const adj = Math.max(0, t + off);
-    return Math.min(Math.floor((adj / audio.duration) * S.words.length), S.words.length - 1);
+    const adj = Math.min(audio.duration, Math.max(0, t + off));
+
+    const anchors = getEffectiveAnchors();
+    let lo = anchors[0], hi = anchors[anchors.length - 1];
+    for (let i = 0; i < anchors.length - 1; i++) {
+        if (adj >= anchors[i].t && adj <= anchors[i + 1].t) { lo = anchors[i]; hi = anchors[i + 1]; break; }
+    }
+    const span = hi.t - lo.t;
+    const frac = span > 0 ? (adj - lo.t) / span : 0;
+    const targetW = lo.w + frac * (hi.w - lo.w);
+    return Math.min(weightToIndex(targetW), S.words.length - 1);
+}
+
+function timeAtIndex(idx) {
+    if (!audio.duration || !S.words.length) return 0;
+    const w = S.cumWeights[idx] || 0;
+    const anchors = getEffectiveAnchors();
+    let lo = anchors[0], hi = anchors[anchors.length - 1];
+    for (let i = 0; i < anchors.length - 1; i++) {
+        if (w >= anchors[i].w && w <= anchors[i + 1].w) { lo = anchors[i]; hi = anchors[i + 1]; break; }
+    }
+    const spanW = hi.w - lo.w;
+    const frac  = spanW > 0 ? (w - lo.w) / spanW : 0;
+    const off   = parseFloat(document.getElementById('syncOffset').value) || 0;
+    return Math.max(0, (lo.t + frac * (hi.t - lo.t)) - off);
+}
+
+/* ── CALIBRAÇÃO MANUAL (âncoras de sincronização) ── */
+function addSyncAnchor(idx) {
+    if (!audio.duration) { toast('Carregue o áudio antes de calibrar!', '⚠️'); return; }
+    const t = audio.currentTime;
+    S.anchors = S.anchors.filter(a => Math.abs(a.t - t) > 0.15); // evita pontos redundantes muito próximos
+    S.anchors.push({ t, wIdx: idx });
+    S.anchors.sort((a, b) => a.t - b.t);
+    S.lastIdx = -99;
+    updateAnchorCount();
+    toast(`🎯 Sincronizado na palavra ${idx + 1}`, '🎯');
+    if (!S.playing) renderStatic(idxAtTime(audio.currentTime));
+}
+
+function clearSyncAnchors() {
+    S.anchors = [];
+    S.lastIdx = -99;
+    updateAnchorCount();
+    toast('Calibração de sincronização limpa.', '🗑️');
+    if (!S.playing && S.words.length) renderStatic(idxAtTime(audio.currentTime));
+}
+
+function updateAnchorCount() {
+    const el = document.getElementById('anchorCount');
+    if (el) el.textContent = S.anchors.length;
+}
+
+/* ─────────────────────────────────────────────
+   PINTURA DO DESTAQUE
+   Dois modos:
+   - Preciso (bg/box/underline/bold): acende uma janela de N palavras a
+     partir da posição sincronizada — bom quando a sincronização está fina.
+   - Nuvem (cloud): acende uma região mais larga, ANTES e DEPOIS da posição
+     atual, com intensidade decrescente a partir do centro — não tenta ser
+     exata, só indica "a leitura está por aqui". Tolera bem mais imprecisão
+     de sincronização, já que não aponta uma palavra específica.
+───────────────────────────────────────────── */
+function paintHighlights(idx) {
+    const dimRead = S.hlEnabled && document.getElementById('dimRead').checked;
+
+    S.spans.forEach(sp => {
+        sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold','hl-cloud');
+        sp.style.removeProperty('--ci');
+    });
+
+    if (!S.hlEnabled) return;
+
+    if (S.hlStyle === 'cloud') {
+        const radius = +document.getElementById('cloudSize').value || 18;
+        S.spans.forEach((sp, i) => {
+            const dist = Math.abs(i - idx);
+            if (dist <= radius) {
+                const intensity = 1 - dist / (radius + 1); // pico no centro, esmaece nas bordas
+                sp.classList.add('hl-cloud');
+                sp.style.setProperty('--ci', (intensity * 0.42).toFixed(3));
+            } else if (dimRead && i < idx - radius) {
+                sp.classList.add('hl-read');
+            }
+        });
+    } else {
+        const hlN  = +document.getElementById('hlCount').value || 4;
+        const sCls = 's-' + S.hlStyle;
+        S.spans.forEach((sp, i) => {
+            // 'hl-active' fica marcado mesmo se o destaque estiver desligado no
+            // topo (chamada só ocorre com S.hlEnabled true aqui) — o auto-scroll
+            // usa o índice, não a classe visual.
+            if (i >= idx && i < idx + hlN) sp.classList.add('hl-active', sCls);
+            else if (dimRead && i < idx)    sp.classList.add('hl-read');
+        });
+    }
 }
 
 function tick() {
-    const idx     = idxAtTime(audio.currentTime);
-    const hlN     = +document.getElementById('hlCount').value || 4;
-    const dimRead = S.hlEnabled && document.getElementById('dimRead').checked;
-    const sCls    = 's-' + S.hlStyle;
-
+    const idx = idxAtTime(audio.currentTime);
     if (idx !== S.lastIdx) {
         S.lastIdx = idx;
-        S.spans.forEach((sp, i) => {
-            sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold');
-            // 'hl-active' fica marcado mesmo com destaque desligado (só não recebe a
-            // classe de estilo sCls) — o auto-scroll usa o índice, não a classe visual.
-            if (i >= idx && i < idx + hlN) {
-                sp.classList.add('hl-active');
-                if (S.hlEnabled) sp.classList.add(sCls);
-            }
-            else if (dimRead && i < idx) sp.classList.add('hl-read');
-        });
+        paintHighlights(idx);
         const cw = document.getElementById('curWord');
         if (cw) cw.textContent = idx + 1;
         autoScroll(idx);
@@ -1648,24 +1835,13 @@ function autoScroll(idx) {
 
 function jumpToWord(idx) {
     if (!audio.duration) return;
-    const off = parseFloat(document.getElementById('syncOffset').value) || 0;
-    audio.currentTime = Math.max(0, (idx / S.words.length) * audio.duration - off);
+    audio.currentTime = timeAtIndex(idx);
     S.lastIdx = -99;
     if (!S.playing) renderStatic(idx);
 }
 
 function renderStatic(idx) {
-    const hlN  = +document.getElementById('hlCount').value || 4;
-    const dim  = S.hlEnabled && document.getElementById('dimRead').checked;
-    const sCls = 's-' + S.hlStyle;
-    S.spans.forEach((sp, i) => {
-        sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold');
-        if (i >= idx && i < idx + hlN) {
-            sp.classList.add('hl-active');
-            if (S.hlEnabled) sp.classList.add(sCls);
-        }
-        else if (dim && i < idx) sp.classList.add('hl-read');
-    });
+    paintHighlights(idx);
     autoScroll(idx);
     const cw = document.getElementById('curWord');
     if (cw) cw.textContent = idx + 1;
@@ -1704,8 +1880,10 @@ function stopAudio() {
     document.getElementById('btnPlay').textContent = '▶';
     document.getElementById('progressFill').style.width = '0%';
     document.getElementById('curTime').textContent = '0:00';
-    S.spans.forEach(sp =>
-        sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold'));
+    S.spans.forEach(sp => {
+        sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold','hl-cloud');
+        sp.style.removeProperty('--ci');
+    });
     const cw = document.getElementById('curWord');
     if (cw) cw.textContent = '—';
     document.getElementById('textDisplay').scrollTo({ top: 0, behavior: 'smooth' });
@@ -1906,7 +2084,10 @@ function setHL(style, btn) {
     S.hlStyle = style;
     document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    document.getElementById('hlCountGroup').style.display    = style === 'cloud' ? 'none' : '';
+    document.getElementById('cloudSizeGroup').style.display  = style === 'cloud' ? '' : 'none';
     S.lastIdx = -99; // força re-render imediato
+    if (!S.playing && S.words.length) renderStatic(idxAtTime(audio.currentTime));
     saveSettings();
 }
 
