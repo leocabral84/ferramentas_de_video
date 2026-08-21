@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LeitorSync — Sincronizador de Áudio e Texto</title>
+    <link rel="icon" href="imagem.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600;700&family=Lora:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Playfair+Display:wght@400;700&family=Source+Serif+Pro:wght@300;400;700&family=Noto+Sans:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -1097,6 +1098,22 @@
             opacity: 0.55;
         }
 
+        /* ── MODO GRAVAÇÃO (esconde tudo que não é o texto) ──
+           A captura de tela pega a aba inteira — não dá pra recortar só um
+           elemento de forma confiável entre navegadores. Em vez disso,
+           escondemos header/navbar/sidebar/player durante a gravação, então
+           a aba fica só com a área do texto (mais a barrinha com o botão de
+           cancelar, pra você conseguir parar a gravação). */
+        body.is-recording-region header,
+        body.is-recording-region .navbar,
+        body.is-recording-region .sidebar,
+        body.is-recording-region .player-bar {
+            display: none !important;
+        }
+        body.is-recording-region .app-layout {
+            grid-template-columns: 1fr;
+        }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 860px) {
             .app-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
@@ -1149,6 +1166,7 @@
                 <li class="nav-item"><a class="nav-link" href="corretor_srt.html">Corretor SRT</a></li>
                 <li class="nav-item"><a class="nav-link" href="formatador-youtube.html">Formatador YouTube</a></li>
                 <li class="nav-item"><a class="nav-link active" href="LeitorSync.html">LeitorSync</a></li>
+                <li class="nav-item"><a class="nav-link" href="ConferSync.html">ConferSync</a></li>
             </ul>
         </div>
     </div>
@@ -1422,9 +1440,9 @@
 
         <!-- EXPORTAÇÃO -->
         <div>
-            <div class="section-title">🎬 Exportar Vídeo</div>
+            <div class="section-title">🎬 Gravar Vídeo</div>
             <div class="form-group">
-                <label>Resolução do vídeo</label>
+                <label>Resolução preferida da gravação</label>
                 <select id="exportRes" onchange="saveSettings()">
                     <option value="1280x720">HD (1280×720)</option>
                     <option value="1920x1080" selected>Full HD (1920×1080)</option>
@@ -1432,9 +1450,17 @@
             </div>
             <p style="font-size:11px;color:var(--text-muted);margin-top:7px;line-height:1.55">
                 Duração total estimada: <strong id="totalDurationLabel" style="color:var(--primary-light)">—</strong><br>
-                O MP4 final tem a duração exata da soma dos áudios: cada slide aparece pelo tempo do seu
-                próprio narrador, com o mesmo fundo, fonte e destaque configurados nesta barra lateral.
+                Ao clicar em "Gravar Vídeo", o navegador pede pra você escolher <strong>esta aba</strong> pra
+                compartilhar. O resto da interface (menu, painel lateral, controles) some da tela durante
+                a gravação, sobrando só a área do texto (fundo, destaque e transições incluídos) junto com
+                o áudio narrado de cada slide — no fim, tudo é salvo como MP4 (ou WebM, se seu navegador
+                não gerar MP4 nativamente).
             </p>
+
+            <label class="check-row" style="margin-top:11px">
+                <input type="checkbox" id="exportSeparate" onchange="saveSettings()">
+                <span>Gravar um vídeo por áudio, um de cada vez: cada clique em "Gravar Vídeo" grava só o slide atual e, ao terminar, avança sozinho pro próximo — clique de novo quando quiser gravá-lo (mais leve pro sistema, e dá pra apontar uma pasta fixa de downloads no navegador). Desmarcado: todos os slides são gravados de uma vez, em um único vídeo.</span>
+            </label>
         </div>
 
     </aside>
@@ -1496,10 +1522,10 @@
             <div class="text-display-header">
                 <span id="dispInfo">Importe áudios (.mp3) para começar</span>
                 <div class="text-display-header-right">
-                    <span class="record-timer" id="exportStatus">🎬 0:00</span>
+                    <span class="record-timer" id="exportStatus">⏺️ 0:00</span>
                     <button class="btn-record" id="exportBtn" onclick="toggleExport()"
-                            title="Renderiza o fundo + texto destacado de cada slide junto com seu áudio direto em um .mp4, sem gravar a tela.">
-                        <span class="rec-dot">🎬</span> Exportar MP4
+                            title="Grava a área do texto junto com o áudio narrado do MP3 — o resto da interface fica escondido durante a gravação. Escolha 'Esta guia' na janela de compartilhamento do navegador.">
+                        <span class="rec-dot">⏺️</span> Gravar Vídeo
                     </button>
                     <div class="word-counter" id="wordCounter"></div>
                 </div>
@@ -1534,9 +1560,8 @@
     <span id="toastMsg"></span>
 </div>
 
-<!-- AUDIO + EXPORT CANVAS -->
+<!-- AUDIO -->
 <audio id="audioEl" preload="auto"></audio>
-<canvas id="exportCanvas" style="display:none"></canvas>
 
 <!-- ══════════════ JAVASCRIPT ══════════════ -->
 <script>
@@ -1612,6 +1637,7 @@ function saveSettings() {
             syncOffset: document.getElementById('syncOffset').value,
             volume: document.getElementById('volSlider').value,
             exportRes: document.getElementById('exportRes').value,
+            exportSeparate: document.getElementById('exportSeparate').checked,
         };
         try {
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
@@ -1701,6 +1727,7 @@ function loadSettings() {
 
     if (typeof data.volume !== 'undefined') document.getElementById('volSlider').value = data.volume;
     if (data.exportRes) document.getElementById('exportRes').value = data.exportRes;
+    if (typeof data.exportSeparate === 'boolean') document.getElementById('exportSeparate').checked = data.exportSeparate;
 }
 
 /* ─────────────────────────────────────────────
@@ -1760,10 +1787,6 @@ function hexToRgbStr(hex) {
     if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
     const num = parseInt(hex, 16);
     return [(num >> 16) & 255, (num >> 8) & 255, num & 255].join(',');
-}
-
-function hexToRgba(hex, alpha) {
-    return `rgba(${hexToRgbStr(hex)},${alpha})`;
 }
 
 function applyHLColor() {
@@ -2151,8 +2174,9 @@ function renderSlideDOM(slide) {
    TRANSIÇÃO ENTRE SLIDES (ao vivo)
    Anima a troca do conteúdo de #textContent: primeiro some o slide antigo,
    depois — só então — o DOM é reconstruído com as palavras do novo slide,
-   que aparece com a animação de entrada. As mesmas opções (tipo + duração)
-   valem também para o vídeo exportado (ver drawExportFrame).
+   que aparece com a animação de entrada. Como a gravação de vídeo captura a
+   tela de verdade (ver GRAVAÇÃO DE VÍDEO), essa mesma transição também
+   aparece no vídeo gravado, sem precisar de nenhum código à parte.
 ───────────────────────────────────────────── */
 const LIVE_TRANSITIONS = {
     fade:  { out: { opacity: '0', transform: 'none' },              inFrom: { opacity: '0', transform: 'none' } },
@@ -2411,7 +2435,6 @@ function tick() {
         if (cw) cw.textContent = idx + 1;
         autoScroll(idx);
     }
-    if (S.exporting) drawExportFrame(idx);
     S.raf = requestAnimationFrame(tick);
 }
 
@@ -2782,21 +2805,17 @@ function getMixedAudioStream() {
 }
 
 /* ─────────────────────────────────────────────
-   EXPORTAÇÃO EM MP4 (canvas + áudio, sem gravar tela)
-   Desenha o fundo + texto (com o mesmo destaque configurado ao lado) direto
-   num <canvas> a cada frame, e grava esse canvas + o áudio de cada slide
-   com o MediaRecorder — mais leve do que capturar a tela inteira.
+   GRAVAÇÃO DE VÍDEO (grava a tela de verdade — só a área do texto — + áudio)
+   Em vez de redesenhar o texto num <canvas> a cada frame (frágil: duplicava
+   manualmente tipografia/destaque/fundo/transições e ainda dava problema de
+   duração no MP4 gerado), gravamos a tela de verdade com getDisplayMedia():
+   o usuário escolhe esta aba, e a API de recorte (Region/Element Capture)
+   restringe o vídeo só à área de #textDisplay — sem capturar a tela toda.
 ───────────────────────────────────────────── */
 let exportRecorder    = null;
-let exportChunks      = [];
-let exportCtx         = null;
-let exportCanvasEl    = null;
-let exportCamera      = { y: 0 };
-let exportLayoutCache = null;
-let exportBgImg       = null;
 let exportStartedAt   = 0;
 let exportTimerHandle = null;
-let exportTransition  = null; // { img: <canvas com o último frame do slide anterior>, durationSec }
+let exportDisplayStream = null;
 
 function toggleExport() {
     if (S.exporting) cancelExport();
@@ -2806,15 +2825,95 @@ function toggleExport() {
 function cancelExport() {
     if (!S.exporting) return;
     S.exportCancelled = true;
-    toast('Cancelando exportação…', 'ℹ️');
+    toast('Cancelando gravação…', 'ℹ️');
+}
+
+// Pede o compartilhamento de tela só quando ainda não tem um vivo — no modo
+// "um vídeo por áudio", cada slide é uma gravação MANUAL separada, mas a
+// MESMA permissão de tela é reaproveitada entre elas (senão o navegador
+// pediria de novo a cada clique em "Gravar Vídeo").
+// A API de recorte por elemento (Region/Element Capture) é experimental e,
+// em vez disso, escondemos o resto da interface via CSS (.is-recording-region)
+// enquanto grava — funciona em qualquer navegador que suporte getDisplayMedia.
+async function getOrCreateDisplayStream(rw, rh) {
+    if (exportDisplayStream && exportDisplayStream.getVideoTracks()[0]?.readyState === 'live') {
+        return exportDisplayStream;
+    }
+    const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 30, width: { ideal: rw }, height: { ideal: rh } },
+        audio: false, // o áudio narrado vem do <audio>, mixado abaixo — não do compartilhamento de tela
+        preferCurrentTab: true,
+    });
+    const screenTrack = displayStream.getVideoTracks()[0];
+    // Se o usuário parar o compartilhamento pela barra do navegador no meio
+    // da gravação, cancela graciosamente em vez de travar esperando o áudio.
+    screenTrack.addEventListener('ended', () => {
+        S.exportCancelled = true;
+        exportDisplayStream = null;
+    });
+
+    exportDisplayStream = displayStream;
+    return displayStream;
+}
+
+// Grava uma leva de slides (um único, no modo separado, ou todos, no modo
+// mesclado) num MediaRecorder próprio, sobre a MESMA stream de tela+áudio
+// (ela fica viva o tempo todo — só o gravador é recriado a cada leva, então
+// o navegador não pede o compartilhamento de tela de novo a cada arquivo).
+function recordBatch(combinedStream, recorderOptions, indices) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        let recorder;
+        try {
+            recorder = new MediaRecorder(combinedStream, recorderOptions);
+        } catch (err) {
+            reject(err);
+            return;
+        }
+        exportRecorder = recorder;
+        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+        recorder.onstop = () => resolve(chunks);
+        recorder.start(1000);
+
+        (async () => {
+            try {
+                for (const i of indices) {
+                    if (S.exportCancelled) break;
+                    await exportPlaySlide(i);
+                }
+            } catch (err) {
+                console.error('Erro durante a exportação:', err);
+                toast('Erro durante a exportação.', '❌');
+            }
+            // Pede o último pedaço explicitamente antes de parar — sem isso,
+            // o fragmento final às vezes fica pendente e não entra no arquivo.
+            if (recorder.state !== 'inactive') {
+                try {
+                    recorder.requestData();
+                } catch (err) {
+                    console.warn('Não foi possível solicitar o último chunk:', err);
+                }
+                setTimeout(() => {
+                    if (recorder.state !== 'inactive') recorder.stop();
+                }, 150);
+            }
+        })();
+    });
+}
+
+function exportFileNameHint(slideIndex) {
+    if (slideIndex == null) return null;
+    const raw = (S.slides[slideIndex] && S.slides[slideIndex].name) || `slide-${slideIndex + 1}`;
+    const base = raw.replace(/\.[^/.]+$/, '').replace(/[\\/:*?"<>|]+/g, '_').trim() || `slide-${slideIndex + 1}`;
+    return String(slideIndex + 1).padStart(2, '0') + '-' + base;
 }
 
 async function startExport() {
-    if (!S.slides.length) { toast('Importe os áudios antes de exportar!', '⚠️'); return; }
+    if (!S.slides.length) { toast('Importe os áudios antes de gravar!', '⚠️'); return; }
     const missingIdx = S.slides.findIndex(s => !s.text.trim());
-    if (missingIdx !== -1) { toast('Adicione o texto do slide ' + (missingIdx + 1) + ' antes de exportar!', '⚠️'); return; }
-    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
-        toast('Seu navegador não suporta exportação de vídeo (use Chrome/Edge atualizado).', '⚠️');
+    if (missingIdx !== -1) { toast('Adicione o texto do slide ' + (missingIdx + 1) + ' antes de gravar!', '⚠️'); return; }
+    if (!window.MediaRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        toast('Seu navegador não suporta gravação de tela (use Chrome/Edge atualizado).', '⚠️');
         return;
     }
 
@@ -2824,29 +2923,19 @@ async function startExport() {
     document.getElementById('btnPlay').textContent = '▶';
 
     const [rw, rh] = document.getElementById('exportRes').value.split('x').map(Number);
-    exportCanvasEl = document.getElementById('exportCanvas');
-    exportCanvasEl.width = rw;
-    exportCanvasEl.height = rh;
-    exportCtx = exportCanvasEl.getContext('2d');
-    exportCamera.y = 0;
-    exportLayoutCache = null;
-    exportTransition = null;
 
-    exportBgImg = null;
-    if (S.bgMode === 'image' && S.bgImage) {
-        exportBgImg = await new Promise(resolve => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => resolve(null);
-            img.src = S.bgImage;
-        });
+    let displayStream;
+    try {
+        displayStream = await getOrCreateDisplayStream(rw, rh);
+    } catch (err) {
+        toast('Gravação cancelada — é preciso permitir o compartilhamento de tela.', 'ℹ️');
+        return;
     }
-    drawCanvasBackground(rw, rh); // primeiro frame não fica em branco
+    const screenTrack = displayStream.getVideoTracks()[0];
 
     const audioStream = getMixedAudioStream();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
-    const videoStream = exportCanvasEl.captureStream(30);
-    const combined = new MediaStream([...videoStream.getVideoTracks(), ...audioStream.getAudioTracks()]);
+    const combined = new MediaStream([screenTrack, ...audioStream.getAudioTracks()]);
 
     const mimeCandidates = [
         'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
@@ -2858,98 +2947,91 @@ async function startExport() {
     ];
     const mimeType = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || '';
     const usingMp4 = mimeType.startsWith('video/mp4');
-    if (!usingMp4) toast('Seu navegador não gera MP4 nativamente — o vídeo será salvo em .webm.', '⚠️');
+    if (!usingMp4) toast('Seu navegador não grava em MP4 nativamente — o vídeo sai em .webm.', 'ℹ️');
 
-    exportChunks = [];
-    try {
-        exportRecorder = new MediaRecorder(combined, mimeType ? { mimeType } : undefined);
-    } catch (err) {
-        toast('Não foi possível iniciar o exportador.', '❌');
-        return;
-    }
-    exportRecorder.ondataavailable = e => { if (e.data.size > 0) exportChunks.push(e.data); };
-    exportRecorder.onstop = () => {
-        S.exporting = false;
-        exportTransition = null;
-        clearInterval(exportTimerHandle);
-        document.getElementById('exportStatus').style.display = 'none';
-        document.getElementById('statusBadge').classList.remove('exporting');
-        document.body.classList.remove('is-exporting');
-        const btn = document.getElementById('exportBtn');
-        btn.classList.remove('recording');
-        btn.innerHTML = '<span class="rec-dot">🎬</span> Exportar MP4';
-        checkReady();
+    const pixelCount = rw * rh;
+    const videoBitsPerSecond = pixelCount >= 1920 * 1080 ? 4_000_000 : 2_500_000;
+    const audioBitsPerSecond = 128_000;
+    const recorderOptions = mimeType ? { mimeType, videoBitsPerSecond, audioBitsPerSecond } : undefined;
 
-        if (S.exportCancelled) {
-            toast('Exportação cancelada.', 'ℹ️');
-            exportChunks = [];
-            return;
-        }
-        saveExportedVideo(exportChunks, usingMp4);
-    };
+    // No modo separado, cada clique em "Gravar Vídeo" grava SÓ o slide atual
+    // (uma gravação manual por vez) — no mesclado, grava tudo numa passada só.
+    const separateMode = document.getElementById('exportSeparate').checked;
+    const currentIdx = separateMode ? Math.max(0, S.currentSlide) : 0;
+    const batches = separateMode
+        ? [[currentIdx]]
+        : [S.slides.map((_, i) => i)];
 
     S.exporting = true;
     S.exportCancelled = false;
     document.body.classList.add('is-exporting');
+    document.body.classList.add('is-recording-region');
     const btn = document.getElementById('exportBtn');
     btn.classList.add('recording');
-    btn.innerHTML = '<span class="rec-dot">⏺️</span> Cancelar exportação';
+    btn.innerHTML = '<span class="rec-dot">⏺️</span> Cancelar gravação';
     document.getElementById('statusBadge').classList.add('exporting');
-    document.getElementById('statusText').textContent = 'Exportando vídeo…';
     const statusEl = document.getElementById('exportStatus');
     statusEl.style.display = 'inline';
     exportStartedAt = performance.now();
     exportTimerHandle = setInterval(() => {
-        statusEl.textContent = '🎬 ' + fmtTime((performance.now() - exportStartedAt) / 1000);
+        statusEl.textContent = '⏺️ ' + fmtTime((performance.now() - exportStartedAt) / 1000);
     }, 500);
 
-    exportRecorder.start(1000);
     S.raf = requestAnimationFrame(tick);
 
-    try {
-        for (let i = 0; i < S.slides.length; i++) {
-            if (S.exportCancelled) break;
-            await exportPlaySlide(i);
+    for (let b = 0; b < batches.length; b++) {
+        if (S.exportCancelled) break;
+        const indices = batches[b];
+        document.getElementById('statusText').textContent = separateMode
+            ? `Gravando slide ${currentIdx + 1}/${S.slides.length}…`
+            : 'Gravando vídeo…';
+
+        let chunks;
+        try {
+            chunks = await recordBatch(combined, recorderOptions, indices);
+        } catch (err) {
+            console.error('Não foi possível iniciar o gravador:', err);
+            toast('Não foi possível iniciar o gravador.', '❌');
+            break;
         }
-    } catch (err) {
-        console.error('Erro durante a exportação:', err);
-        toast('Erro durante a exportação.', '❌');
+
+        if (S.exportCancelled) break; // descarta a leva parcial, não salva arquivo incompleto
+
+        saveExportedVideo(chunks, usingMp4, exportFileNameHint(separateMode ? indices[0] : null));
     }
 
     cancelAnimationFrame(S.raf);
-    if (exportRecorder && exportRecorder.state !== 'inactive') exportRecorder.stop();
-}
+    clearInterval(exportTimerHandle);
+    S.exporting = false;
+    statusEl.style.display = 'none';
+    document.getElementById('statusBadge').classList.remove('exporting');
+    document.body.classList.remove('is-exporting');
+    document.body.classList.remove('is-recording-region');
+    btn.classList.remove('recording');
+    btn.innerHTML = '<span class="rec-dot">⏺️</span> Gravar Vídeo';
+    if (S.exportCancelled) toast('Gravação cancelada.', 'ℹ️');
 
-function captureExportSnapshot() {
-    if (!exportCanvasEl) return null;
-    const snap = document.createElement('canvas');
-    snap.width = exportCanvasEl.width;
-    snap.height = exportCanvasEl.height;
-    snap.getContext('2d').drawImage(exportCanvasEl, 0, 0);
-    return snap;
+    const isLastSlide = currentIdx >= S.slides.length - 1;
+    if (separateMode && !S.exportCancelled && !isLastSlide) {
+        // Já deixa o próximo slide pronto (texto + áudio pausado no início) —
+        // o usuário só precisa clicar em "Gravar Vídeo" de novo pra gravá-lo.
+        // O compartilhamento de tela continua ativo, então não pede de novo.
+        loadSlideCommon(currentIdx + 1, { autoplay: false, transition: true });
+        renderSlideList();
+        checkReady();
+        toast(`Slide ${currentIdx + 2}/${S.slides.length} pronto — clique em "Gravar Vídeo" quando quiser.`, 'ℹ️');
+    } else {
+        checkReady();
+        if (separateMode && !S.exportCancelled) toast('Todos os slides foram gravados!', '✅');
+        if (exportDisplayStream) {
+            exportDisplayStream.getTracks().forEach(t => t.stop());
+            exportDisplayStream = null;
+        }
+    }
 }
 
 function exportPlaySlide(i) {
     return new Promise((resolve) => {
-        // Captura o último frame já desenhado (do slide anterior, ou só o fundo
-        // se for o primeiro slide) para servir de imagem de saída na transição:
-        // ela é sobreposta ao novo frame e some ao longo de exportTransition.durationSec,
-        // usando audio.currentTime do slide que está ENTRANDO — não atrasa o áudio.
-        if (S.transitionType !== 'none') {
-            const rawDur = S.slides[i].duration;
-            const cap = rawDur ? rawDur * 0.8 : Infinity;
-            exportTransition = {
-                img: captureExportSnapshot(),
-                durationSec: Math.max(0.05, Math.min(S.transitionDuration / 1000, cap)),
-            };
-        } else {
-            exportTransition = null;
-        }
-
-        loadSlideCommon(i, {});
-        renderSlideList();
-        exportLayoutCache = null; // recalcula o layout do canvas para este slide
-
         let settled = false;
         const cancelCheck = setInterval(() => {
             if (S.exportCancelled && !settled) settle();
@@ -2967,24 +3049,29 @@ function exportPlaySlide(i) {
         function onEnded() { settle(); }
         audio.addEventListener('ended', onEnded, { once: true });
 
-        const begin = () => audio.play().catch(() => settle());
-        if (audio.readyState >= 1) begin();
-        else audio.addEventListener('canplay', begin, { once: true });
+        // autoplay + transition: true reaproveita o MESMO fluxo da navegação
+        // ao vivo entre slides — a mesma transição CSS que aparece na tela
+        // normalmente agora entra na gravação, porque é a tela de verdade
+        // que está sendo capturada.
+        loadSlideCommon(i, { autoplay: true, transition: true });
+        renderSlideList();
     });
 }
 
-async function saveExportedVideo(chunks, usingMp4) {
+function saveExportedVideo(chunks, usingMp4, nameHint) {
     if (!chunks.length) return;
     const ext = usingMp4 ? 'mp4' : 'webm';
     const blobType = usingMp4 ? 'video/mp4' : 'video/webm';
     const blob = new Blob(chunks, { type: blobType });
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const suggestedName = `LeitorSync-apresentacao-${stamp}.${ext}`;
+    const suggestedName = nameHint
+        ? `LeitorSync-${nameHint}-${stamp}.${ext}`
+        : `LeitorSync-apresentacao-${stamp}.${ext}`;
 
     // Não usamos showSaveFilePicker aqui: ele exige um gesto do usuário "fresco",
-    // mas uma exportação pode levar minutos (dura o mesmo tempo que a soma dos
-    // áudios) — quando o MediaRecorder termina, o gesto do clique original em
-    // "Exportar MP4" já expirou havia muito tempo, e o picker trava/rejeita.
+    // mas uma gravação pode levar minutos (dura o mesmo tempo que o áudio) —
+    // quando o MediaRecorder termina, o gesto do clique original em "Gravar
+    // Vídeo" já expirou havia muito tempo, e o picker trava/rejeita.
     // O download direto abaixo sempre funciona, não importa quanto tempo passou.
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2994,199 +3081,7 @@ async function saveExportedVideo(chunks, usingMp4) {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    toast('Vídeo exportado! Verifique sua pasta de downloads.', '✅');
-}
-
-/* ── DESENHO NO CANVAS ── */
-function roundRectPath(ctx, x, y, w, h, r) {
-    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
-    const rr = Math.min(r, w / 2, h / 2);
-    ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
-    ctx.closePath();
-}
-
-function buildCanvasLayout(slide, W, H) {
-    const scale = W / 780; // 780px = largura de referência do #text-content na tela
-    const fontPx = (+document.getElementById('fontSize').value) * scale;
-    const lineHeightPx = fontPx * (+document.getElementById('lineHeight').value / 10);
-    const fontFamily = document.getElementById('fontSelect').value;
-    const paddingX = W * 0.08;
-    const maxWidth = W - paddingX * 2;
-
-    exportCtx.font = fontPx + 'px ' + fontFamily;
-
-    const lines = [];
-    let curLine = null;
-    let y = lineHeightPx;
-    function pushLine() { if (curLine) lines.push(curLine); }
-    function startLine(gap) {
-        pushLine();
-        y += (curLine ? lineHeightPx : 0) + gap;
-        curLine = { words: [], width: 0, y };
-    }
-    startLine(0);
-
-    slide.words.forEach((tok, idx) => {
-        const w = exportCtx.measureText(tok).width;
-        const isParaStart = slide.paraBreaks.has(idx);
-        if (isParaStart) {
-            startLine(lineHeightPx * 0.5);
-        } else if (curLine.width + w > maxWidth && curLine.words.length > 0) {
-            startLine(0);
-        }
-        curLine.words.push({ idx, text: tok, x: curLine.width, w });
-        curLine.width += w;
-    });
-    pushLine();
-
-    return { lines, totalHeight: y + lineHeightPx, fontPx, lineHeightPx, fontFamily, paddingX, maxWidth, slideId: slide.id };
-}
-
-function drawCanvasBackground(W, H) {
-    exportCtx.fillStyle = '#0f0f13';
-    exportCtx.fillRect(0, 0, W, H);
-
-    if (S.bgMode === 'image' && exportBgImg) {
-        const op = (+document.getElementById('bgImageOpacity').value) / 100;
-        const scale = Math.max(W / exportBgImg.width, H / exportBgImg.height);
-        const dw = exportBgImg.width * scale, dh = exportBgImg.height * scale;
-        const dx = (W - dw) / 2, dy = (H - dh) / 2;
-        exportCtx.globalAlpha = op;
-        exportCtx.drawImage(exportBgImg, dx, dy, dw, dh);
-        exportCtx.globalAlpha = 1;
-        const ov = (+document.getElementById('bgOverlay').value) / 100;
-        exportCtx.fillStyle = `rgba(0,0,0,${ov})`;
-        exportCtx.fillRect(0, 0, W, H);
-    } else {
-        exportCtx.fillStyle = S.bgColor;
-        exportCtx.fillRect(0, 0, W, H);
-    }
-}
-
-function drawExportTransitionOverlay(W, H) {
-    if (!exportTransition || !exportTransition.img || S.transitionType === 'none') return;
-    const t = audio.currentTime;
-    if (t >= exportTransition.durationSec) { exportTransition = null; return; }
-
-    const progress = Math.max(0, Math.min(1, t / exportTransition.durationSec));
-    exportCtx.save();
-    exportCtx.globalAlpha = 1 - progress;
-    if (S.transitionType === 'slide') {
-        exportCtx.translate(-progress * W * 0.4, 0);
-    } else if (S.transitionType === 'zoom') {
-        const scale = 1 + progress * 0.15;
-        exportCtx.translate(W / 2, H / 2);
-        exportCtx.scale(scale, scale);
-        exportCtx.translate(-W / 2, -H / 2);
-    }
-    exportCtx.drawImage(exportTransition.img, 0, 0);
-    exportCtx.restore();
-}
-
-function drawExportFrame(idx) {
-    if (!exportCtx || S.currentSlide === -1) return;
-    const slide = S.slides[S.currentSlide];
-    const W = exportCanvasEl.width, H = exportCanvasEl.height;
-    if (!slide || !slide.words.length) {
-        drawCanvasBackground(W, H);
-        drawExportTransitionOverlay(W, H);
-        return;
-    }
-
-    if (!exportLayoutCache || exportLayoutCache.slideId !== slide.id) {
-        exportLayoutCache = buildCanvasLayout(slide, W, H);
-        exportCamera.y = 0;
-    }
-    const layout = exportLayoutCache;
-
-    drawCanvasBackground(W, H);
-
-    const activeLine = layout.lines.find(l => l.words.length && idx >= l.words[0].idx && idx <= l.words[l.words.length - 1].idx) || layout.lines[0];
-    const paddingY = H * 0.12;
-    const visibleH = H - paddingY * 2;
-    const maxCam = Math.max(0, layout.totalHeight - visibleH);
-    const targetCam = Math.min(Math.max(activeLine.y - visibleH / 2, 0), maxCam);
-    exportCamera.y += (targetCam - exportCamera.y) * 0.15;
-
-    exportCtx.save();
-    exportCtx.beginPath();
-    exportCtx.rect(0, paddingY, W, visibleH);
-    exportCtx.clip();
-    exportCtx.translate(0, paddingY - exportCamera.y);
-
-    const align = document.querySelector('.align-btn.active')?.dataset.align || 'left';
-    const dimRead = S.hlEnabled && document.getElementById('dimRead').checked;
-    const hlN = +document.getElementById('hlCount').value || 4;
-    const cloudRadius = +document.getElementById('cloudSize').value || 18;
-    const baseColor = document.getElementById('textColor').value;
-    exportCtx.textBaseline = 'alphabetic';
-
-    layout.lines.forEach(line => {
-        let lineX = layout.paddingX;
-        if (align === 'center') lineX = layout.paddingX + (layout.maxWidth - line.width) / 2;
-        else if (align === 'right') lineX = layout.paddingX + (layout.maxWidth - line.width);
-
-        line.words.forEach(w => {
-            const gx = lineX + w.x, gy = line.y;
-            let mode = null, intensity = 1;
-
-            if (S.hlEnabled) {
-                if (S.hlStyle === 'cloud') {
-                    const dist = Math.abs(w.idx - idx);
-                    if (dist <= cloudRadius) { mode = 'cloud'; intensity = 1 - dist / (cloudRadius + 1); }
-                    else if (dimRead && w.idx < idx - cloudRadius) mode = 'dim';
-                } else {
-                    if (w.idx >= idx && w.idx < idx + hlN) mode = 'active';
-                    else if (dimRead && w.idx < idx) mode = 'dim';
-                }
-            }
-
-            if (mode === 'active') {
-                if (S.hlStyle === 'bg') {
-                    exportCtx.fillStyle = hexToRgba(S.hlColor, 0.38);
-                    roundRectPath(exportCtx, gx - 2, gy - layout.fontPx * 0.82, w.w + 4, layout.fontPx * 1.12, 4);
-                    exportCtx.fill();
-                } else if (S.hlStyle === 'box') {
-                    exportCtx.fillStyle = S.hlColor;
-                    roundRectPath(exportCtx, gx - 2, gy - layout.fontPx * 0.82, w.w + 4, layout.fontPx * 1.12, 4);
-                    exportCtx.fill();
-                } else if (S.hlStyle === 'underline') {
-                    exportCtx.strokeStyle = S.hlColor;
-                    exportCtx.lineWidth = Math.max(2, layout.fontPx * 0.08);
-                    exportCtx.beginPath();
-                    exportCtx.moveTo(gx, gy + layout.fontPx * 0.22);
-                    exportCtx.lineTo(gx + w.w, gy + layout.fontPx * 0.22);
-                    exportCtx.stroke();
-                }
-            } else if (mode === 'cloud') {
-                exportCtx.fillStyle = hexToRgba(S.hlColor, intensity * 0.42);
-                roundRectPath(exportCtx, gx - 2, gy - layout.fontPx * 0.82, w.w + 4, layout.fontPx * 1.12, 4);
-                exportCtx.fill();
-            }
-
-            exportCtx.save();
-            exportCtx.globalAlpha = mode === 'dim' ? 0.38 : 1;
-            let fillColor = baseColor;
-            let fontStr = layout.fontPx + 'px ' + layout.fontFamily;
-            if (mode === 'active') {
-                if (S.hlStyle === 'box' || S.hlStyle === 'bg') fillColor = '#ffffff';
-                else if (S.hlStyle === 'underline' || S.hlStyle === 'bold') fillColor = S.hlColor;
-                if (S.hlStyle === 'bold') fontStr = 'bold ' + fontStr;
-            }
-            exportCtx.fillStyle = fillColor;
-            exportCtx.font = fontStr;
-            exportCtx.fillText(w.text, gx, gy);
-            exportCtx.restore();
-        });
-    });
-
-    exportCtx.restore();
-    drawExportTransitionOverlay(W, H);
+    toast(nameHint ? `Vídeo "${nameHint}" salvo!` : 'Vídeo salvo! Verifique sua pasta de downloads.', '✅');
 }
 
 /* ─────────────────────────────────────────────

@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConferSync — Comparador de Narração x Referência</title>
+    <link rel="icon" href="imagem.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #e8621a;
+            --primary-light: #f4843d;
+            --primary-dark: #c44e10;
+            --bg-dark: #0f0f13;
+            --bg-card: #1a1a22;
+            --bg-input: #25252f;
+            --border: #2e2e3a;
+            --text-main: #e8e8f0;
+            --text-muted: #8888a0;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --radius: 12px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: linear-gradient(135deg, #1a1a22 0%, #0f0f13 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; }
+
+        .logo-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 11px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 18px rgba(232,98,26,0.45);
+        }
+
+        .logo-text h1 {
+            font-size: 19px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), #ffaa66);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .header-badge {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex; align-items: center; gap: 7px;
+            transition: all 0.3s;
+        }
+        .header-badge .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--text-muted);
+            transition: background 0.3s;
+        }
+        .header-badge.active .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .header-badge.playing .dot { background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(1.4); } }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 9px 20px;
+            flex-shrink: 0;
+        }
+        .navbar .container-fluid {
+            display: flex; align-items: center; justify-content: space-between;
+            max-width: 1400px; margin: 0 auto;
+        }
+        .navbar-brand {
+            font-size: 0.95rem; font-weight: 700;
+            color: var(--primary-light) !important;
+            text-decoration: none; display: flex; align-items: center; gap: 7px;
+        }
+        .navbar-toggler {
+            border: none; padding: 0.5rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; background: transparent;
+        }
+        .navbar-toggler:focus { outline: none; box-shadow: 0 0 0 3px rgba(232,98,26,0.4); border-radius: 4px; }
+        .navbar-toggler-icon {
+            display: inline-block; width: 22px; height: 2px; background: var(--text-main);
+            position: relative; transition: all 0.3s;
+        }
+        .navbar-toggler-icon::before, .navbar-toggler-icon::after {
+            content: ''; position: absolute; width: 22px; height: 2px; background: var(--text-main);
+            left: 0; transition: all 0.3s;
+        }
+        .navbar-toggler-icon::before { top: -6px; }
+        .navbar-toggler-icon::after { top: 6px; }
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon { background: transparent; }
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before { transform: rotate(45deg) translate(4px, 4px); }
+        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after { transform: rotate(-45deg) translate(4px, -4px); }
+        .navbar-collapse { transition: max-height 0.3s ease-out; }
+        .navbar-collapse:not(.show) { display: none; }
+        .navbar-nav { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; }
+        .nav-item { display: flex; align-items: center; }
+        .nav-link {
+            color: var(--text-muted) !important; text-decoration: none;
+            padding: 6px 12px; font-size: 0.78rem; font-weight: 500;
+            border-radius: 20px; transition: all 0.25s ease; white-space: nowrap;
+        }
+        .nav-link:hover { color: #fff !important; background: rgba(232,98,26,0.18); }
+        .nav-link.active {
+            color: #fff !important;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            box-shadow: 0 2px 10px rgba(232,98,26,0.4);
+        }
+        @media (max-width: 991px) {
+            .navbar-nav { flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 10px; }
+            .nav-link { width: 100%; padding: 9px 13px; }
+            .navbar-collapse.show { display: block; max-height: 60vh; overflow-y: auto; }
+        }
+        @media (min-width: 992px) {
+            .navbar-collapse { display: block !important; }
+            .navbar-toggler { display: none; }
+        }
+
+        /* ── LAYOUT ── */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            flex: 1;
+            min-height: 0;
+            transition: grid-template-columns 0.3s ease;
+        }
+        .app-layout.sidebar-collapsed { grid-template-columns: 0 1fr 300px; }
+        .app-layout.sidebar-collapsed .sidebar { padding: 22px 0; border-right: none; overflow: hidden; }
+        .app-layout.sidebar-collapsed .sidebar > * { opacity: 0; pointer-events: none; }
+
+        .sidebar {
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 22px 18px;
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 22px;
+        }
+        .results-panel {
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            padding: 22px 18px;
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .sidebar::-webkit-scrollbar, .results-panel::-webkit-scrollbar, .content-area::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track, .results-panel::-webkit-scrollbar-track, .content-area::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb, .results-panel::-webkit-scrollbar-thumb, .content-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .section-title {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase;
+            color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+        }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .section-title .count-badge {
+            background: var(--bg-input); color: var(--text-main); border-radius: 10px;
+            padding: 1px 8px; font-size: 10px; letter-spacing: 0;
+        }
+
+        /* ── FILE DROP ── */
+        .file-group { margin-bottom: 2px; }
+        .file-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-main); margin-bottom: 7px; }
+        .file-label small { font-weight: 400; color: var(--text-muted); font-size: 11px; }
+        .file-drop {
+            position: relative; border: 2px dashed var(--border); border-radius: var(--radius);
+            padding: 18px 12px; text-align: center; cursor: pointer; transition: all 0.25s;
+            background: var(--bg-input); overflow: hidden;
+        }
+        .file-drop:hover, .file-drop.dragover { border-color: var(--primary); background: rgba(232,98,26,0.07); }
+        .file-drop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+        .file-drop-icon { font-size: 24px; margin-bottom: 5px; }
+        .file-drop-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+        .file-drop-text strong { color: var(--primary-light); }
+
+        .hint-text { font-size: 11px; color: var(--text-muted); line-height: 1.55; margin-top: 10px; }
+
+        /* ── MAIN AREA ── */
+        .main-area { display: flex; flex-direction: column; overflow: hidden; }
+
+        .player-bar {
+            background: var(--bg-card); border-bottom: 1px solid var(--border);
+            padding: 14px 24px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; flex-wrap: wrap;
+        }
+        .transport-controls { display: flex; align-items: center; gap: 7px; }
+        .btn-t {
+            border-radius: 50%; border: none; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-play {
+            width: 46px; height: 46px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: #fff; font-size: 18px; box-shadow: 0 4px 20px rgba(232,98,26,0.5);
+        }
+        .btn-play:hover { transform: scale(1.09); box-shadow: 0 6px 28px rgba(232,98,26,0.65); }
+        .btn-play:active { transform: scale(0.94); }
+        .btn-sec {
+            width: 38px; height: 38px; background: var(--bg-input);
+            border: 1px solid var(--border) !important; color: var(--text-main); font-size: 15px;
+        }
+        .btn-sec:hover { background: var(--border); }
+        .btn-stop { color: var(--danger) !important; }
+        .btn-stop:hover { background: rgba(231,76,60,0.15) !important; border-color: var(--danger) !important; }
+        .btn-toggle-sidebar {
+            width: 38px; height: 38px; border-radius: 10px; background: var(--bg-input);
+            border: 1px solid var(--border); color: var(--text-main); font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-toggle-sidebar:hover { background: var(--border); color: var(--primary-light); }
+
+        .media-info { display: flex; flex-direction: column; min-width: 0; }
+        .media-info .name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+        .media-info .pos { font-size: 10.5px; color: var(--text-muted); letter-spacing: 0.3px; }
+
+        .progress-wrap { flex: 1; min-width: 140px; display: flex; align-items: center; gap: 8px; }
+        .progress-track {
+            flex: 1; height: 5px; background: var(--bg-input); border-radius: 4px; overflow: hidden;
+            border: 1px solid var(--border); cursor: pointer; position: relative;
+        }
+        .progress-track:hover { height: 8px; margin: -1.5px 0; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); transition: width 0.15s linear; }
+        .progress-time { font-size: 10.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 78px; text-align: right; }
+
+        .auto-btn {
+            border: none; border-radius: 24px; padding: 11px 22px; font-size: 13px; font-weight: 700;
+            color: #fff; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, var(--success), #27d17f); box-shadow: 0 4px 16px rgba(46,204,113,0.4);
+            transition: all 0.2s;
+        }
+        .auto-btn:hover { transform: translateY(-1px); }
+        .auto-btn.active { background: linear-gradient(135deg, var(--danger), #ff6b5b); box-shadow: 0 4px 16px rgba(231,76,60,0.4); }
+
+        .volume-control { display: flex; align-items: center; gap: 8px; }
+        input[type="range"] { width: 80px; accent-color: var(--primary); cursor: pointer; height: 4px; }
+
+        /* ── CONTENT AREA ── */
+        .content-area { flex: 1; overflow-y: auto; padding: 20px 26px; display: flex; flex-direction: column; gap: 18px; }
+
+        .pager-row { display: flex; align-items: stretch; gap: 10px; }
+        .pager-arrow {
+            width: 40px; flex-shrink: 0; border: 1px solid var(--border); background: var(--bg-card);
+            color: var(--text-muted); border-radius: var(--radius); cursor: pointer; font-size: 16px;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-family: inherit;
+        }
+        .pager-arrow:hover:not(:disabled) { border-color: var(--primary); color: var(--primary-light); background: rgba(232,98,26,0.08); }
+        .pager-arrow:disabled { opacity: 0.3; cursor: default; }
+
+        .card {
+            flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius);
+            background: var(--bg-card); padding: 16px; box-shadow: var(--shadow);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .card-title {
+            font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-title .saved-pill {
+            font-size: 10px; background: rgba(46,204,113,0.15); color: var(--success);
+            border: 1px solid rgba(46,204,113,0.4); border-radius: 10px; padding: 1px 8px; text-transform: none; letter-spacing: 0;
+            display: none;
+        }
+        .ref-card.saved .saved-pill { display: inline-block; }
+        .ref-card.saved { border-color: var(--success); box-shadow: 0 0 0 1px rgba(46,204,113,0.25); }
+
+        .ref-textarea, .transcript-box {
+            width: 100%; min-height: 150px; max-height: 320px; background: var(--bg-input);
+            border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text-main);
+            font-family: inherit; font-size: 13.5px; line-height: 1.55; resize: vertical; outline: none;
+            white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto;
+        }
+        .ref-textarea:focus, .transcript-box:focus { border-color: var(--primary); }
+        .ref-textarea:disabled { opacity: 0.75; cursor: default; border-color: var(--success); background: rgba(46,204,113,0.05); }
+
+        .card-footer { margin-top: 10px; font-size: 11px; color: var(--text-muted); }
+
+        .action-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .action-row .right-actions { display: flex; gap: 8px; }
+        .btn-pill {
+            border: 1px solid var(--border); background: var(--bg-input); color: var(--text-main);
+            padding: 8px 16px; border-radius: 20px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all 0.2s;
+        }
+        .btn-pill:hover { background: var(--border); }
+        .btn-pill.btn-danger { color: var(--danger); border-color: rgba(231,76,60,0.4); }
+        .btn-pill.btn-danger:hover { background: rgba(231,76,60,0.15); border-color: var(--danger); }
+        .btn-pill.btn-success { color: var(--success); border-color: rgba(46,204,113,0.4); }
+        .btn-pill.btn-success:hover { background: rgba(46,204,113,0.15); border-color: var(--success); }
+        .btn-pill.btn-clear { color: var(--text-muted); }
+        .btn-pill:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+
+        /* ── RESULTS LIST ── */
+        .results-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .result-item {
+            border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; cursor: pointer;
+            background: var(--bg-input); transition: all 0.15s;
+        }
+        .result-item:hover { border-color: var(--primary); background: rgba(232,98,26,0.06); }
+        .result-item.active { border-color: var(--primary); box-shadow: 0 0 0 1px rgba(232,98,26,0.35); }
+        .result-item .r-top { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 700; }
+        .result-item .r-name { font-size: 10.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .result-item .r-breakdown { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+        .score-high { color: var(--success); }
+        .score-mid { color: var(--warning); }
+        .score-low { color: var(--danger); }
+        .score-none { color: var(--text-muted); }
+
+        .empty-hint {
+            font-size: 12px; color: var(--text-muted); line-height: 1.6; text-align: center;
+            padding: 18px 10px; border: 1px dashed var(--border); border-radius: var(--radius);
+        }
+
+        .legend-note { font-size: 10.5px; color: var(--text-muted); line-height: 1.5; margin-top: 4px; }
+
+        /* ── OCR CARD (MP4) ── */
+        .ocr-card { display: none; }
+        .ocr-card.visible { display: block; }
+        .ocr-frames { display: flex; gap: 14px; flex-wrap: wrap; }
+        .ocr-frame-block { flex: 1; min-width: 200px; }
+        .ocr-frame-block h4 {
+            font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.6px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .ocr-frame-img {
+            width: 100%; max-height: 140px; object-fit: contain; background: #000;
+            border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; display: block;
+            cursor: zoom-in; transition: border-color 0.2s;
+        }
+        .ocr-frame-img:hover { border-color: var(--primary); }
+        .ocr-frame-text {
+            width: 100%; min-height: 70px; max-height: 130px; overflow-y: auto; background: var(--bg-input);
+            border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 12px; line-height: 1.5;
+            white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-main);
+        }
+
+        /* ── LIGHTBOX (frame ampliado) ── */
+        .frame-lightbox {
+            display: none; position: fixed; inset: 0; background: rgba(6,6,10,0.88);
+            z-index: 1000; align-items: center; justify-content: center; padding: 5vh 5vw; cursor: zoom-out;
+            backdrop-filter: blur(2px);
+        }
+        .frame-lightbox.visible { display: flex; }
+        .frame-lightbox img {
+            max-width: 90vw; max-height: 88vh; border-radius: 10px; cursor: default;
+            box-shadow: 0 24px 70px rgba(0,0,0,0.65); border: 1px solid var(--border);
+        }
+        .frame-lightbox-close {
+            position: absolute; top: 18px; right: 26px; font-size: 30px; color: var(--text-main);
+            background: none; border: none; cursor: pointer; line-height: 1; opacity: 0.75; transition: opacity 0.2s;
+        }
+        .frame-lightbox-close:hover { opacity: 1; }
+        .ocr-score-badge {
+            font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px;
+            background: var(--bg-input); border: 1px solid var(--border);
+        }
+
+        @media (max-width: 1100px) {
+            .app-layout { grid-template-columns: 260px 1fr 260px; }
+        }
+        @media (max-width: 860px) {
+            .app-layout { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
+            .sidebar, .results-panel { max-height: 34vh; border: none; border-bottom: 1px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+    <div class="logo">
+        <div class="logo-icon">🎯</div>
+        <div class="logo-text">
+            <h1>ConferSync</h1>
+            <span>Comparador de Narração &amp; Texto de Referência</span>
+        </div>
+    </div>
+    <div class="header-badge" id="statusBadge">
+        <div class="dot"></div>
+        <span id="statusText">Aguardando arquivos…</span>
+    </div>
+</header>
+
+<!-- ══════════════ NAVBAR ══════════════ -->
+<nav class="navbar">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="ConferSync.html">🎯 Ferramentas de Vídeo</a>
+        <button class="navbar-toggler" type="button" aria-label="Abrir menu" aria-expanded="false">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="index.html">Divisor</a></li>
+                <li class="nav-item"><a class="nav-link" href="Capitulador.html">Capitulador</a></li>
+                <li class="nav-item"><a class="nav-link" href="checklist.html">Checklist</a></li>
+                <li class="nav-item"><a class="nav-link" href="formatar_textos.html">Formatar Textos</a></li>
+                <li class="nav-item"><a class="nav-link" href="substituir_caracteres.html">Substituir Caracteres</a></li>
+                <li class="nav-item"><a class="nav-link" href="Contador.html">Contador de Caracteres</a></li>
+                <li class="nav-item"><a class="nav-link" href="substituir_numeros.html">Substituir N. Romanos</a></li>
+                <li class="nav-item"><a class="nav-link" href="pausasheygen.html">Inserir Relógios</a></li>
+                <li class="nav-item"><a class="nav-link" href="pausas.html">Inserir Pausas</a></li>
+                <li class="nav-item"><a class="nav-link" href="aplicar_emocoes.html">Emoções</a></li>
+                <li class="nav-item"><a class="nav-link" href="timestamps_test.html">TimeStamps</a></li>
+                <li class="nav-item"><a class="nav-link" href="timestamps_legendas.html">TimeStamps com Legendas</a></li>
+                <li class="nav-item"><a class="nav-link" href="divisor_de_personagens.html">Divisor de Diálogos</a></li>
+                <li class="nav-item"><a class="nav-link" href="padrao_do_audio.html">Padrão do Audio</a></li>
+                <li class="nav-item"><a class="nav-link" href="corretor_srt.html">Corretor SRT</a></li>
+                <li class="nav-item"><a class="nav-link" href="formatador-youtube.html">Formatador YouTube</a></li>
+                <li class="nav-item"><a class="nav-link" href="LeitorSync.html">LeitorSync</a></li>
+                <li class="nav-item"><a class="nav-link active" href="ConferSync.html">ConferSync</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- ══════════════ APP LAYOUT ══════════════ -->
+<div class="app-layout" id="appLayout">
+
+    <!-- ══ SIDEBAR: IMPORTAÇÃO ══ -->
+    <aside class="sidebar">
+        <div>
+            <div class="section-title">📁 Mídias (mp3 / mp4)</div>
+            <div class="file-group">
+                <label class="file-label">Áudios ou vídeos narrados <small>(arraste vários de uma vez)</small></label>
+                <div class="file-drop" id="mediaDrop">
+                    <input type="file" id="mediaFiles" accept=".mp3,.mp4,audio/mpeg,audio/mp4,video/mp4,audio/*" multiple>
+                    <div class="file-drop-icon">🎬</div>
+                    <div class="file-drop-text">Arraste um ou mais arquivos <strong>.mp3 / .mp4</strong>, ou <strong>clique aqui</strong><br>para importar</div>
+                </div>
+            </div>
+            <p class="hint-text">
+                Cada mídia vira um item na lista. Cole o texto de referência dela na caixa central — a transcrição
+                (via Web Speech do navegador) é comparada só com o texto daquele mesmo arquivo.
+            </p>
+            <p class="hint-text">
+                ⚠ O Web Speech usa o microfone enquanto a mídia toca pelo alto-falante. Use Chrome ou Edge e
+                permita o acesso ao microfone.
+            </p>
+            <p class="hint-text">
+                💾 Textos, transcrições, % e OCR ficam salvos automaticamente neste navegador (mesmo após fechar
+                o PC) e só são apagados ao clicar em "Deletar" ou "Limpar Lista". Se a mídia não couber no
+                armazenamento local, ela precisa ser reimportada na próxima sessão — os textos continuam salvos.
+            </p>
+        </div>
+
+        <div>
+            <div class="section-title">🔊 Volume</div>
+            <div class="volume-control">
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" oninput="setVolume(this.value)">
+                <span class="range-val" id="volumeVal" style="font-size:11px;color:var(--text-muted)">100%</span>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-title">📌 Lista</div>
+            <p class="hint-text" id="sidebarListHint">Nenhuma mídia importada ainda.</p>
+        </div>
+    </aside>
+
+    <!-- ══ MAIN AREA ══ -->
+    <div class="main-area">
+        <div class="player-bar">
+            <button class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Mostrar/ocultar painel de importação">☰</button>
+
+            <div class="transport-controls">
+                <button class="btn-t btn-sec" onclick="prevMedia()" title="Mídia anterior (ou voltar ao início desta, se for a primeira)">◀</button>
+                <button class="btn-t btn-play" id="playBtn" onclick="togglePlay()" title="Tocar e transcrever">▶</button>
+                <button class="btn-t btn-sec btn-stop" onclick="stopPlayback()" title="Parar">■</button>
+                <button class="btn-t btn-sec" onclick="nextMedia()" title="Próxima mídia">▶</button>
+            </div>
+
+            <div class="media-info">
+                <span class="name" id="mediaNameLabel">Nenhuma mídia carregada</span>
+                <span class="pos" id="mediaPosLabel">-</span>
+            </div>
+
+            <div class="progress-wrap">
+                <div class="progress-track" id="progressTrack" title="Clique para ir para este ponto"><div class="progress-fill" id="progressFill"></div></div>
+                <span class="progress-time" id="progressTime">00:00 / 00:00</span>
+            </div>
+
+            <button class="auto-btn" id="autoBtn" onclick="toggleAutoAnalysis()" title="Transcreve e compara mídia por mídia, em sequência">
+                ▶▶ Auto Análise
+            </button>
+        </div>
+
+        <div class="content-area">
+            <div class="pager-row">
+                <button class="pager-arrow" id="pagerPrevBtn" onclick="prevMedia()" title="Mídia anterior">◁</button>
+
+                <div class="card ref-card" id="refCard">
+                    <div class="card-title">
+                        <span id="refCardTitle">Texto de Referência</span>
+                        <span class="saved-pill">✅ Salvo</span>
+                    </div>
+                    <textarea class="ref-textarea" id="refTextarea" placeholder="Cole aqui o texto de referência desta mídia..." oninput="onRefTextInput()"></textarea>
+                    <div class="card-footer" id="refCardFooter">Importe uma mídia para começar.</div>
+                </div>
+
+                <button class="pager-arrow" id="pagerNextBtn" onclick="nextMedia()" title="Próxima mídia">▷</button>
+            </div>
+
+            <div class="action-row">
+                <button class="btn-pill btn-clear" onclick="clearAllData()">🗑 Limpar Lista</button>
+                <div class="right-actions">
+                    <button class="btn-pill" id="editBtn" onclick="editRefText()" disabled>✏️ Editar</button>
+                    <button class="btn-pill btn-danger" id="deleteBtn" onclick="deleteCurrentMedia()" disabled>❌ Deletar</button>
+                    <button class="btn-pill btn-success" id="saveBtn" onclick="saveRefText()" disabled>💾 Salvar</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span>📝 Transcrição (Web Speech)</span>
+                </div>
+                <div class="transcript-box" id="transcriptBox" contenteditable="true" spellcheck="false" oninput="onTranscriptInput()">Nenhuma transcrição ainda.</div>
+                <div class="card-footer" id="transcriptFooter">Toque a mídia (ou use a Auto Análise) para transcrever automaticamente. Você também pode colar/corrigir o texto aqui manualmente.</div>
+            </div>
+
+            <div class="card ocr-card" id="ocrCard">
+                <div class="card-title">
+                    <span>🖼️ Texto na Tela (OCR) — 1º e último frame do vídeo</span>
+                </div>
+                <div class="ocr-frames">
+                    <div class="ocr-frame-block">
+                        <h4>Primeiro frame × início da transcrição <span class="ocr-score-badge" id="ocrStartBadge">—</span></h4>
+                        <img class="ocr-frame-img" id="ocrStartImg" alt="Primeiro frame do vídeo" onclick="openFrameLightbox(this.src)">
+                        <div class="ocr-frame-text" id="ocrStartText">—</div>
+                    </div>
+                    <div class="ocr-frame-block">
+                        <h4>Último frame × final da transcrição <span class="ocr-score-badge" id="ocrEndBadge">—</span></h4>
+                        <img class="ocr-frame-img" id="ocrEndImg" alt="Último frame do vídeo" onclick="openFrameLightbox(this.src)">
+                        <div class="ocr-frame-text" id="ocrEndText">—</div>
+                    </div>
+                </div>
+                <div class="card-footer" id="ocrCardFooter">Disponível apenas para arquivos .mp4. Toque a mídia para capturar os frames e comparar com a transcrição.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PAINEL DE RESULTADOS ══ -->
+    <aside class="results-panel">
+        <div>
+            <div class="section-title">📊 Comparação <span class="count-badge" id="resultsCount">0</span></div>
+            <p class="legend-note">Pontuação = 50% comparação global + 25% início + 25% final do texto.</p>
+        </div>
+        <ul class="results-list" id="resultsList">
+            <li class="empty-hint">Os resultados de cada mídia aparecem aqui após a transcrição.</li>
+        </ul>
+    </aside>
+</div>
+
+<audio id="mediaPlayer" preload="auto" style="display:none"></audio>
+
+<div class="frame-lightbox" id="frameLightbox" onclick="closeFrameLightbox()">
+    <button class="frame-lightbox-close" onclick="closeFrameLightbox()" title="Fechar">×</button>
+    <img id="frameLightboxImg" alt="Frame ampliado" onclick="event.stopPropagation()">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+
+<script>
+/* =========================================
+   ESTADO GLOBAL
+========================================= */
+let mediaItems = [];      // { id, file, url, type, refText, refSaved, transcriptText, accumulatedText, finalSegmentsList, loading, transcriptionComplete, scores:{global,start,end,final} }
+let currentIndex = -1;
+let isPlaying = false;
+let isAutoMode = false;
+let autoCancelRequested = false;
+
+const mediaPlayer = document.getElementById('mediaPlayer');
+const mediaDrop = document.getElementById('mediaDrop');
+const mediaFilesInput = document.getElementById('mediaFiles');
+const volumeSlider = document.getElementById('volumeSlider');
+const volumeVal = document.getElementById('volumeVal');
+const statusBadge = document.getElementById('statusBadge');
+const statusText = document.getElementById('statusText');
+const sidebarListHint = document.getElementById('sidebarListHint');
+
+const playBtn = document.getElementById('playBtn');
+const autoBtn = document.getElementById('autoBtn');
+const mediaNameLabel = document.getElementById('mediaNameLabel');
+const mediaPosLabel = document.getElementById('mediaPosLabel');
+const progressFill = document.getElementById('progressFill');
+const progressTime = document.getElementById('progressTime');
+
+const pagerPrevBtn = document.getElementById('pagerPrevBtn');
+const pagerNextBtn = document.getElementById('pagerNextBtn');
+const refCard = document.getElementById('refCard');
+const refCardTitle = document.getElementById('refCardTitle');
+const refCardFooter = document.getElementById('refCardFooter');
+const refTextarea = document.getElementById('refTextarea');
+const editBtn = document.getElementById('editBtn');
+const deleteBtn = document.getElementById('deleteBtn');
+const saveBtn = document.getElementById('saveBtn');
+
+const transcriptBox = document.getElementById('transcriptBox');
+const transcriptFooter = document.getElementById('transcriptFooter');
+const resultsList = document.getElementById('resultsList');
+const resultsCount = document.getElementById('resultsCount');
+const appLayout = document.getElementById('appLayout');
+
+const ocrCard = document.getElementById('ocrCard');
+const ocrStartImg = document.getElementById('ocrStartImg');
+const ocrEndImg = document.getElementById('ocrEndImg');
+const ocrStartText = document.getElementById('ocrStartText');
+const ocrEndText = document.getElementById('ocrEndText');
+const ocrStartBadge = document.getElementById('ocrStartBadge');
+const ocrEndBadge = document.getElementById('ocrEndBadge');
+const ocrCardFooter = document.getElementById('ocrCardFooter');
+
+let audioCtx = null, sourceNode = null, gainNode = null;
+
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+const speechSupported = !!SpeechRecognitionAPI;
+let recognition = null;
+let currentRecognitionIndex = null;
+let recognitionActive = false;
+let recognitionEndResolve = null;
+let recognitionShouldRun = false;   // true enquanto a mídia atual deveria estar sendo transcrita (permite reiniciar sozinho se o navegador encerrar a sessão)
+let recognitionSeenIndices = new Set(); // evita duplicar trechos finais ao reiniciar a sessão de reconhecimento
+let currentPlaybackController = null;   // permite ao Stop/navegação encerrar de forma limpa uma reprodução em andamento
+
+/* =========================================
+   PERSISTÊNCIA (IndexedDB) — sobrevive a fechar o navegador/PC.
+   Só é apagada quando o usuário clica em "Deletar" (item) ou "Limpar Lista" (tudo).
+========================================= */
+const DB_NAME = 'conferSyncDB';
+const DB_VERSION = 1;
+const META_STORE = 'meta';   // textos, transcrições, %, ocr (leve, gravado a cada mudança)
+const BLOB_STORE = 'blobs';  // arquivo de mídia original (pesado, gravado só ao importar)
+let dbPromise = null;
+
+function openDB() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+        if (!window.indexedDB) { reject(new Error('IndexedDB não suportado neste navegador.')); return; }
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(META_STORE)) db.createObjectStore(META_STORE, { keyPath: 'id' });
+            if (!db.objectStoreNames.contains(BLOB_STORE)) db.createObjectStore(BLOB_STORE, { keyPath: 'id' });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+    return dbPromise;
+}
+
+async function dbGetAllMeta() {
+    try {
+        const db = await openDB();
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction(META_STORE, 'readonly');
+            const req = tx.objectStore(META_STORE).getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error);
+        });
+    } catch (e) { console.warn('ConferSync: falha ao carregar dados salvos.', e); return []; }
+}
+
+async function dbGetBlob(id) {
+    try {
+        const db = await openDB();
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction(BLOB_STORE, 'readonly');
+            const req = tx.objectStore(BLOB_STORE).get(id);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => reject(req.error);
+        });
+    } catch (e) { return null; }
+}
+
+async function dbPutMeta(record) {
+    try {
+        const db = await openDB();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(META_STORE, 'readwrite');
+            tx.objectStore(META_STORE).put(record);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    } catch (e) { console.warn('ConferSync: falha ao salvar dados desta mídia.', e); }
+}
+
+async function dbPutBlob(record) {
+    const db = await openDB();
+    await new Promise((resolve, reject) => {
+        const tx = db.transaction(BLOB_STORE, 'readwrite');
+        tx.objectStore(BLOB_STORE).put(record);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+async function dbDeleteAll(id) {
+    try {
+        const db = await openDB();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction([META_STORE, BLOB_STORE], 'readwrite');
+            tx.objectStore(META_STORE).delete(id);
+            tx.objectStore(BLOB_STORE).delete(id);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    } catch (e) { console.warn('ConferSync: falha ao remover item salvo.', e); }
+}
+
+async function dbClearAll() {
+    try {
+        const db = await openDB();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction([META_STORE, BLOB_STORE], 'readwrite');
+            tx.objectStore(META_STORE).clear();
+            tx.objectStore(BLOB_STORE).clear();
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    } catch (e) { console.warn('ConferSync: falha ao limpar dados salvos.', e); }
+}
+
+function buildMetaRecord(item) {
+    return {
+        id: item.id,
+        fileName: item.file && item.file.name ? item.file.name : '',
+        type: item.type,
+        refText: item.refText,
+        refSaved: item.refSaved,
+        transcriptText: item.transcriptText,
+        accumulatedText: item.accumulatedText,
+        scores: item.scores,
+        ocr: item.ocr ? {
+            startFrame: item.ocr.startFrame,
+            endFrame: item.ocr.endFrame,
+            startText: item.ocr.startText,
+            endText: item.ocr.endText,
+            startScore: item.ocr.startScore,
+            endScore: item.ocr.endScore,
+            done: item.ocr.done
+        } : null
+    };
+}
+
+const metaPersistTimers = {};
+function persistItemMeta(index, debounceMs) {
+    const item = mediaItems[index];
+    if (!item) return;
+    const record = buildMetaRecord(item);
+    if (!debounceMs) { dbPutMeta(record); return; }
+    clearTimeout(metaPersistTimers[item.id]);
+    metaPersistTimers[item.id] = setTimeout(() => dbPutMeta(record), debounceMs);
+}
+
+async function persistBlob(id, file) {
+    try {
+        await dbPutBlob({ id, file });
+    } catch (e) {
+        console.warn('ConferSync: não foi possível salvar esta mídia localmente (arquivo grande?). Os textos/transcrição continuam salvos.', e);
+    }
+}
+
+/* =========================================
+   IMPORTAÇÃO / DRAG & DROP
+========================================= */
+function isMediaFile(file) {
+    return /\.(mp3|mp4)$/i.test(file.name) || file.type.startsWith('audio/') || file.type.startsWith('video/');
+}
+
+function addFiles(fileList) {
+    const incoming = Array.from(fileList).filter(isMediaFile);
+    if (!incoming.length) return;
+    incoming.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+
+    incoming.forEach(file => {
+        const id = `${file.name}:${file.size}:${file.lastModified}`;
+        const existing = mediaItems.find(m => m.id === id);
+        if (existing) {
+            // Já está na lista (ex.: item recuperado de sessão anterior sem a mídia). Reanexa o arquivo.
+            if (existing.mediaMissing) {
+                try { if (existing.url) URL.revokeObjectURL(existing.url); } catch (e) {}
+                existing.file = file;
+                existing.url = URL.createObjectURL(file);
+                existing.mediaMissing = false;
+                persistBlob(existing.id, file);
+                if (currentIndex !== -1 && mediaItems[currentIndex] === existing) loadMediaSync(currentIndex);
+            }
+            return;
+        }
+        const type = (file.type.startsWith('video/') || /\.mp4$/i.test(file.name)) ? 'video' : 'audio';
+        const item = {
+            id, file,
+            url: URL.createObjectURL(file),
+            type,
+            refText: '', refSaved: false,
+            transcriptText: '', accumulatedText: '', finalSegmentsList: [],
+            loading: false, transcriptionComplete: false,
+            scores: { global: 0, start: 0, end: 0, final: 0 },
+            ocr: type === 'video' ? {
+                startFrame: null, endFrame: null, startText: '', endText: '',
+                startScore: 0, endScore: 0, processing: false, done: false, error: null
+            } : null,
+            mediaMissing: false
+        };
+        mediaItems.push(item);
+        persistBlob(item.id, file);
+        persistItemMeta(mediaItems.length - 1);
+    });
+
+    renderAll();
+    if (currentIndex === -1 && mediaItems.length > 0) {
+        loadMediaSync(0);
+    }
+}
+
+['dragenter', 'dragover'].forEach(evt =>
+    mediaDrop.addEventListener(evt, e => { e.preventDefault(); mediaDrop.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(evt =>
+    mediaDrop.addEventListener(evt, e => { e.preventDefault(); mediaDrop.classList.remove('dragover'); }));
+mediaDrop.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+});
+mediaFilesInput.addEventListener('change', function () {
+    if (this.files.length) addFiles(this.files);
+    this.value = '';
+});
+
+/* =========================================
+   ÁUDIO / VÍDEO — MOTOR DE REPRODUÇÃO
+========================================= */
+async function ensureAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        sourceNode = audioCtx.createMediaElementSource(mediaPlayer);
+        gainNode = audioCtx.createGain();
+        gainNode.gain.value = parseFloat(volumeSlider.value);
+        sourceNode.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+}
+
+function setVolume(val) {
+    volumeVal.textContent = Math.round(val * 100) + '%';
+    if (gainNode) gainNode.gain.value = val;
+}
+
+mediaPlayer.addEventListener('timeupdate', () => {
+    if (!mediaPlayer.duration) return;
+    const pct = (mediaPlayer.currentTime / mediaPlayer.duration) * 100;
+    progressFill.style.width = pct + '%';
+    progressTime.textContent = `${formatTime(mediaPlayer.currentTime)} / ${formatTime(mediaPlayer.duration || 0)}`;
+});
+
+function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+/* =========================================
+   TIMELINE CLICÁVEL (seek)
+========================================= */
+const progressTrack = document.getElementById('progressTrack');
+function seekFromEvent(e) {
+    if (currentIndex === -1 || !mediaPlayer.duration || !isFinite(mediaPlayer.duration)) return;
+    const rect = progressTrack.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    mediaPlayer.currentTime = ratio * mediaPlayer.duration;
+}
+progressTrack.addEventListener('click', seekFromEvent);
+
+/* =========================================
+   LIGHTBOX (ampliar frame OCR)
+========================================= */
+function openFrameLightbox(src) {
+    if (!src) return;
+    document.getElementById('frameLightboxImg').src = src;
+    document.getElementById('frameLightbox').classList.add('visible');
+}
+function closeFrameLightbox() {
+    document.getElementById('frameLightbox').classList.remove('visible');
+}
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeFrameLightbox();
+});
+
+/* =========================================
+   NAVEGAÇÃO ENTRE MÍDIAS (PAGER)
+========================================= */
+function loadMediaSync(index) {
+    if (index < 0 || index >= mediaItems.length) return;
+    currentIndex = index;
+    const item = mediaItems[index];
+
+    mediaPlayer.pause();
+    mediaPlayer.src = item.url || '';
+    isPlaying = false;
+    updatePlayButtonUI();
+    progressFill.style.width = '0%';
+    progressTime.textContent = '00:00 / 00:00';
+
+    mediaNameLabel.textContent = item.file.name + (item.mediaMissing ? ' (arquivo não carregado)' : '');
+    mediaPosLabel.textContent = `Mídia ${index + 1} de ${mediaItems.length}` + (item.mediaMissing ? ' • reimporte para tocar' : '');
+    refCardTitle.textContent = `Texto de Referência — Mídia ${index + 1} de ${mediaItems.length}`;
+
+    refTextarea.value = item.refText;
+    refTextarea.disabled = !!item.refSaved;
+    refCard.classList.toggle('saved', !!item.refSaved);
+    refCardFooter.textContent = item.refSaved
+        ? 'Texto salvo. Clique em "Editar" para alterar.'
+        : 'Cole o texto de referência desta mídia e clique em "Salvar".';
+
+    transcriptBox.innerText = getTranscriptDisplay(item);
+    transcriptFooter.textContent = item.loading
+        ? 'Transcrevendo...'
+        : 'Toque a mídia (ou use a Auto Análise) para transcrever automaticamente. Você também pode colar/corrigir o texto aqui manualmente.';
+
+    editBtn.disabled = !item.refSaved;
+    deleteBtn.disabled = false;
+    saveBtn.disabled = !!item.refSaved;
+    pagerPrevBtn.disabled = index === 0;
+    pagerNextBtn.disabled = index === mediaItems.length - 1;
+
+    renderOcrCard(item);
+    renderResults();
+    updateStatusBadge();
+}
+
+function getTranscriptDisplay(item) {
+    return item.transcriptText || item.accumulatedText || (item.loading ? 'Transcrevendo...' : 'Nenhuma transcrição ainda.');
+}
+
+function prevMedia() {
+    cancelAutoMode();
+    if (currentIndex > 0) {
+        abortPlayback();
+        loadMediaSync(currentIndex - 1);
+    } else if (currentIndex === 0) {
+        // Não há mídia anterior: volta o cursor desta mídia para o início (00:00).
+        try { mediaPlayer.currentTime = 0; } catch (e) {}
+        progressFill.style.width = '0%';
+        progressTime.textContent = `00:00 / ${formatTime(mediaPlayer.duration || 0)}`;
+    }
+}
+function nextMedia() {
+    if (currentIndex < mediaItems.length - 1) {
+        cancelAutoMode();
+        abortPlayback();
+        loadMediaSync(currentIndex + 1);
+    }
+}
+
+/* =========================================
+   REPRODUÇÃO MANUAL (TOCAR / PARAR)
+========================================= */
+function abortPlayback() {
+    recognitionShouldRun = false;
+    try { mediaPlayer.pause(); } catch (e) {}
+    if (recognitionActive) { try { recognition.stop(); } catch (e) {} }
+    if (currentPlaybackController) {
+        const controller = currentPlaybackController;
+        currentPlaybackController = null;
+        controller.abort();
+    }
+    isPlaying = false;
+    updatePlayButtonUI();
+}
+
+function stopPlayback() {
+    cancelAutoMode();
+    abortPlayback();
+    updateStatusBadge();
+}
+
+async function togglePlay() {
+    if (currentIndex === -1) { alert('Importe uma mídia primeiro.'); return; }
+    if (mediaItems[currentIndex].mediaMissing) {
+        alert('O arquivo original desta mídia não está carregado nesta sessão (os textos, a transcrição e os % salvos continuam disponíveis). Arraste o mesmo arquivo novamente para habilitar a reprodução.');
+        return;
+    }
+    if (isPlaying) { abortPlayback(); updateStatusBadge(); return; }
+    await runSingleAnalysis(currentIndex);
+}
+
+async function runSingleAnalysis(index) {
+    await playAndTranscribe(index);
+    if (index !== currentIndex) return; // usuário navegou para outra mídia enquanto tocava
+    updateScoresFor(index);
+    persistItemMeta(index);
+    renderResults();
+    loadMediaSync(index); // atualiza textos exibidos
+}
+
+function playAndTranscribe(index) {
+    return new Promise((resolve) => {
+        const item = mediaItems[index];
+        if (!item) { resolve(); return; }
+
+        item.transcriptText = '';
+        item.accumulatedText = '';
+        item.finalSegmentsList = [];
+        item.transcriptionComplete = false;
+        item.loading = true;
+
+        if (currentIndex === index) {
+            transcriptBox.innerText = 'Transcrevendo...';
+            transcriptFooter.textContent = 'Transcrevendo...';
+        }
+        updateStatusBadge();
+
+        let settled = false;
+        const cleanup = () => {
+            mediaPlayer.removeEventListener('ended', onEnded);
+            if (currentPlaybackController === controller) currentPlaybackController = null;
+        };
+
+        const finishNaturally = async () => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            isPlaying = false;
+            updatePlayButtonUI();
+            await new Promise(r => setTimeout(r, 450)); // folga para captar as últimas palavras
+            await stopRecognitionAndWait();
+            item.transcriptionComplete = true;
+
+            if (item.type === 'video' && item.ocr) {
+                if (currentIndex === index) transcriptFooter.textContent = 'Capturando frames e rodando OCR...';
+                await runOcrForVideo(index);
+            }
+
+            item.loading = false;
+            updateStatusBadge();
+            resolve();
+        };
+
+        const onEnded = () => { finishNaturally(); };
+
+        const controller = {
+            abort: () => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                item.loading = false;
+                resolve(); // libera quem estava aguardando (ex.: Stop, trocar de mídia, Auto Análise)
+            }
+        };
+        currentPlaybackController = controller;
+        mediaPlayer.addEventListener('ended', onEnded);
+
+        (async () => {
+            await ensureAudioContext();
+            if (mediaPlayer.src !== item.url) mediaPlayer.src = item.url;
+            mediaPlayer.currentTime = 0;
+
+            isPlaying = true;
+            updatePlayButtonUI();
+            startRecognition(index);
+
+            try { await mediaPlayer.play(); } catch (e) { /* autoplay pode falhar sem interação, ignorado */ }
+        })();
+    });
+}
+
+function updatePlayButtonUI() {
+    playBtn.innerHTML = isPlaying ? '⏸' : '▶';
+    playBtn.title = isPlaying ? 'Pausar' : 'Tocar e transcrever';
+}
+
+/* =========================================
+   WEB SPEECH — TRANSCRIÇÃO
+========================================= */
+function initRecognition() {
+    if (!speechSupported || recognition) return;
+    recognition = new SpeechRecognitionAPI();
+    recognition.lang = 'pt-BR';
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 5;
+    recognition.continuous = true;
+
+    recognition.onresult = function (event) {
+        if (currentRecognitionIndex === null) return;
+        const item = mediaItems[currentRecognitionIndex];
+        if (!item) return;
+
+        item.finalSegmentsList = item.finalSegmentsList || [];
+        let interimParts = [];
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            const alt = chooseBestAlternative(result);
+            const transcript = (alt && alt.transcript ? alt.transcript : '').trim();
+            if (!transcript) continue;
+            if (result.isFinal) {
+                if (!recognitionSeenIndices.has(i)) {
+                    recognitionSeenIndices.add(i);
+                    item.finalSegmentsList.push(transcript);
+                }
+            } else {
+                interimParts.push(transcript);
+            }
+        }
+
+        const finalText = item.finalSegmentsList.join('\n');
+        const interimText = interimParts.join(' ').trim();
+
+        item.accumulatedText = finalText;
+        item.transcriptText = [finalText, interimText].filter(Boolean).join('\n');
+        item.loading = true;
+
+        if (currentIndex === currentRecognitionIndex && document.activeElement !== transcriptBox) {
+            transcriptBox.innerText = getTranscriptDisplay(item);
+        }
+    };
+
+    recognition.onerror = function (event) {
+        // 'no-speech'/'network'/'aborted' são comuns em pausas da narração — não são fatais, a sessão é
+        // reiniciada automaticamente em onend. Só erros abaixo interrompem de vez a transcrição automática.
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed' || event.error === 'audio-capture') {
+            recognitionShouldRun = false;
+        }
+        if (currentRecognitionIndex === null) return;
+        const item = mediaItems[currentRecognitionIndex];
+        if (item && !item.accumulatedText) item.transcriptText = `Erro de reconhecimento: ${event.error}`;
+        if (recognitionEndResolve) { const r = recognitionEndResolve; recognitionEndResolve = null; r(); }
+    };
+
+    recognition.onend = function () {
+        recognitionActive = false;
+        if (recognitionShouldRun) {
+            // O navegador encerrou a sessão sozinho (limite interno de silêncio/tempo), mas a mídia ainda
+            // está tocando. Reinicia automaticamente sem perder o texto já transcrito até aqui.
+            recognitionSeenIndices = new Set();
+            try {
+                recognition.start();
+                recognitionActive = true;
+                return;
+            } catch (e) {
+                recognitionActive = false;
+            }
+        }
+        if (recognitionEndResolve) { const r = recognitionEndResolve; recognitionEndResolve = null; r(); }
+    };
+}
+
+function chooseBestAlternative(result) {
+    let best = result[0];
+    for (let i = 1; i < result.length; i++) {
+        if ((result[i].confidence || 0) > (best.confidence || 0)) best = result[i];
+    }
+    return best;
+}
+
+function startRecognition(index) {
+    const item = mediaItems[index];
+    if (!speechSupported) {
+        if (item) {
+            item.transcriptText = 'Web Speech não suportado neste navegador. Use Chrome ou Edge.';
+            item.loading = false;
+            item.transcriptionComplete = true;
+        }
+        return;
+    }
+    initRecognition();
+    currentRecognitionIndex = index;
+    recognitionShouldRun = true;
+    recognitionSeenIndices = new Set();
+    try { recognition.start(); recognitionActive = true; }
+    catch (e) { recognitionActive = false; }
+}
+
+function stopRecognitionAndWait() {
+    recognitionShouldRun = false;
+    return new Promise(resolve => {
+        if (!recognitionActive) { resolve(); return; }
+        recognitionEndResolve = resolve;
+        try { recognition.stop(); } catch (e) { resolve(); }
+    });
+}
+
+function onTranscriptInput() {
+    if (currentIndex === -1) return;
+    const item = mediaItems[currentIndex];
+    const text = transcriptBox.innerText || '';
+    item.transcriptText = text;
+    item.accumulatedText = text;
+    item.transcriptionComplete = true;
+    item.loading = false;
+    updateScoresFor(currentIndex);
+    recomputeOcrScoresFor(currentIndex);
+    if (item.ocr) renderOcrCard(item);
+    renderResults();
+    persistItemMeta(currentIndex, 600);
+}
+
+/* =========================================
+   COMPARAÇÃO: GLOBAL + INÍCIO + FINAL
+========================================= */
+const ACCENT_MAP = {
+    'á':'a','à':'a','â':'a','ã':'a','ä':'a',
+    'é':'e','è':'e','ê':'e','ë':'e',
+    'í':'i','ì':'i','î':'i','ï':'i',
+    'ó':'o','ò':'o','ô':'o','õ':'o','ö':'o',
+    'ú':'u','ù':'u','û':'u','ü':'u',
+    'ç':'c','ñ':'n'
+};
+
+function stripAccents(str) {
+    return str.split('').map(ch => ACCENT_MAP[ch] || ch).join('');
+}
+
+function normalizeWords(text) {
+    return stripAccents((text || '').toLowerCase())
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(Boolean);
+}
+
+function wordOverlapScore(sampleWords, poolWords) {
+    if (!sampleWords.length) return 0;
+    const freq = {};
+    poolWords.forEach(w => freq[w] = (freq[w] || 0) + 1);
+    let hits = 0;
+    sampleWords.forEach(w => { if (freq[w] > 0) { hits++; freq[w]--; } });
+    return hits / sampleWords.length;
+}
+
+const EDGE_WINDOW = 12;
+const EDGE_TOLERANCE = 6;
+
+function compareTexts(referenceText, transcriptText) {
+    const refWords = normalizeWords(referenceText);
+    const transcriptWords = normalizeWords(transcriptText);
+
+    if (!refWords.length || !transcriptWords.length) {
+        return { global: 0, start: 0, end: 0, final: 0 };
+    }
+
+    const global = wordOverlapScore(refWords, transcriptWords);
+
+    const edge = Math.max(1, Math.min(EDGE_WINDOW, Math.ceil(refWords.length / 3)));
+    const refStart = refWords.slice(0, edge);
+    const refEnd = refWords.slice(-edge);
+    const transcriptStartWindow = transcriptWords.slice(0, edge + EDGE_TOLERANCE);
+    const transcriptEndWindow = transcriptWords.slice(-(edge + EDGE_TOLERANCE));
+
+    const start = wordOverlapScore(refStart, transcriptStartWindow);
+    const end = wordOverlapScore(refEnd, transcriptEndWindow);
+
+    const final = (global * 0.5) + (start * 0.25) + (end * 0.25);
+    return { global, start, end, final };
+}
+
+function updateScoresFor(index) {
+    const item = mediaItems[index];
+    if (!item) return;
+    item.scores = compareTexts(item.refText, item.accumulatedText || item.transcriptText);
+}
+
+/* =========================================
+   OCR DE FRAMES (MP4): 1º/ÚLTIMO FRAME × INÍCIO/FINAL DA TRANSCRIÇÃO
+========================================= */
+const OCR_MIN_CHARS = 700;
+const OCR_LANG = 'por';
+
+function edgeCharSlice(text, edge, minChars) {
+    const clean = text || '';
+    if (!clean) return '';
+    if (edge === 'start') return clean.slice(0, Math.min(minChars, clean.length));
+    return clean.slice(Math.max(0, clean.length - minChars));
+}
+
+function compareOcrEdge(transcriptText, ocrText, edge) {
+    const slice = edgeCharSlice(transcriptText, edge, OCR_MIN_CHARS);
+    const transcriptWords = normalizeWords(slice);
+    const ocrWords = normalizeWords(ocrText);
+    if (!transcriptWords.length || !ocrWords.length) return 0;
+    return wordOverlapScore(ocrWords, transcriptWords);
+}
+
+function captureVideoFrame(url, edge) {
+    return new Promise((resolve, reject) => {
+        const v = document.createElement('video');
+        v.preload = 'auto';
+        v.muted = true;
+        v.playsInline = true;
+
+        const cleanup = () => { try { v.removeAttribute('src'); v.load(); } catch (e) {} };
+
+        v.addEventListener('loadedmetadata', () => {
+            const duration = v.duration || 0;
+            const target = edge === 'start'
+                ? Math.min(0.05, duration)
+                : Math.max(0, duration - 0.15);
+            v.currentTime = target;
+        }, { once: true });
+
+        v.addEventListener('seeked', () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = v.videoWidth || 320;
+                canvas.height = v.videoHeight || 180;
+                canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/png');
+                cleanup();
+                resolve(dataUrl);
+            } catch (e) { cleanup(); reject(e); }
+        }, { once: true });
+
+        v.addEventListener('error', () => { cleanup(); reject(new Error('Não foi possível ler o vídeo para captura do frame.')); }, { once: true });
+
+        v.src = url;
+        v.load();
+    });
+}
+
+async function ocrImage(dataUrl) {
+    if (typeof Tesseract === 'undefined') {
+        throw new Error('Tesseract.js não carregou (verifique a conexão com a internet).');
+    }
+    const { data } = await Tesseract.recognize(dataUrl, OCR_LANG);
+    return (data && data.text ? data.text : '').trim();
+}
+
+function recomputeOcrScoresFor(index) {
+    const item = mediaItems[index];
+    if (!item || !item.ocr || !item.ocr.done) return;
+    const transcript = item.accumulatedText || item.transcriptText || '';
+    item.ocr.startScore = compareOcrEdge(transcript, item.ocr.startText, 'start');
+    item.ocr.endScore = compareOcrEdge(transcript, item.ocr.endText, 'end');
+}
+
+async function runOcrForVideo(index) {
+    const item = mediaItems[index];
+    if (!item || item.type !== 'video' || !item.ocr) return;
+
+    item.ocr.processing = true;
+    item.ocr.error = null;
+    if (currentIndex === index) renderOcrCard(item);
+    updateStatusBadge();
+
+    try {
+        const [startFrame, endFrame] = await Promise.all([
+            captureVideoFrame(item.url, 'start'),
+            captureVideoFrame(item.url, 'end')
+        ]);
+        item.ocr.startFrame = startFrame;
+        item.ocr.endFrame = endFrame;
+
+        const [startText, endText] = await Promise.all([
+            ocrImage(startFrame),
+            ocrImage(endFrame)
+        ]);
+        item.ocr.startText = startText;
+        item.ocr.endText = endText;
+        item.ocr.done = true;
+        recomputeOcrScoresFor(index);
+    } catch (e) {
+        item.ocr.error = (e && e.message) ? e.message : 'Falha ao processar OCR dos frames.';
+    } finally {
+        item.ocr.processing = false;
+        if (currentIndex === index) renderOcrCard(item);
+        updateStatusBadge();
+        renderResults();
+        persistItemMeta(index);
+    }
+}
+
+function renderOcrCard(item) {
+    if (!item || item.type !== 'video') {
+        ocrCard.classList.remove('visible');
+        return;
+    }
+    ocrCard.classList.add('visible');
+
+    const ocr = item.ocr || {};
+    ocrStartImg.src = ocr.startFrame || '';
+    ocrEndImg.src = ocr.endFrame || '';
+    ocrStartText.textContent = ocr.processing
+        ? 'Processando...'
+        : (ocr.startText || (ocr.done ? '(nenhum texto detectado)' : 'Aguardando análise da mídia...'));
+    ocrEndText.textContent = ocr.processing
+        ? 'Processando...'
+        : (ocr.endText || (ocr.done ? '(nenhum texto detectado)' : 'Aguardando análise da mídia...'));
+
+    if (ocr.error) {
+        ocrCardFooter.textContent = ocr.error;
+    } else if (ocr.processing) {
+        ocrCardFooter.textContent = 'Capturando frames e rodando OCR...';
+    } else if (ocr.done) {
+        ocrCardFooter.textContent = `Comparação por pelo menos ${OCR_MIN_CHARS} caracteres: texto do 1º frame × início da transcrição; texto do último frame × final da transcrição.`;
+    } else {
+        ocrCardFooter.textContent = 'Toque a mídia (ou use a Auto Análise) para capturar os frames e comparar com a transcrição.';
+    }
+
+    const pctStart = ocr.done ? Math.round((ocr.startScore || 0) * 100) : null;
+    const pctEnd = ocr.done ? Math.round((ocr.endScore || 0) * 100) : null;
+    ocrStartBadge.textContent = pctStart === null ? '—' : pctStart + '%';
+    ocrStartBadge.className = 'ocr-score-badge ' + (pctStart === null ? 'score-none' : scoreClass(pctStart));
+    ocrEndBadge.textContent = pctEnd === null ? '—' : pctEnd + '%';
+    ocrEndBadge.className = 'ocr-score-badge ' + (pctEnd === null ? 'score-none' : scoreClass(pctEnd));
+}
+
+/* =========================================
+   AÇÕES DE TEXTO DE REFERÊNCIA
+========================================= */
+function onRefTextInput() {
+    if (currentIndex === -1) return;
+    mediaItems[currentIndex].refText = refTextarea.value;
+    persistItemMeta(currentIndex, 600);
+}
+
+function saveRefText() {
+    if (currentIndex === -1) return;
+    const item = mediaItems[currentIndex];
+    item.refText = refTextarea.value.trim();
+    if (!item.refText) { alert('Cole o texto de referência antes de salvar.'); return; }
+    item.refSaved = true;
+    updateScoresFor(currentIndex);
+    loadMediaSync(currentIndex);
+    renderResults();
+    persistItemMeta(currentIndex);
+}
+
+function editRefText() {
+    if (currentIndex === -1) return;
+    mediaItems[currentIndex].refSaved = false;
+    loadMediaSync(currentIndex);
+    persistItemMeta(currentIndex);
+}
+
+function deleteCurrentMedia() {
+    if (currentIndex === -1 || !mediaItems.length) return;
+    if (!confirm('Remover esta mídia (áudio/vídeo, texto de referência, transcrição e dados salvos) da lista? Esta ação não pode ser desfeita.')) return;
+
+    cancelAutoMode();
+    abortPlayback();
+
+    const item = mediaItems[currentIndex];
+    try { if (item.url) URL.revokeObjectURL(item.url); } catch (e) {}
+    dbDeleteAll(item.id);
+    mediaItems.splice(currentIndex, 1);
+
+    if (mediaItems.length === 0) {
+        currentIndex = -1;
+        mediaPlayer.removeAttribute('src');
+        mediaNameLabel.textContent = 'Nenhuma mídia carregada';
+        mediaPosLabel.textContent = '-';
+        refCardTitle.textContent = 'Texto de Referência';
+        refTextarea.value = '';
+        refTextarea.disabled = false;
+        refCard.classList.remove('saved');
+        refCardFooter.textContent = 'Importe uma mídia para começar.';
+        transcriptBox.innerText = 'Nenhuma transcrição ainda.';
+        transcriptFooter.textContent = 'Toque a mídia (ou use a Auto Análise) para transcrever automaticamente. Você também pode colar/corrigir o texto aqui manualmente.';
+        editBtn.disabled = true;
+        deleteBtn.disabled = true;
+        saveBtn.disabled = true;
+        pagerPrevBtn.disabled = true;
+        pagerNextBtn.disabled = true;
+        ocrCard.classList.remove('visible');
+        renderResults();
+        updateStatusBadge();
+    } else {
+        if (currentIndex >= mediaItems.length) currentIndex = mediaItems.length - 1;
+        loadMediaSync(currentIndex);
+    }
+    renderSidebarHint();
+}
+
+function clearAllData() {
+    if (!mediaItems.length) return;
+    if (!confirm('Isso vai apagar PERMANENTEMENTE todas as mídias, textos de referência, transcrições e % salvos (inclusive os dados salvos neste navegador). Confirmar?')) return;
+
+    cancelAutoMode();
+    abortPlayback();
+    mediaItems.forEach(item => { try { if (item.url) URL.revokeObjectURL(item.url); } catch (e) {} });
+    dbClearAll();
+    mediaItems = [];
+    currentIndex = -1;
+    mediaPlayer.removeAttribute('src');
+
+    mediaNameLabel.textContent = 'Nenhuma mídia carregada';
+    mediaPosLabel.textContent = '-';
+    refCardTitle.textContent = 'Texto de Referência';
+    refTextarea.value = '';
+    refTextarea.disabled = false;
+    refCard.classList.remove('saved');
+    refCardFooter.textContent = 'Importe uma mídia para começar.';
+    transcriptBox.innerText = 'Nenhuma transcrição ainda.';
+    transcriptFooter.textContent = 'Toque a mídia (ou use a Auto Análise) para transcrever automaticamente. Você também pode colar/corrigir o texto aqui manualmente.';
+    editBtn.disabled = true;
+    deleteBtn.disabled = true;
+    saveBtn.disabled = true;
+    pagerPrevBtn.disabled = true;
+    pagerNextBtn.disabled = true;
+    ocrCard.classList.remove('visible');
+
+    renderAll();
+}
+
+/* =========================================
+   AUTO ANÁLISE (sequencial, uma mídia por vez)
+========================================= */
+function cancelAutoMode() {
+    if (isAutoMode) autoCancelRequested = true;
+    isAutoMode = false;
+    updateAutoUI();
+}
+
+function updateAutoUI() {
+    autoBtn.classList.toggle('active', isAutoMode);
+    autoBtn.innerHTML = isAutoMode ? '⏹ Parar Análise' : '▶▶ Auto Análise';
+}
+
+async function toggleAutoAnalysis() {
+    if (isAutoMode) { cancelAutoMode(); return; }
+    if (!mediaItems.length) { alert('Importe arquivos mp3/mp4 primeiro.'); return; }
+
+    isAutoMode = true;
+    autoCancelRequested = false;
+    updateAutoUI();
+
+    let idx = currentIndex === -1 ? 0 : currentIndex;
+    let finished = true;
+
+    for (; idx < mediaItems.length; idx++) {
+        if (autoCancelRequested) { finished = false; break; }
+        if (mediaItems[idx].mediaMissing) continue; // sem arquivo original nesta sessão; pula
+        loadMediaSync(idx);
+        await runSingleAnalysis(idx);
+        if (autoCancelRequested) { finished = false; break; }
+    }
+
+    isAutoMode = false;
+    updateAutoUI();
+    updateStatusBadge();
+    if (finished) alert('Análise automática concluída.');
+}
+
+/* =========================================
+   RENDERIZAÇÃO
+========================================= */
+function scoreClass(pct) {
+    if (pct >= 80) return 'score-high';
+    if (pct >= 50) return 'score-mid';
+    return 'score-low';
+}
+
+function renderResults() {
+    resultsCount.textContent = mediaItems.length;
+    resultsList.innerHTML = '';
+
+    if (!mediaItems.length) {
+        resultsList.innerHTML = '<li class="empty-hint">Os resultados de cada mídia aparecem aqui após a transcrição.</li>';
+        return;
+    }
+
+    mediaItems.forEach((item, idx) => {
+        const hasData = !!(item.refText && (item.accumulatedText || item.transcriptText));
+        const pct = hasData ? Math.round((item.scores.final || 0) * 100) : null;
+        const cls = pct === null ? 'score-none' : scoreClass(pct);
+
+        const li = document.createElement('li');
+        li.className = `result-item${idx === currentIndex ? ' active' : ''}`;
+        li.onclick = () => { cancelAutoMode(); abortPlayback(); loadMediaSync(idx); };
+
+        const top = document.createElement('div');
+        top.className = 'r-top';
+        top.innerHTML = `<span>Mídia ${(idx + 1).toString().padStart(2, '0')}</span><span class="${cls}">${pct === null ? '—' : pct + '%'}</span>`;
+
+        const name = document.createElement('div');
+        name.className = 'r-name';
+        name.textContent = item.file.name;
+
+        li.appendChild(top);
+        li.appendChild(name);
+
+        if (pct !== null) {
+            const breakdown = document.createElement('div');
+            breakdown.className = 'r-breakdown';
+            breakdown.textContent = `Global ${Math.round(item.scores.global * 100)}% · Início ${Math.round(item.scores.start * 100)}% · Final ${Math.round(item.scores.end * 100)}%`;
+            li.appendChild(breakdown);
+        }
+
+        if (item.type === 'video' && item.ocr && item.ocr.done) {
+            const ocrLine = document.createElement('div');
+            ocrLine.className = 'r-breakdown';
+            ocrLine.textContent = `OCR Início ${Math.round(item.ocr.startScore * 100)}% · OCR Final ${Math.round(item.ocr.endScore * 100)}%`;
+            li.appendChild(ocrLine);
+        }
+
+        resultsList.appendChild(li);
+    });
+}
+
+function renderSidebarHint() {
+    sidebarListHint.textContent = mediaItems.length
+        ? `${mediaItems.length} mídia(s) na lista.`
+        : 'Nenhuma mídia importada ainda.';
+}
+
+function updateStatusBadge() {
+    statusBadge.classList.remove('active', 'playing');
+    if (isPlaying) {
+        statusBadge.classList.add('playing');
+        statusText.textContent = isAutoMode ? `Analisando ${currentIndex + 1}/${mediaItems.length}…` : 'Transcrevendo…';
+    } else if (mediaItems.length) {
+        statusBadge.classList.add('active');
+        statusText.textContent = isAutoMode ? 'Análise automática em andamento…' : `${mediaItems.length} mídia(s) na lista`;
+    } else {
+        statusText.textContent = 'Aguardando arquivos…';
+    }
+}
+
+function renderAll() {
+    renderResults();
+    renderSidebarHint();
+    updateStatusBadge();
+    if (currentIndex !== -1) loadMediaSync(currentIndex);
+}
+
+/* =========================================
+   SIDEBAR TOGGLE / NAVBAR MOBILE
+========================================= */
+function toggleSidebar() {
+    appLayout.classList.toggle('sidebar-collapsed');
+}
+
+document.querySelector('.navbar-toggler')?.addEventListener('click', function () {
+    const collapse = document.getElementById('navbarNav');
+    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+    this.setAttribute('aria-expanded', !isExpanded);
+    if (!isExpanded) {
+        collapse.classList.add('show');
+        collapse.style.maxHeight = collapse.scrollHeight + 'px';
+    } else {
+        collapse.classList.remove('show');
+        collapse.style.maxHeight = null;
+    }
+});
+document.querySelectorAll('#navbarNav .nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+        const collapse = document.getElementById('navbarNav');
+        const toggler = document.querySelector('.navbar-toggler');
+        if (window.innerWidth <= 991 && collapse.classList.contains('show')) {
+            collapse.classList.remove('show');
+            collapse.style.maxHeight = null;
+            toggler.setAttribute('aria-expanded', 'false');
+        }
+    });
+});
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 991) {
+        const collapse = document.getElementById('navbarNav');
+        collapse.classList.remove('show');
+        collapse.style.maxHeight = null;
+        document.querySelector('.navbar-toggler')?.setAttribute('aria-expanded', 'false');
+    }
+});
+
+/* =========================================
+   INIT — recupera dados salvos (IndexedDB) de sessões anteriores
+========================================= */
+async function initFromStorage() {
+    statusText.textContent = 'Carregando dados salvos...';
+
+    if (navigator.storage && navigator.storage.persist) {
+        try { await navigator.storage.persist(); } catch (e) {}
+    }
+
+    const metaRecords = await dbGetAllMeta();
+    metaRecords.sort((a, b) => (a.fileName || '').localeCompare(b.fileName || '', undefined, { numeric: true }));
+
+    for (const rec of metaRecords) {
+        let file = null, url = null, mediaMissing = true;
+        try {
+            const blobRec = await dbGetBlob(rec.id);
+            if (blobRec && blobRec.file) {
+                file = blobRec.file;
+                url = URL.createObjectURL(file);
+                mediaMissing = false;
+            }
+        } catch (e) {}
+
+        if (!file) file = { name: rec.fileName };
+
+        mediaItems.push({
+            id: rec.id, file, url,
+            type: rec.type,
+            refText: rec.refText || '', refSaved: !!rec.refSaved,
+            transcriptText: rec.transcriptText || '', accumulatedText: rec.accumulatedText || '',
+            finalSegmentsList: (rec.accumulatedText || '').split('\n').filter(Boolean),
+            loading: false, transcriptionComplete: !!(rec.accumulatedText || rec.transcriptText),
+            scores: rec.scores || { global: 0, start: 0, end: 0, final: 0 },
+            ocr: rec.ocr ? {
+                startFrame: rec.ocr.startFrame || null, endFrame: rec.ocr.endFrame || null,
+                startText: rec.ocr.startText || '', endText: rec.ocr.endText || '',
+                startScore: rec.ocr.startScore || 0, endScore: rec.ocr.endScore || 0,
+                processing: false, done: !!rec.ocr.done, error: null
+            } : (rec.type === 'video' ? {
+                startFrame: null, endFrame: null, startText: '', endText: '',
+                startScore: 0, endScore: 0, processing: false, done: false, error: null
+            } : null),
+            mediaMissing
+        });
+    }
+
+    renderAll();
+    if (mediaItems.length && currentIndex === -1) loadMediaSync(0);
+    updateStatusBadge();
+}
+
+initFromStorage();
+</script>
+</body>
+</html>
