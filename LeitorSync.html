@@ -1191,6 +1191,15 @@
                 </div>
             </div>
 
+            <div class="file-group" style="margin-top:11px">
+                <label class="file-label">Textos narrados <small>(.txt — mesmo nome do áudio, importa automático)</small></label>
+                <div class="file-drop" id="txtDrop">
+                    <input type="file" id="txtFiles" accept=".txt,text/plain" multiple>
+                    <div class="file-drop-icon">📄</div>
+                    <div class="file-drop-text">Arraste um ou mais .txt, ou <strong>clique aqui</strong><br>ex: "Constituicao 01.txt" preenche "Constituicao 01.mp3"</div>
+                </div>
+            </div>
+
             <div class="slide-pager" id="slidePager">
                 <button class="slide-pager-arrow" id="pagerPrevBtn" onclick="prevSlide()" title="Slide anterior (Page Up)">◀</button>
                 <div class="slide-item" id="slidePagerItem"></div>
@@ -1906,6 +1915,70 @@ function addSlidesFromFiles(fileList) {
     renderSlideList();
     checkReady();
     toast(files.length + ' áudio(s) adicionados à playlist!', '🎵');
+}
+
+/* ─────────────────────────────────────────────
+   IMPORTAÇÃO AUTOMÁTICA DE TEXTO (.txt com mesmo nome do áudio)
+   Ex.: "Constituicao 01.mp3" recebe o texto de "Constituicao 01.txt"
+   automaticamente, casando pelo nome do arquivo sem a extensão
+   (comparação sem diferenciar maiúsculas/minúsculas).
+───────────────────────────────────────────── */
+const txtDrop  = document.getElementById('txtDrop');
+const txtInput = document.getElementById('txtFiles');
+
+['dragenter','dragover'].forEach(e =>
+    txtDrop.addEventListener(e, ev => { ev.preventDefault(); txtDrop.classList.add('dragover'); }));
+['dragleave','drop'].forEach(e =>
+    txtDrop.addEventListener(e, ev => { ev.preventDefault(); txtDrop.classList.remove('dragover'); }));
+txtDrop.addEventListener('drop', ev => {
+    if (ev.dataTransfer.files.length) addTextsFromFiles(ev.dataTransfer.files);
+});
+txtInput.addEventListener('change', () => {
+    if (txtInput.files.length) addTextsFromFiles(txtInput.files);
+    txtInput.value = '';
+});
+
+function stripExt(name) {
+    return name.replace(/\.[^/.]+$/, '').trim().toLowerCase();
+}
+
+function addTextsFromFiles(fileList) {
+    const files = Array.from(fileList).filter(f => /\.txt$/i.test(f.name));
+    if (!files.length) { toast('Nenhum arquivo .txt válido encontrado.', '⚠️'); return; }
+    if (!S.slides.length) { toast('Importe os áudios primeiro — o .txt casa pelo nome do arquivo.', '⚠️'); return; }
+
+    let pending = files.length;
+    let matched = 0;
+    const unmatched = [];
+
+    files.forEach(file => {
+        const base = stripExt(file.name);
+        const idx = S.slides.findIndex(s => stripExt(s.name) === base);
+        const reader = new FileReader();
+        reader.onload = e => {
+            if (idx === -1) {
+                unmatched.push(file.name);
+            } else {
+                setSlideText(idx, e.target.result);
+                matched++;
+            }
+            if (--pending === 0) finishTextImport(matched, unmatched);
+        };
+        reader.onerror = () => {
+            unmatched.push(file.name);
+            if (--pending === 0) finishTextImport(matched, unmatched);
+        };
+        reader.readAsText(file, 'UTF-8');
+    });
+}
+
+function finishTextImport(matched, unmatched) {
+    renderSlideList();
+    checkReady();
+    let msg = '';
+    if (matched) msg += matched + ' texto(s) importado(s) automaticamente!';
+    if (unmatched.length) msg += (msg ? ' ' : '') + unmatched.length + ' sem áudio com nome correspondente (' + unmatched.join(', ') + ').';
+    toast(msg, matched ? '📄' : '⚠️');
 }
 
 /* ─────────────────────────────────────────────
