@@ -388,6 +388,19 @@
             background: var(--bg-input); border: 1px solid var(--border);
         }
 
+        /* ── CONFIRM MODAL (substitui window.confirm, que pode ser bloqueado em alguns visualizadores) ── */
+        .confirm-modal {
+            display: none; position: fixed; inset: 0; background: rgba(6,6,10,0.72);
+            z-index: 1100; align-items: center; justify-content: center; padding: 20px;
+        }
+        .confirm-modal.visible { display: flex; }
+        .confirm-box {
+            width: 100%; max-width: 420px; background: var(--bg-card, var(--bg-input)); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px; box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+        }
+        .confirm-box p { font-size: 13.5px; line-height: 1.55; color: var(--text-main); margin-bottom: 18px; white-space: pre-wrap; }
+        .confirm-box .confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
         @media (max-width: 1100px) {
             .app-layout { grid-template-columns: 260px 1fr 260px; }
         }
@@ -588,6 +601,16 @@
 <div class="frame-lightbox" id="frameLightbox" onclick="closeFrameLightbox()">
     <button class="frame-lightbox-close" onclick="closeFrameLightbox()" title="Fechar">×</button>
     <img id="frameLightboxImg" alt="Frame ampliado" onclick="event.stopPropagation()">
+</div>
+
+<div class="confirm-modal" id="confirmModal">
+    <div class="confirm-box" onclick="event.stopPropagation()">
+        <p id="confirmModalText"></p>
+        <div class="confirm-actions">
+            <button class="btn-pill" id="confirmModalCancel">Cancelar</button>
+            <button class="btn-pill btn-danger" id="confirmModalOk">Confirmar</button>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
@@ -911,11 +934,36 @@ function openFrameLightbox(src) {
     document.getElementById('frameLightboxImg').src = src;
     document.getElementById('frameLightbox').classList.add('visible');
 }
+/* =========================================
+   CONFIRMAÇÃO (modal próprio; window.confirm() pode ser bloqueado
+   silenciosamente em alguns visualizadores/webviews)
+========================================= */
+const confirmModal = document.getElementById('confirmModal');
+const confirmModalText = document.getElementById('confirmModalText');
+const confirmModalOk = document.getElementById('confirmModalOk');
+const confirmModalCancel = document.getElementById('confirmModalCancel');
+let confirmResolve = null;
+
+function askConfirm(message) {
+    return new Promise(resolve => {
+        confirmResolve = resolve;
+        confirmModalText.textContent = message;
+        confirmModal.classList.add('visible');
+    });
+}
+function resolveConfirm(result) {
+    confirmModal.classList.remove('visible');
+    if (confirmResolve) { const r = confirmResolve; confirmResolve = null; r(result); }
+}
+confirmModalOk.addEventListener('click', () => resolveConfirm(true));
+confirmModalCancel.addEventListener('click', () => resolveConfirm(false));
+confirmModal.addEventListener('click', () => resolveConfirm(false));
+
 function closeFrameLightbox() {
     document.getElementById('frameLightbox').classList.remove('visible');
 }
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeFrameLightbox();
+    if (e.key === 'Escape') { closeFrameLightbox(); if (confirmModal.classList.contains('visible')) resolveConfirm(false); }
 });
 
 /* =========================================
@@ -1465,9 +1513,10 @@ function editRefText() {
     persistItemMeta(currentIndex);
 }
 
-function deleteCurrentMedia() {
+async function deleteCurrentMedia() {
     if (currentIndex === -1 || !mediaItems.length) return;
-    if (!confirm('Remover esta mídia (áudio/vídeo, texto de referência, transcrição e dados salvos) da lista? Esta ação não pode ser desfeita.')) return;
+    const ok = await askConfirm('Remover esta mídia (áudio/vídeo, texto de referência, transcrição e dados salvos) da lista? Esta ação não pode ser desfeita.');
+    if (!ok) return;
 
     cancelAutoMode();
     abortPlayback();
@@ -1504,9 +1553,10 @@ function deleteCurrentMedia() {
     renderSidebarHint();
 }
 
-function clearAllData() {
+async function clearAllData() {
     if (!mediaItems.length) return;
-    if (!confirm('Isso vai apagar PERMANENTEMENTE todas as mídias, textos de referência, transcrições e % salvos (inclusive os dados salvos neste navegador). Confirmar?')) return;
+    const ok = await askConfirm('Isso vai apagar PERMANENTEMENTE todas as mídias, textos de referência, transcrições e % salvos (inclusive os dados salvos neste navegador). Confirmar?');
+    if (!ok) return;
 
     cancelAutoMode();
     abortPlayback();
