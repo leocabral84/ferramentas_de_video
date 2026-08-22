@@ -1182,6 +1182,11 @@
         <div>
             <div class="section-title">📁 Playlist de Áudios</div>
 
+            <label class="check-row" style="margin-top:0;margin-bottom:11px">
+                <input type="checkbox" id="manualAdvance" onchange="saveSettings()">
+                <span>Avançar manualmente: quando um áudio terminar, só passa pro próximo quando eu clicar em avançar (⏩ ou ▶). Desmarcado: avança sozinho.</span>
+            </label>
+
             <div class="file-group">
                 <label class="file-label">Áudios narrados <small>(.mp3 — selecione vários)</small></label>
                 <div class="file-drop" id="mp3Drop">
@@ -1647,6 +1652,7 @@ function saveSettings() {
             volume: document.getElementById('volSlider').value,
             exportRes: document.getElementById('exportRes').value,
             exportSeparate: document.getElementById('exportSeparate').checked,
+            manualAdvance: document.getElementById('manualAdvance').checked,
         };
         try {
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
@@ -1737,6 +1743,7 @@ function loadSettings() {
     if (typeof data.volume !== 'undefined') document.getElementById('volSlider').value = data.volume;
     if (data.exportRes) document.getElementById('exportRes').value = data.exportRes;
     if (typeof data.exportSeparate === 'boolean') document.getElementById('exportSeparate').checked = data.exportSeparate;
+    if (typeof data.manualAdvance === 'boolean') document.getElementById('manualAdvance').checked = data.manualAdvance;
 }
 
 /* ─────────────────────────────────────────────
@@ -2683,6 +2690,13 @@ audio.addEventListener('timeupdate', () => {
 audio.addEventListener('ended', () => {
     if (S.exporting) return; // durante a exportação, o próprio fluxo de export controla o avanço
     if (S.currentSlide < S.slides.length - 1) {
+        if (document.getElementById('manualAdvance').checked) {
+            S.playing = false;
+            cancelAnimationFrame(S.raf);
+            document.getElementById('btnPlay').textContent = '▶';
+            setStatus('Áudio concluído — clique em avançar (⏩) para continuar', 'active');
+            return;
+        }
         loadSlideCommon(S.currentSlide + 1, { autoplay: true, transition: true });
         renderSlideList();
     } else {
