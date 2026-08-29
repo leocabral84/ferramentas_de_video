@@ -2141,6 +2141,8 @@ function deleteSlide(i) {
 
 function clearViewer() {
     S.words = []; S.spans = []; S.wordWeights = []; S.cumWeights = [0]; S.totalWeight = 0; S.anchors = [];
+    anchorsVersion++;
+    paintState.idx = -1;
     document.getElementById('textContent').innerHTML = '';
     document.getElementById('textContent').style.display = 'none';
     document.getElementById('placeholder').style.display = 'flex';
@@ -2208,6 +2210,7 @@ function setSlideText(i, rawText) {
 function buildSlideContent(box, slide) {
     box.innerHTML = '';
     S.spans = [];
+    paintState.idx = -1; // spans novos: descarta o estado incremental do slide anterior
 
     if (!slide.words.length) {
         const empty = document.createElement('div');
@@ -2335,6 +2338,7 @@ function loadSlideCommon(i, opts) {
     S.cumWeights = slide.cumWeights;
     S.totalWeight = slide.totalWeight;
     S.anchors = slide.anchors;
+    anchorsVersion++;
     S.lastIdx = -99;
 
     if (switchingSlide) {
@@ -2393,13 +2397,24 @@ function loadSlideCommon(i, opts) {
    pontos de calibração manual (S.anchors, via Shift+clique), interpola por
    trechos entre eles — o que corrige o desvio acumulado em cada ponto.
 ───────────────────────────────────────────── */
+// idxAtTime() roda a cada requestAnimationFrame (até 60x/s) durante a
+// reprodução — sem cache, isso remontava e ordenava este array 60x/s pra
+// nada, já que os anchors quase nunca mudam entre um frame e o próximo.
+let anchorsVersion = 0;
+let _anchorsCache = null, _anchorsCacheVer = -1, _anchorsCacheDur = -1;
+
 function getEffectiveAnchors() {
+    const dur = audio.duration || 0;
+    if (_anchorsCacheVer === anchorsVersion && _anchorsCacheDur === dur) return _anchorsCache;
     const list = [
         { t: 0, w: 0 },
         ...S.anchors.map(a => ({ t: a.t, w: S.cumWeights[a.wIdx] || 0 })),
-        { t: audio.duration || 0, w: S.totalWeight },
+        { t: dur, w: S.totalWeight },
     ];
     list.sort((a, b) => a.t - b.t);
+    _anchorsCache = list;
+    _anchorsCacheVer = anchorsVersion;
+    _anchorsCacheDur = dur;
     return list;
 }
 
@@ -2450,6 +2465,7 @@ function addSyncAnchor(idx) {
     S.anchors = S.anchors.filter(a => Math.abs(a.t - t) > 0.15); // evita pontos redundantes muito próximos
     S.anchors.push({ t, wIdx: idx });
     S.anchors.sort((a, b) => a.t - b.t);
+    anchorsVersion++;
     if (S.currentSlide !== -1) S.slides[S.currentSlide].anchors = S.anchors;
     S.lastIdx = -99;
     updateAnchorCount();
@@ -2459,6 +2475,7 @@ function addSyncAnchor(idx) {
 
 function clearSyncAnchors() {
     S.anchors = [];
+    anchorsVersion++;
     if (S.currentSlide !== -1) S.slides[S.currentSlide].anchors = S.anchors;
     S.lastIdx = -99;
     updateAnchorCount();
@@ -2473,36 +2490,107 @@ function updateAnchorCount() {
 
 /* ─────────────────────────────────────────────
    PINTURA DO DESTAQUE
+   Em vez de varrer TODAS as palavras do slide a cada troca de índice (o que
+   travava a página em slides de 1h+ de narração, com milhares de palavras),
+   só tocamos os spans cujo estado de fato mudou desde a última pintura —
+   a janela de destaque e a fronteira de "já lido" andam alguns índices por
+   vez, então o custo por chamada fica proporcional à mudança, não ao
+   tamanho total do slide. Se alguma opção de destaque mudou (estilo,
+   contagem, raio da nuvem, "escurecer lidas") ou o slide foi trocado, o
+   estado incremental guardado deixa de valer e fazemos uma repintura
+   completa (só dessa vez) antes de voltar ao modo incremental.
 ───────────────────────────────────────────── */
-function paintHighlights(idx) {
-    const dimRead = S.hlEnabled && document.getElementById('dimRead').checked;
+const paintState = { idx: -1, style: null, hlN: null, radius: null, dimRead: null, spansLen: -1 };
 
+function resetPaint() {
     S.spans.forEach(sp => {
         sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold','hl-cloud');
         sp.style.removeProperty('--ci');
     });
+    paintState.idx = -1;
+}
 
-    if (!S.hlEnabled) return;
+function paintHighlights(idx) {
+    if (!S.hlEnabled) {
+        if (paintState.idx !== -1) resetPaint();
+        paintState.spansLen = S.spans.length;
+        return;
+    }
 
-    if (S.hlStyle === 'cloud') {
-        const radius = +document.getElementById('cloudSize').value || 18;
-        S.spans.forEach((sp, i) => {
-            const dist = Math.abs(i - idx);
-            if (dist <= radius) {
-                const intensity = 1 - dist / (radius + 1);
-                sp.classList.add('hl-cloud');
-                sp.style.setProperty('--ci', (intensity * 0.42).toFixed(3));
-            } else if (dimRead && i < idx - radius) {
-                sp.classList.add('hl-read');
+    const dimRead = document.getElementById('dimRead').checked;
+    const style   = S.hlStyle;
+    const hlN     = +document.getElementById('hlCount').value || 4;
+    const radius  = +document.getElementById('cloudSize').value || 18;
+
+    if (paintState.idx === -1 || paintState.style !== style || paintState.hlN !== hlN ||
+        paintState.radius !== radius || paintState.dimRead !== dimRead || paintState.spansLen !== S.spans.length) {
+        resetPaint();
+        paintState.style = style; paintState.hlN = hlN; paintState.radius = radius;
+        paintState.dimRead = dimRead; paintState.spansLen = S.spans.length;
+    }
+
+    const prevIdx = paintState.idx;
+    paintState.idx = idx;
+
+    if (style === 'cloud') paintCloudIncremental(prevIdx, idx, radius, dimRead);
+    else                   paintWindowIncremental(prevIdx, idx, hlN, style, dimRead);
+}
+
+function paintWindowIncremental(prevIdx, idx, hlN, style, dimRead) {
+    const sCls = 's-' + style;
+    const n = S.spans.length;
+    const newLo = idx, newHi = Math.min(n, idx + hlN);
+    const oldLo = prevIdx, oldHi = Math.min(n, prevIdx + hlN);
+
+    if (prevIdx >= 0) {
+        for (let i = oldLo; i < oldHi; i++) {
+            if (i < newLo || i >= newHi) S.spans[i].classList.remove('hl-active', sCls);
+        }
+    }
+    for (let i = newLo; i < newHi; i++) {
+        if (prevIdx < 0 || i < oldLo || i >= oldHi) S.spans[i].classList.add('hl-active', sCls);
+    }
+
+    if (dimRead) {
+        if (prevIdx < 0) {
+            for (let i = 0; i < idx; i++) S.spans[i].classList.add('hl-read');
+        } else if (idx > prevIdx) {
+            for (let i = prevIdx; i < idx; i++) S.spans[i].classList.add('hl-read');
+        } else if (idx < prevIdx) {
+            for (let i = idx; i < prevIdx; i++) S.spans[i].classList.remove('hl-read');
+        }
+    }
+}
+
+function paintCloudIncremental(prevIdx, idx, radius, dimRead) {
+    const n = S.spans.length;
+    const newLo = Math.max(0, idx - radius), newHi = Math.min(n - 1, idx + radius);
+    const oldLo = Math.max(0, prevIdx - radius), oldHi = Math.min(n - 1, prevIdx + radius);
+
+    if (prevIdx >= 0) {
+        for (let i = oldLo; i <= oldHi; i++) {
+            if (i < newLo || i > newHi) {
+                S.spans[i].classList.remove('hl-cloud');
+                S.spans[i].style.removeProperty('--ci');
             }
-        });
-    } else {
-        const hlN  = +document.getElementById('hlCount').value || 4;
-        const sCls = 's-' + S.hlStyle;
-        S.spans.forEach((sp, i) => {
-            if (i >= idx && i < idx + hlN) sp.classList.add('hl-active', sCls);
-            else if (dimRead && i < idx)    sp.classList.add('hl-read');
-        });
+        }
+    }
+    for (let i = newLo; i <= newHi; i++) {
+        const dist = Math.abs(i - idx);
+        const intensity = 1 - dist / (radius + 1);
+        S.spans[i].classList.add('hl-cloud');
+        S.spans[i].style.setProperty('--ci', (intensity * 0.42).toFixed(3));
+    }
+
+    if (dimRead) {
+        const newBound = idx - radius, oldBound = prevIdx - radius;
+        if (prevIdx < 0) {
+            for (let i = 0; i < newBound; i++) S.spans[i].classList.add('hl-read');
+        } else if (newBound > oldBound) {
+            for (let i = Math.max(0, oldBound); i < newBound; i++) S.spans[i].classList.add('hl-read');
+        } else if (newBound < oldBound) {
+            for (let i = Math.max(0, newBound); i < oldBound; i++) S.spans[i].classList.remove('hl-read');
+        }
     }
 }
 
@@ -2585,10 +2673,7 @@ function stopAudio() {
     document.getElementById('btnPlay').textContent = '▶';
     document.getElementById('progressFill').style.width = '0%';
     document.getElementById('curTime').textContent = '0:00';
-    S.spans.forEach(sp => {
-        sp.classList.remove('hl-active','hl-read','s-bg','s-box','s-underline','s-bold','hl-cloud');
-        sp.style.removeProperty('--ci');
-    });
+    resetPaint();
     const cw = document.getElementById('curWord');
     if (cw) cw.textContent = '—';
     document.getElementById('textDisplay').scrollTo({ top: 0, behavior: 'smooth' });
