@@ -41,16 +41,35 @@
   .topo { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:0 16px 12px; flex-wrap:wrap; max-width:1200px; margin:0 auto; }
   h1 { font-size:1.1rem; margin:0; }
   .hint { font-size:.85rem; opacity:.75; }
-  .btn-limpar { font:inherit; padding:6px 14px; border:1px solid var(--bd); background:var(--card); color:var(--fg); border-radius:6px; cursor:pointer; }
-  .btn-limpar:hover { border-color:var(--accent); }
+  .btn-x { font:inherit; font-size:.9rem; padding:6px 12px; border:1px solid var(--bd); background:var(--card); color:var(--fg); border-radius:6px; cursor:pointer; white-space:nowrap; }
+  .btn-x:hover { border-color:var(--accent); }
+  .btn-x.primario { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn-x:disabled { opacity:.45; cursor:default; }
   main { padding:0 16px 16px; max-width:1200px; margin:0 auto; }
+
+  .painel { background:var(--card); border:1px solid var(--bd); border-radius:8px; padding:12px 14px; margin-bottom:12px; }
+  .linha { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .linha + .linha { margin-top:10px; }
+  .painel label.rot { font-size:.85rem; opacity:.8; margin:0; }
+  .campo { font:inherit; font-size:.95rem; padding:6px 10px; border:1px solid var(--bd); background:var(--bg); color:var(--fg); border-radius:6px; min-width:0; }
+  .campo:focus { outline:none; border-color:var(--accent); }
+  select.campo { max-width:340px; }
+  input[type=text].campo { width:200px; }
+  input[type=range] { width:160px; accent-color:var(--accent); }
+  .vel { min-width:3.2em; font-variant-numeric:tabular-nums; }
+  .status { font-size:.85rem; opacity:.8; margin-left:auto; }
+  .chk { font-size:.85rem; display:flex; gap:5px; align-items:center; cursor:pointer; }
+
   #texto {
-    min-height:calc(100vh - 230px); padding:20px; background:var(--card);
+    min-height:calc(100vh - 380px); padding:20px; background:var(--card);
     border:1px solid var(--bd); border-radius:8px; outline:none;
     font-size:1.15rem; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere;
   }
   #texto:focus { border-color:var(--accent); }
   #texto:empty::before { content:attr(data-placeholder); opacity:.5; }
+  ::highlight(leitura) { background-color:#fde68a; color:#1c1917; }
+  ::highlight(achados) { background-color:#bfdbfe; color:#1c1917; }
+  ::highlight(atual) { background-color:#f97316; color:#fff; }
 </style>
 </head>
 <body>
@@ -90,33 +109,343 @@
 <div class="topo">
   <div>
     <h1>Bloco de Notas</h1>
-    <div class="hint">Cole o texto abaixo. Nada é salvo. Para ouvir no Edge: Ctrl+Shift+U (Ler em voz alta).</div>
+    <div class="hint">Cole o texto abaixo. Nada é salvo. Também funciona com Ctrl+Shift+U (Ler em voz alta do Edge).</div>
   </div>
-  <button id="limpar" class="btn-limpar" type="button">Limpar</button>
+  <button id="limpar" class="btn-x" type="button">Limpar</button>
 </div>
 <main>
-  <div id="texto" contenteditable="true" spellcheck="false" data-placeholder="Cole seu texto aqui (Ctrl+V)..." autofocus></div>
+  <div class="painel" id="leitor">
+    <div class="linha">
+      <label class="rot" for="voz">Voz</label>
+      <select id="voz" class="campo"></select>
+      <label class="rot" for="vel">Velocidade</label>
+      <input id="vel" type="range" min="0.5" max="3" step="0.1" value="1">
+      <span id="velTxt" class="vel">1,0x</span>
+    </div>
+    <div class="linha">
+      <button id="ler" class="btn-x primario" type="button">&#9654; Ler</button>
+      <button id="pausar" class="btn-x" type="button" disabled>&#10074;&#10074; Pausar</button>
+      <button id="parar" class="btn-x" type="button" disabled>&#9632; Parar</button>
+      <span class="hint">Lê a partir do cursor (ou só o trecho selecionado). Clique no texto durante a leitura para continuar dali.</span>
+      <span id="status" class="status"></span>
+    </div>
+    <div class="hint" id="avisoVoz" style="margin-top:8px"></div>
+  </div>
+
+  <div class="painel" id="substituidor">
+    <div class="linha">
+      <label class="rot" for="achar">Localizar</label>
+      <input id="achar" type="text" class="campo" placeholder="palavra a localizar" autocomplete="off">
+      <button id="ant" class="btn-x" type="button" title="Anterior (Shift+Enter)">&#9664;</button>
+      <button id="prox" class="btn-x" type="button" title="Próxima (Enter)">&#9654;</button>
+      <span id="contagem" class="hint"></span>
+      <label class="chk"><input id="caso" type="checkbox"> Maiúsc./minúsc.</label>
+    </div>
+    <div class="linha">
+      <label class="rot" for="troca">Substituir por</label>
+      <input id="troca" type="text" class="campo" placeholder="nova palavra" autocomplete="off">
+      <button id="subst" class="btn-x primario" type="button">Substituir</button>
+      <button id="substTudo" class="btn-x" type="button">Substituir tudo</button>
+    </div>
+  </div>
+
+  <div id="texto" contenteditable="plaintext-only" spellcheck="false" data-placeholder="Cole seu texto aqui (Ctrl+V)..." autofocus></div>
 </main>
 
 <script>
-  const t = document.getElementById('texto');
-  // Cola sempre como texto simples, sem formatação
-  t.addEventListener('paste', e => {
-    e.preventDefault();
-    const txt = (e.clipboardData || window.clipboardData).getData('text/plain');
-    document.execCommand('insertText', false, txt);
+(() => {
+  const $ = id => document.getElementById(id);
+  const t = $('texto');
+  const synth = window.speechSynthesis;
+  const temHighlight = !!(window.CSS && CSS.highlights && window.Highlight);
+
+  // Edição em texto simples (sem formatação). Fallback se o navegador não suportar plaintext-only.
+  if (t.contentEditable !== 'plaintext-only') {
+    t.contentEditable = 'true';
+    t.addEventListener('paste', e => {
+      e.preventDefault();
+      document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain'));
+    });
+  }
+
+  // ---------- utilitários de posição (offset de caracteres <-> Range) ----------
+  function offsetDe(node, off) {
+    const r = document.createRange();
+    r.setStart(t, 0);
+    r.setEnd(node, off);
+    return r.toString().length;
+  }
+  function rangeDe(ini, fim) {
+    const w = document.createTreeWalker(t, NodeFilter.SHOW_TEXT);
+    const r = document.createRange();
+    let pos = 0, n, okIni = false, ultimo = null;
+    while ((n = w.nextNode())) {
+      const len = n.nodeValue.length;
+      ultimo = n;
+      if (!okIni && ini <= pos + len) { r.setStart(n, ini - pos); okIni = true; }
+      if (okIni && fim <= pos + len) { r.setEnd(n, fim - pos); return r; }
+      pos += len;
+    }
+    if (!okIni && ultimo) r.setStart(ultimo, ultimo.nodeValue.length);
+    if (ultimo) r.setEnd(ultimo, ultimo.nodeValue.length);
+    return r;
+  }
+  function rolarPara(r) {
+    const rc = r.getBoundingClientRect();
+    const topo = (document.querySelector('.navbar')?.offsetHeight || 70) + 20;
+    if (rc.top < topo || rc.bottom > innerHeight - 40) {
+      scrollBy({ top: rc.top - innerHeight / 3, behavior: 'smooth' });
+    }
+  }
+  function pintar(nome, ranges) {
+    if (!temHighlight) return;
+    if (ranges.length) CSS.highlights.set(nome, new Highlight(...ranges));
+    else CSS.highlights.delete(nome);
+  }
+
+  // Última posição do cursor / seleção dentro do texto
+  let sel = { s: 0, e: 0 };
+  document.addEventListener('selectionchange', () => {
+    const g = getSelection();
+    if (!g.rangeCount || !t.contains(g.anchorNode) || !t.contains(g.focusNode)) return;
+    const a = offsetDe(g.anchorNode, g.anchorOffset), b = offsetDe(g.focusNode, g.focusOffset);
+    sel = { s: Math.min(a, b), e: Math.max(a, b) };
   });
-  document.getElementById('limpar').addEventListener('click', () => { t.textContent = ''; t.focus(); });
+
+  // Botões não roubam o foco/cursor do texto
+  document.querySelectorAll('.btn-x').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
+
+  // ====================== LEITOR ======================
+  const selVoz = $('voz'), vel = $('vel'), velTxt = $('velTxt'), status = $('status');
+  const btnLer = $('ler'), btnPausar = $('pausar'), btnParar = $('parar');
+  let vozes = [];
+
+  const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const lembrar = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+  const ehNatural = v => /natural|online/i.test(v.name);
+  function carregarVozes() {
+    vozes = synth.getVoices();
+    if (!vozes.length) return;
+    const pt = vozes.filter(v => /^pt/i.test(v.lang));
+    const outras = vozes.filter(v => !/^pt/i.test(v.lang));
+    const ordem = (a, b) => (ehNatural(b) - ehNatural(a)) || (/pt-BR/i.test(b.lang) - /pt-BR/i.test(a.lang)) || a.name.localeCompare(b.name);
+    pt.sort(ordem); outras.sort(ordem);
+    const grupo = (rotulo, lista) => {
+      if (!lista.length) return '';
+      return '<optgroup label="' + rotulo + '">' + lista.map(v =>
+        '<option value="' + vozes.indexOf(v) + '">' + (ehNatural(v) ? '★ ' : '') + v.name.replace(/</g, '&lt;') + ' (' + v.lang + ')</option>').join('') + '</optgroup>';
+    };
+    selVoz.innerHTML = grupo('Português', pt) + grupo('Outros idiomas', outras);
+
+    const salva = lembrar('bn_voz');
+    let escolha = vozes.findIndex(v => v.name === salva);
+    if (escolha < 0) escolha = vozes.indexOf(pt[0] || vozes[0]);
+    selVoz.value = String(escolha);
+
+    $('avisoVoz').textContent = pt.some(ehNatural)
+      ? '★ = voz natural (neural) da Microsoft.'
+      : 'Nenhuma voz natural em português encontrada. No Microsoft Edge, as vozes "Online (Natural)" aparecem aqui automaticamente.';
+  }
+  carregarVozes();
+  synth.addEventListener('voiceschanged', carregarVozes);
+
+  const rotuloVel = () => { velTxt.textContent = Number(vel.value).toFixed(1).replace('.', ',') + 'x'; };
+  const velSalva = lembrar('bn_vel');
+  if (velSalva) vel.value = velSalva;
+  rotuloVel();
+
+  // Divide o trecho em frases curtas (com posições absolutas) para ler e destacar
+  function fazerBlocos(texto, de, ate) {
+    const blocos = [];
+    const re = /[^.!?…;\n]+[.!?…;]*\s*|\n+/g;
+    const trecho = texto.slice(de, ate);
+    let m;
+    while ((m = re.exec(trecho))) {
+      let ini = de + m.index, bruto = m[0];
+      while (bruto.length > 220) {
+        let corte = Math.max(bruto.lastIndexOf(', ', 220), bruto.lastIndexOf(' ', 220));
+        if (corte < 60) corte = 220;
+        blocos.push({ s: ini, e: ini + corte + 1 });
+        ini += corte + 1; bruto = bruto.slice(corte + 1);
+      }
+      blocos.push({ s: ini, e: ini + bruto.length });
+    }
+    return blocos.filter(b => /[\p{L}\p{N}]/u.test(texto.slice(b.s, b.e)));
+  }
+
+  let sessao = 0, blocos = [], idx = 0, enfileirado = 0, fimLeitura = 0, estado = 'parado';
+
+  function ui() {
+    btnPausar.disabled = btnParar.disabled = estado === 'parado';
+    btnPausar.innerHTML = estado === 'pausado' ? '&#9654; Continuar' : '&#10074;&#10074; Pausar';
+    status.textContent = estado === 'lendo' ? 'Lendo…' : estado === 'pausado' ? 'Pausado' : '';
+  }
+  function parar() {
+    sessao++;
+    synth.cancel();
+    estado = 'parado';
+    pintar('leitura', []);
+    ui();
+  }
+  function enfileirar(i, minha) {
+    if (i >= blocos.length) return;
+    const texto = t.textContent;
+    const u = new SpeechSynthesisUtterance(texto.slice(blocos[i].s, blocos[i].e).trim());
+    const v = vozes[Number(selVoz.value)];
+    if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = 'pt-BR'; }
+    u.rate = Number(vel.value);
+    u.onstart = () => {
+      if (minha !== sessao) return;
+      idx = i;
+      const r = rangeDe(blocos[i].s, blocos[i].e);
+      pintar('leitura', [r]);
+      rolarPara(r);
+      while (enfileirado < Math.min(i + 3, blocos.length)) enfileirar(enfileirado++, minha);
+    };
+    u.onend = () => { if (minha === sessao && i === blocos.length - 1) parar(); };
+    u.onerror = e => { if (minha === sessao && e.error !== 'interrupted' && e.error !== 'canceled') parar(); };
+    synth.speak(u);
+  }
+  function ler(de, ate) {
+    parar();
+    blocos = fazerBlocos(t.textContent, de, ate);
+    if (!blocos.length) { status.textContent = 'Nada para ler'; return; }
+    fimLeitura = ate;
+    idx = 0; enfileirado = 0;
+    const minha = ++sessao;
+    estado = 'lendo';
+    ui();
+    enfileirar(enfileirado++, minha);
+    enfileirar(enfileirado++, minha);
+  }
+
+  btnLer.addEventListener('click', () => {
+    const len = t.textContent.length;
+    if (sel.e > sel.s) ler(sel.s, sel.e);          // trecho selecionado
+    else ler(Math.min(sel.s, len), len);           // do cursor até o fim
+  });
+  btnPausar.addEventListener('click', () => {
+    if (estado === 'lendo') { synth.pause(); estado = 'pausado'; }
+    else if (estado === 'pausado') { synth.resume(); estado = 'lendo'; }
+    ui();
+  });
+  btnParar.addEventListener('click', parar);
+
+  // Clicar no texto durante a leitura: continua dali
+  t.addEventListener('mouseup', () => {
+    if (estado === 'parado') return;
+    setTimeout(() => { if (sel.e === sel.s) ler(sel.s, t.textContent.length); }, 60);
+  });
+
+  vel.addEventListener('input', rotuloVel);
+  vel.addEventListener('change', () => {
+    guardar('bn_vel', vel.value);
+    if (estado !== 'parado' && blocos[idx]) ler(blocos[idx].s, fimLeitura);   // aplica na hora
+  });
+  selVoz.addEventListener('change', () => {
+    const v = vozes[Number(selVoz.value)];
+    if (v) guardar('bn_voz', v.name);
+    if (estado !== 'parado' && blocos[idx]) ler(blocos[idx].s, fimLeitura);
+  });
+  addEventListener('beforeunload', () => synth.cancel());
+
+  // ====================== LOCALIZAR / SUBSTITUIR ======================
+  const achar = $('achar'), troca = $('troca'), caso = $('caso'), contagem = $('contagem');
+  let atual = -1;   // início (offset) da ocorrência atual
+
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function ocorrencias() {
+    const termo = achar.value;
+    if (!termo) return [];
+    const re = new RegExp(esc(termo), caso.checked ? 'g' : 'gi');
+    const out = [], texto = t.textContent;
+    let m;
+    while ((m = re.exec(texto))) { out.push({ s: m.index, e: m.index + m[0].length }); if (out.length > 5000) break; }
+    return out;
+  }
+  function marcar(ms, i) {
+    pintar('achados', ms.map(m => rangeDe(m.s, m.e)));
+    if (i >= 0 && ms[i]) {
+      const r = rangeDe(ms[i].s, ms[i].e);
+      pintar('atual', [r]);
+      rolarPara(r);
+      contagem.textContent = (i + 1) + ' de ' + ms.length;
+    } else {
+      pintar('atual', []);
+      contagem.textContent = achar.value ? (ms.length ? ms.length + ' encontrada(s)' : 'Não encontrada') : '';
+    }
+  }
+  function passo(dir) {
+    const ms = ocorrencias();
+    if (!ms.length) { atual = -1; marcar(ms, -1); return; }
+    const ref = atual >= 0 ? atual : sel.s;
+    let i;
+    if (dir > 0) {
+      i = ms.findIndex(m => atual >= 0 ? m.s > atual : m.s >= ref);
+      if (i < 0) i = 0;
+    } else {
+      i = -1;
+      for (let k = ms.length - 1; k >= 0; k--) if (atual >= 0 ? ms[k].s < atual : ms[k].s < ref) { i = k; break; }
+      if (i < 0) i = ms.length - 1;
+    }
+    atual = ms[i].s;
+    marcar(ms, i);
+  }
+  function substituir() {
+    const ms = ocorrencias();
+    const m = ms.find(x => x.s === atual);
+    if (!m) { passo(1); return; }                 // ainda não há ocorrência selecionada: localiza a primeira
+    parar();
+    const r = rangeDe(m.s, m.e);
+    r.deleteContents();
+    r.insertNode(document.createTextNode(troca.value));
+    t.normalize();
+    sel = { s: m.s + troca.value.length, e: m.s + troca.value.length };
+    atual = -1;
+    passo(1);
+  }
+  function substituirTudo() {
+    const ms = ocorrencias();
+    if (!ms.length) { marcar(ms, -1); return; }
+    parar();
+    const re = new RegExp(esc(achar.value), caso.checked ? 'g' : 'gi');
+    t.textContent = t.textContent.replace(re, () => troca.value);
+    atual = -1;
+    marcar([], -1);
+    contagem.textContent = ms.length + ' substituída(s)';
+  }
+
+  $('prox').addEventListener('click', () => passo(1));
+  $('ant').addEventListener('click', () => passo(-1));
+  $('subst').addEventListener('click', substituir);
+  $('substTudo').addEventListener('click', substituirTudo);
+  [achar, troca].forEach(el => el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); if (el === achar) passo(e.shiftKey ? -1 : 1); else substituir(); }
+  }));
+  achar.addEventListener('input', () => { atual = -1; marcar(ocorrencias(), -1); });
+  caso.addEventListener('change', () => { atual = -1; marcar(ocorrencias(), -1); });
+  t.addEventListener('input', () => {
+    if (estado !== 'parado') parar();
+    atual = -1;
+    if (achar.value) marcar(ocorrencias(), -1);
+  });
+
+  // ====================== GERAL ======================
+  $('limpar').addEventListener('click', () => {
+    parar(); t.textContent = ''; atual = -1; sel = { s: 0, e: 0 };
+    pintar('achados', []); pintar('atual', []); contagem.textContent = ''; t.focus();
+  });
   t.focus();
 
   // Menu: ajusta o espaço do topo e abre/fecha no celular
   const nav = document.querySelector('.navbar.fixed-top');
   const toggler = document.querySelector('.navbar-toggler');
-  const collapse = document.getElementById('navbarNav');
+  const collapse = $('navbarNav');
   function ajustarEspacoMenu() { if (nav) document.body.style.paddingTop = nav.offsetHeight + 'px'; }
-  window.addEventListener('load', ajustarEspacoMenu);
-  window.addEventListener('resize', () => {
-    if (window.innerWidth > 991) { collapse.classList.remove('show'); toggler.setAttribute('aria-expanded', 'false'); }
+  addEventListener('load', ajustarEspacoMenu);
+  addEventListener('resize', () => {
+    if (innerWidth > 991) { collapse.classList.remove('show'); toggler.setAttribute('aria-expanded', 'false'); }
     ajustarEspacoMenu();
   });
   toggler.addEventListener('click', () => {
@@ -125,6 +454,7 @@
     collapse.classList.toggle('show', !aberto);
     setTimeout(ajustarEspacoMenu, 310);
   });
+})();
 </script>
 </body>
 </html>
